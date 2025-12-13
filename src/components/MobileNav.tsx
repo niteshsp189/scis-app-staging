@@ -1,0 +1,229 @@
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { 
+  Building2, 
+  Home, 
+  Users, 
+  User, 
+  FileText, 
+  Calendar, 
+  Bell, 
+  Search, 
+  Settings, 
+  Menu, 
+  LayoutDashboard, 
+  Shield,
+  UserCheck,
+  UserX,
+  HeartHandshake,
+  BookOpen,
+} from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ChatButton } from "@/components/ChatButton";
+import { NotificationButton } from "@/components/NotificationButton";
+import { usePermissions } from "@/contexts/PermissionContext";
+import { useSecuritySettings } from "@/hooks/useSecuritySettings";
+
+// Settings permissions list - user needs ANY of these to access settings
+const settingsPermissions = [
+  'admin_settings',
+  'manage_users',
+  'view_users',
+  'manage_roles',
+  'view_company_settings',
+  'manage_company_settings',
+  'view_office_locations',
+  'manage_office_locations',
+  'view_team_management',
+  'manage_team_management',
+  'view_roles_permissions',
+  'manage_roles_permissions',
+  'view_insurance_plan_types',
+  'manage_insurance_plan_types',
+  'view_insurance_companies_settings',
+  'manage_insurance_companies_settings',
+  'view_insurance_plans_settings',
+  'manage_insurance_plans_settings',
+  'view_holidays',
+  'manage_holidays',
+  'view_reminder_settings',
+  'manage_reminder_settings',
+  'view_currency_settings',
+  'manage_currency_settings',
+  'view_security_settings',
+  'manage_security_settings',
+];
+
+const allNavigationItems = [
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, permission: null },
+  {
+    title: "Consumers",
+    icon: Users,
+    permission: "view_customers",
+    submenu: [
+      { title: "Clients", url: "/customers/clients", icon: UserCheck, permission: "view_clients" },
+      { title: "Former", url: "/customers/former", icon: UserX, permission: "view_former_customers" },
+      { title: "Deceased", url: "/customers/deceased", icon: HeartHandshake, permission: "view_deceased_customers" },
+      { title: "Prospects", url: "/customers/prospects", icon: User, permission: "view_prospects" },
+    ]
+  },
+  { title: "Policies", url: "/policies", icon: FileText, permission: "view_policies" },
+  { title: "Appointments", url: "/appointments", icon: Calendar, permission: "view_appointments" },
+  { title: "Reminders", url: "/reminders", icon: Bell, permission: "view_reminders" },
+  {
+    title: "Lookup Service",
+    icon: Search,
+    permission: null,
+    submenu: [
+      { title: "Global Search", url: "/lookup", icon: Search, permission: "view_global_search" },
+      { title: "Global Book", url: "/global-book", icon: BookOpen, permission: "view_customers" },
+    ]
+  },
+  { title: "Audit Logs", url: "/audit", icon: Shield, permission: "view_audit_logs" },
+  { title: "Settings", url: "/settings", icon: Settings, permissions: settingsPermissions, checkAny: true },
+];
+
+export function MobileNav() {
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const isMobile = useIsMobile();
+  const { hasPermission } = usePermissions();
+  const { auditLoggingEnabled } = useSecuritySettings();
+
+  // Prevent body scroll when drawer is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [open]);
+
+  // Filter navigation items based on permissions
+  const navigationItems = allNavigationItems.filter(item => {
+    // Check if item has multiple permissions (permissions array with checkAny)
+    if (item.permissions && item.checkAny) {
+      // User needs at least ONE of the permissions
+      const hasAnyPermission = item.permissions.some(perm => hasPermission(perm));
+      if (!hasAnyPermission) {
+        return false;
+      }
+    } else if (item.permission && !hasPermission(item.permission)) {
+      // Check single permission
+      return false;
+    }
+
+    // Filter submenu items based on permissions
+    if (item.submenu) {
+      item.submenu = item.submenu.filter(subItem => {
+        return !subItem.permission || hasPermission(subItem.permission);
+      });
+      // Hide the parent item if no submenu items are visible
+      if (item.submenu.length === 0) {
+        return false;
+      }
+    }
+
+    // Special case: Hide Audit Logs menu when audit logging is disabled
+    if (item.title === "Audit Logs" && !auditLoggingEnabled) {
+      return false;
+    }
+
+    return true;
+  });
+
+  if (!isMobile) return null;
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-3 py-3 flex items-center justify-between shadow-sm">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <img 
+          src="/uploads/Maha-Shahwan-150x150.jpg" 
+          alt="SCIS Logo" 
+          className="h-8 w-8 flex-shrink-0"
+        />
+        <span className="text-base font-bold text-gray-900 truncate">SCIS</span>
+      </div>
+      
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <ChatButton />
+        <NotificationButton />
+        <Drawer open={open} onOpenChange={setOpen}>
+          <DrawerTrigger asChild>
+            <Button variant="ghost" size="icon" className="flex-shrink-0">
+              <Menu className="h-6 w-6" />
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent className="max-h-[80vh]">
+            <DrawerHeader>
+              <DrawerTitle>Navigation</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-6 overflow-y-auto max-h-[60vh]">
+              <nav className="space-y-2">
+                {navigationItems.map((item) => (
+                  <div key={item.title}>
+                    {item.submenu ? (
+                      // Render parent with submenu items
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-3 px-4 py-3 text-gray-600 font-medium">
+                          <item.icon className="h-5 w-5" />
+                          <span>{item.title}</span>
+                        </div>
+                        <div className="ml-4 space-y-1">
+                          {item.submenu.map((subItem) => (
+                            <Link
+                              key={subItem.title}
+                              to={subItem.url}
+                              onClick={() => setOpen(false)}
+                              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+                                location.pathname === subItem.url 
+                                  ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600' 
+                                  : 'hover:bg-gray-100'
+                              }`}
+                            >
+                              <subItem.icon className="h-5 w-5" />
+                              <span className="font-medium">{subItem.title}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      // Render single item
+                      <Link
+                        to={item.url}
+                        onClick={() => setOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                          location.pathname === item.url 
+                            ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600' 
+                            : 'hover:bg-gray-100'
+                        }`}
+                      >
+                        <item.icon className="h-5 w-5" />
+                        <span className="font-medium">{item.title}</span>
+                      </Link>
+                    )}
+                  </div>
+                ))}
+              </nav>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      </div>
+    </div>
+  );
+}
