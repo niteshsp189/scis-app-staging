@@ -19,7 +19,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"          # or 18, but 20 is fine for Vite
+          node-version: "20"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -50,8 +50,19 @@ jobs:
 
           API_BASE_URL=$(echo "$SECRET_JSON" | jq -r '.apiBaseUrl')
 
+          # export for later steps
           echo "API_BASE_URL=$API_BASE_URL" >> $GITHUB_ENV
-          echo API_BASE_URL
+
+          # print it to the logs so you can see it
+          echo "Resolved API_BASE_URL: $API_BASE_URL"
+
+      # 🔍 optional but very useful: verify the URL / health endpoint
+      - name: Check API health (optional)
+        env:
+          API_BASE_URL: ${{ env.API_BASE_URL }}
+        run: |
+          echo "Calling ${API_BASE_URL}/api/health"
+          curl -v "${API_BASE_URL}/api/health" || echo "Health check failed (but continuing)"
 
       - name: Install dependencies
         run: npm ci
@@ -60,7 +71,9 @@ jobs:
         env:
           VITE_API_BASE_URL: ${{ env.API_BASE_URL }}
           VITE_API_URL: ${{ env.API_BASE_URL }}
-        run: npm run build
+        run: |
+          echo "Building with VITE_API_BASE_URL=${VITE_API_BASE_URL}"
+          npm run build
 
       - name: Deploy to S3
         run: |
