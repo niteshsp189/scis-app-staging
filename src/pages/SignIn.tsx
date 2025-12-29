@@ -121,7 +121,7 @@ const SignIn = () => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <img src="/uploads/Maha-Shahwan-150x150.jpg" alt="SCIS Logo" className="h-8 w-8" />
-            <span className="text-2xl font-bold">SCIS</span>
+            <span className="text-2xl font-bold">SCIS (t1) </span>
           </div>
         </div>
 
