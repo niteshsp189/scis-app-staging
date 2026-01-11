@@ -29,5 +29,9 @@ dist-ssr
 bun.lockb
 
 # Local Docker configuration
+# Use these for local customizations
+docker.local/
 Dockerfile.local
 docker-compose.local.yml
+*.local.yml
+*.local.conf
