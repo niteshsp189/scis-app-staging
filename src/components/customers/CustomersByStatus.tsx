@@ -206,13 +206,6 @@ const CustomersByStatus = ({ status, title, description, showAddButton = false }
       <div className="flex-1 overflow-auto">
         <div className="p-4 md:p-6">
           <div className="space-y-6">
-            {/* Stats */}
-            <CustomerStats 
-              totalCustomers={viewMode === "pagination" ? paginationHook.pagination?.total || 0 : hook.customers.length}
-              loading={hook.loading}
-              status={status}
-            />
-
             {/* Search */}
             <CustomersSearchSection 
               searchTerm={hook.filters.search || ""}

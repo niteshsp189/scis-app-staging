@@ -6,11 +6,20 @@ import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrencyFormatter } from "@/hooks/useCurrency";
 
-export const CustomerStats = () => {
-  const { stats, loading, error } = useDashboardStats();
+interface CustomerStatsProps {
+  totalCustomers?: number;
+  loading?: boolean;
+  status?: "Client" | "Former" | "Deceased" | "Prospect";
+}
+
+export const CustomerStats = ({ totalCustomers, loading: externalLoading, status }: CustomerStatsProps) => {
+  const { stats, loading: internalLoading, error } = useDashboardStats();
   const { formatCurrency } = useCurrencyFormatter();
 
-  if (loading) {
+  // Use external loading state if provided, otherwise fall back to internal
+  const isLoading = externalLoading !== undefined ? externalLoading : internalLoading;
+
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {Array.from({ length: 5 }).map((_, index) => (
