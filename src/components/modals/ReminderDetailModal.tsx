@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, User, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Calendar, Clock, User, AlertCircle, CheckCircle, Loader2, Printer } from 'lucide-react';
 import { SearchResult } from '@/services/globalSearchService';
 import { reminderService, Reminder } from '@/services/reminderService';
 import { format } from 'date-fns';
@@ -286,7 +286,15 @@ const ReminderDetailModal: React.FC<ReminderDetailModalProps> = ({
           </div>
         </div>
 
-        <div className="flex justify-end pt-4 border-t">
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button 
+            onClick={() => window.open(`/reminders/${reminder.id}/print`, '_blank')}
+            variant="outline"
+            disabled={!reminder?.id}
+          >
+            <Printer className="h-4 w-4 mr-2" />
+            Print
+          </Button>
           <Button onClick={onClose} variant="outline">
             Close
           </Button>

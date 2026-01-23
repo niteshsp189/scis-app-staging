@@ -26,6 +26,7 @@ import {
   X,
   ChevronDown,
   ChevronUp,
+  Printer,
 } from "lucide-react";
 import {
   Select,
@@ -547,6 +548,31 @@ export const AppointmentsTableView = forwardRef(
                 >
                   <X className="h-4 w-4" />
                   Clear Filters
+                </Button>
+              </div>
+
+              {/* Print Button */}
+              <div className="flex items-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Build query params from current filters
+                    const params = new URLSearchParams();
+                    if (startDate) params.set('start_date', startDate);
+                    if (endDate) params.set('end_date', endDate);
+                    if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
+                    if (typeFilter && typeFilter !== 'all') params.set('type', typeFilter);
+                    if (assigneeFilter && assigneeFilter !== 'all') params.set('assigned_to', assigneeFilter);
+                    if (createdByFilter && createdByFilter !== 'all') params.set('created_by', createdByFilter);
+                    if (locationFilter && locationFilter !== 'all') params.set('location', locationFilter);
+                    
+                    const url = `/appointments/print${params.toString() ? '?' + params.toString() : ''}`;
+                    window.open(url, '_blank');
+                  }}
+                  className="flex items-center gap-1.5 px-3 w-full"
+                >
+                  <Printer className="h-4 w-4" />
+                  Print List
                 </Button>
               </div>
             </div>

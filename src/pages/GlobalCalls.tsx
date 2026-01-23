@@ -17,6 +17,7 @@ import {
   Eye,
   RefreshCw,
   Plus,
+  Printer,
 } from "lucide-react";
 import {
   Select,
@@ -534,6 +535,28 @@ export default function GlobalCalls() {
                   >
                     <RefreshCw className={`h-4 w-4 ${(loading || silentRefresh) ? 'animate-spin' : ''}`} />
                     Refresh
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const params = new URLSearchParams();
+                      if (customerType && customerType !== 'all') {
+                        params.set('customerType', customerType);
+                      }
+                      if (startDate) {
+                        params.set('startDate', startDate);
+                      }
+                      if (endDate) {
+                        params.set('endDate', endDate);
+                      }
+                      const queryString = params.toString();
+                      window.open(`/calls/print${queryString ? `?${queryString}` : ''}`, '_blank');
+                    }}
+                    title="Print call logs"
+                  >
+                    <Printer className="h-4 w-4" />
                   </Button>
 
                   {(startDate || endDate) && (

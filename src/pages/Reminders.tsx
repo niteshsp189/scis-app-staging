@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Filter, RefreshCw, ChevronDown, ChevronUp, Printer } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { usePreferences } from "@/contexts/PreferenceContext";
@@ -455,6 +455,34 @@ export default function Reminders() {
     }
   };
 
+  // Handle print reminders list
+  const handlePrintReminders = () => {
+    const params = new URLSearchParams();
+    
+    if (statusFilter && statusFilter !== 'all') {
+      params.set('status', statusFilter);
+    }
+    if (createdByFilter && createdByFilter !== 'all') {
+      params.set('createdBy', createdByFilter);
+    }
+    if (assignedToFilter && assignedToFilter !== 'all') {
+      params.set('assignedTo', assignedToFilter);
+    }
+    if (fromDate) {
+      params.set('fromDate', formatDateForAPI(fromDate));
+    }
+    if (toDate) {
+      params.set('toDate', formatDateForAPI(toDate));
+    }
+    if (searchQuery) {
+      params.set('search', searchQuery);
+    }
+    
+    const queryString = params.toString();
+    const printUrl = `/reminders/print${queryString ? `?${queryString}` : ''}`;
+    window.open(printUrl, '_blank');
+  };
+
   return (
     <div className={`${isMobile ? "pt-20 px-4 pb-4 space-y-4" : "p-6 space-y-6"}`}>
       <div>
@@ -540,6 +568,14 @@ export default function Reminders() {
                   size="sm"
                 >
                   Clear
+                </Button>
+                <Button
+                  onClick={handlePrintReminders}
+                  variant="outline"
+                  size="sm"
+                  title="Print reminders list"
+                >
+                  <Printer className="h-4 w-4" />
                 </Button>
                 <Button
                   onClick={handleRefresh}

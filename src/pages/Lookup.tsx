@@ -53,7 +53,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Copy, Users2 } from "lucide-react";
+import { Check, ChevronsUpDown, Copy, Users2, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Lookup = () => {
@@ -421,6 +421,45 @@ const Lookup = () => {
   const closeProspectModal = () => {
     setIsProspectModalOpen(false);
     setSelectedProspect(null);
+  };
+
+  // Print handlers for each tab
+  const handlePrintSearchResults = () => {
+    const params = new URLSearchParams();
+    params.set('tab', 'search');
+    params.set('q', searchTerm);
+    if (searchType !== 'all') params.set('type', searchType);
+    if (statusFilter !== 'all') params.set('status', statusFilter);
+    if (dateFilter) params.set('date_from', dateFilter);
+    
+    window.open(`/lookup/print?${params.toString()}`, '_blank');
+  };
+
+  const handlePrintDuplicates = () => {
+    const params = new URLSearchParams();
+    params.set('tab', 'duplicates');
+    if (selectedColumns.length > 0) {
+      params.set('columns', selectedColumns.join(','));
+    }
+    if (duplicateCustomerType !== 'all') {
+      params.set('customerType', duplicateCustomerType);
+    }
+    params.set('matchType', matchType);
+    
+    window.open(`/lookup/print?${params.toString()}`, '_blank');
+  };
+
+  const handlePrintMissingInfo = () => {
+    const params = new URLSearchParams();
+    params.set('tab', 'missing');
+    if (missingInfoColumns.length > 0) {
+      params.set('missingColumns', missingInfoColumns.join(','));
+    }
+    if (missingInfoCustomerType !== 'all') {
+      params.set('missingCustomerType', missingInfoCustomerType);
+    }
+    
+    window.open(`/lookup/print?${params.toString()}`, '_blank');
   };
 
   const performDuplicateSearch = async () => {
@@ -1589,8 +1628,17 @@ const Lookup = () => {
           {/* Search Results */}
           {results.length > 0 && (
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Search Results ({results.length})</CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrintSearchResults}
+                  className="shrink-0"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
+                </Button>
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="all" className="w-full">
@@ -1977,14 +2025,25 @@ const Lookup = () => {
           {/* Duplicate Results */}
           {duplicateGroups.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users2 className="h-5 w-5" />
-                  Duplicate Groups Found ({duplicateGroups.length})
-                </CardTitle>
-                <p className="text-sm text-gray-600">
-                  {duplicateFinderService.getDuplicateSummary(duplicateGroups)}
-                </p>
+              <CardHeader className="flex flex-row items-start justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users2 className="h-5 w-5" />
+                    Duplicate Groups Found ({duplicateGroups.length})
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {duplicateFinderService.getDuplicateSummary(duplicateGroups)}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrintDuplicates}
+                  className="shrink-0"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
+                </Button>
               </CardHeader>
               <CardContent className="space-y-6">
                 {duplicateGroups.map((group, index) => (
@@ -2255,14 +2314,25 @@ const Lookup = () => {
           {/* Missing Information Results */}
           {missingInfoResults.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Customers with Missing Information ({missingInfoResults.length})
-                </CardTitle>
-                <p className="text-sm text-gray-600">
-                  Found {missingInfoResults.length} customer{missingInfoResults.length > 1 ? 's' : ''} with incomplete information
-                </p>
+              <CardHeader className="flex flex-row items-start justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Customers with Missing Information ({missingInfoResults.length})
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Found {missingInfoResults.length} customer{missingInfoResults.length > 1 ? 's' : ''} with incomplete information
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrintMissingInfo}
+                  className="shrink-0"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
+                </Button>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">

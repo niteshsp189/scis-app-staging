@@ -43,6 +43,21 @@ import CurrencySystemTest from "./CurrencySystemTest";
 import AuditDashboard from "./pages/AuditDashboard";
 import GlobalBook from "./pages/GlobalBook";
 import GlobalCalls from "./pages/GlobalCallsNew";
+import {
+  CustomerPrintPage,
+  CustomerCallsPrintPage,
+  CustomerPoliciesPrintPage,
+  CustomerNotesPrintPage,
+  CustomerHistoryPrintPage,
+  AppointmentsPrintPage,
+  AppointmentCalendarPrintPage,
+  AppointmentDetailPrintPage,
+  RemindersPrintPage,
+  ReminderDetailPrintPage,
+  CallsPrintPage,
+  CallDetailPrintPage,
+  LookupPrintPage,
+} from "./pages/print";
 
 const queryClient = new QueryClient();
 
@@ -418,6 +433,120 @@ function App() {
                 <Route path="/currency-test" element={<CurrencyTest />} />
                 <Route path="/currency-debug" element={<CurrencyDebug />} />
                 <Route path="/currency-system-test" element={<CurrencySystemTest />} />
+
+                {/* Print routes - open in new tabs, no layout */}
+                <Route
+                  path="/customers/:id/print"
+                  element={
+                    <ProtectedRoute>
+                      <CustomerPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/customers/:id/print/calls"
+                  element={
+                    <ProtectedRoute>
+                      <CustomerCallsPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/customers/:id/print/policies"
+                  element={
+                    <ProtectedRoute>
+                      <CustomerPoliciesPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/customers/:id/print/notes"
+                  element={
+                    <ProtectedRoute>
+                      <CustomerNotesPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/customers/:id/print/history"
+                  element={
+                    <ProtectedRoute>
+                      <CustomerHistoryPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Appointment Print routes - open in new tabs, no layout */}
+                <Route
+                  path="/appointments/print"
+                  element={
+                    <ProtectedRoute>
+                      <AppointmentsPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/appointments/print/calendar"
+                  element={
+                    <ProtectedRoute>
+                      <AppointmentCalendarPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/appointments/:id/print"
+                  element={
+                    <ProtectedRoute>
+                      <AppointmentDetailPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Reminder Print routes - open in new tabs, no layout */}
+                <Route
+                  path="/reminders/print"
+                  element={
+                    <ProtectedRoute>
+                      <RemindersPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/reminders/:id/print"
+                  element={
+                    <ProtectedRoute>
+                      <ReminderDetailPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Call Print routes - open in new tabs, no layout */}
+                <Route
+                  path="/calls/print"
+                  element={
+                    <ProtectedRoute>
+                      <CallsPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/customers/:customerId/calls/:id/print"
+                  element={
+                    <ProtectedRoute>
+                      <CallDetailPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Lookup Print route - open in new tab, no layout */}
+                <Route
+                  path="/lookup/print"
+                  element={
+                    <ProtectedRoute>
+                      <LookupPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
 
                 {/* Calendar OAuth callback routes */}
                 <Route

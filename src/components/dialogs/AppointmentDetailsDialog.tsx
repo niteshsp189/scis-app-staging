@@ -20,7 +20,8 @@ import {
   FileText,
   Edit,
   Trash2,
-  X
+  X,
+  Printer
 } from "lucide-react";
 import { Appointment } from "@/services/appointmentService";
 import appointmentService from "@/services/appointmentService";
@@ -339,6 +340,14 @@ export const AppointmentDetailsDialog = ({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Close
             </Button>
+              <Button
+                variant="outline"
+                onClick={() => window.open(`/appointments/${appointment.id}/print`, '_blank')}
+                className="gap-2"
+              >
+                <Printer className="h-4 w-4" />
+                Print
+              </Button>
               <Button
                 variant="outline"
                 onClick={handleEdit}

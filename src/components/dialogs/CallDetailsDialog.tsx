@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Eye, PhoneIncoming, PhoneOutgoing, Calendar, Clock, User, MessageSquare } from "lucide-react";
+import { Eye, PhoneIncoming, PhoneOutgoing, Calendar, Clock, User, MessageSquare, Printer } from "lucide-react";
 import { CustomerActivity } from "@/services/customerActivitiesService";
 import { useState, useEffect } from "react";
 import { customerActivitiesService } from "@/services/customerActivitiesService";
@@ -381,6 +381,22 @@ export const CallDetailsDialog = ({
               <span className="font-medium">Updated:</span>{" "}
               {call.updated_at ? formatDate(call.updated_at) : "N/A"}
             </div>
+          </div>
+
+          {/* Print Button */}
+          <div className="flex justify-end pt-4 border-t">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const params = new URLSearchParams();
+                params.set('customerName', customerName);
+                window.open(`/customers/${customerId}/calls/${call.id}/print?${params.toString()}`, '_blank');
+              }}
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Print
+            </Button>
           </div>
         </div>
       </DialogContent>

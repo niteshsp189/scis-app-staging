@@ -3,7 +3,7 @@ import { Phone, Clock, Edit, Trash2, UserCheck } from "lucide-react";
 import { ScheduleMeetingDialog } from "@/components/dialogs/ScheduleMeetingDialog";
 import { SetReminderDialog } from "@/components/dialogs/SetReminderDialog";
 import { EnhancedCustomerDeletionDialog } from "@/components/dialogs/enhanced-customer-deletion/EnhancedCustomerDeletionDialog";
-import { PrintCustomerDetails } from "@/components/PrintCustomerDetails";
+import { PrintButton } from "@/components/print";
 import { CustomerData } from "@/types/customer";
 import { usePhoneSelection } from "@/hooks/usePhoneSelection";
 import { usePermissions } from "@/contexts/PermissionContext";
@@ -129,7 +129,12 @@ export const CustomerHeaderActions = ({
         )}
 
         <div className="mt-3">
-          <PrintCustomerDetails customer={customerData} />
+          <PrintButton
+            customerId={customerId}
+            customerName={customerName}
+            size="sm"
+            className="w-full"
+          />
         </div>
         <PhoneSelectionDialog />
 
@@ -202,7 +207,11 @@ export const CustomerHeaderActions = ({
           {isProspect ? "Delete Prospect" : "Delete Customer"}
         </Button>
       )}
-      {/* <PrintCustomerDetails customer={customerData} /> */}
+      <PrintButton
+        customerId={customerId}
+        customerName={customerName}
+        showDropdown={true}
+      />
       <PhoneSelectionDialog />
 
       <EnhancedCustomerDeletionDialog
