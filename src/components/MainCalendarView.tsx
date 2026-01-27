@@ -251,7 +251,9 @@ export const MainCalendarView = forwardRef<{
     setLoading(true);
     try {
       // Build filters object
-      const filters: any = {};
+      const filters: any = {
+        per_page: 100, // Get more results for calendar display
+      };
 
       // Always get all appointments in date range (no user filter here)
       if (filterEmployee !== "all") {
@@ -262,12 +264,39 @@ export const MainCalendarView = forwardRef<{
         filters.created_by = filterCreatedBy;
       }
 
+      // Use user-set date filters if provided, otherwise calculate based on current view
       if (filterDateFrom) {
         filters.date_from = filterDateFrom;
+      } else {
+        // Calculate default date range based on view
+        if (view === "month") {
+          // Get first day of the visible month grid (may include days from previous month)
+          const monthStart = startOfMonth(currentDate);
+          const visibleStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+          filters.date_from = format(visibleStart, "yyyy-MM-dd");
+        } else if (view === "week") {
+          const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
+          filters.date_from = format(weekStart, "yyyy-MM-dd");
+        } else if (view === "day") {
+          filters.date_from = format(startOfDay(currentDate), "yyyy-MM-dd");
+        }
       }
 
       if (filterDateTo) {
         filters.date_to = filterDateTo;
+      } else {
+        // Calculate default end date based on view
+        if (view === "month") {
+          // Get last day of the visible month grid (may include days from next month)
+          const monthEnd = endOfMonth(currentDate);
+          const visibleEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+          filters.date_to = format(visibleEnd, "yyyy-MM-dd");
+        } else if (view === "week") {
+          const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
+          filters.date_to = format(weekEnd, "yyyy-MM-dd");
+        } else if (view === "day") {
+          filters.date_to = format(startOfDay(currentDate), "yyyy-MM-dd");
+        }
       }
 
       if (filterAppointmentType !== "all") {

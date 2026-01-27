@@ -22,5 +22,8 @@ export { ReminderDetailPrintPage } from './ReminderDetailPrintPage';
 export { CallsPrintPage } from './CallsPrintPage';
 export { CallDetailPrintPage } from './CallDetailPrintPage';
 
+// Policy print pages
+export { PolicyPrintPage } from './PolicyPrintPage';
+
 // Lookup print pages
 export { LookupPrintPage } from './LookupPrintPage';

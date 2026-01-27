@@ -223,10 +223,15 @@ const Lookup = () => {
     }
 
     try {
+      console.log('Performing search with query:', query, 'filters:', filters);
       const response = await globalSearchService.search(query, filters);
-      setResults(response.data?.results || []);
+      console.log('Search response:', response);
+      const results = response.data?.results || [];
+      console.log('Parsed results:', results.length, 'items');
+      setResults(results);
       setFiltersEnabled(true); // Enable filters after results are received
     } catch (error) {
+      console.error('Search error:', error);
       setResults([]);
     } finally {
       if (!skipLoading) {
@@ -235,10 +240,18 @@ const Lookup = () => {
     }
   };
 
-  const performSearch = async () => {
-    if (!searchTerm.trim()) {
+  const performSearch = async (searchText?: string | React.MouseEvent) => {
+    // Handle case where event object is passed (from button click) vs string (from suggestion)
+    const queryText = typeof searchText === 'string' ? searchText : searchTerm;
+    
+    if (!queryText.trim()) {
       toast.error("Please enter a search term");
       return;
+    }
+
+    // If searchText was passed as a string, update the searchTerm state
+    if (typeof searchText === 'string') {
+      setSearchTerm(searchText);
     }
 
     setFiltersEnabled(false); // Disable filters during search
@@ -252,11 +265,11 @@ const Lookup = () => {
     };
 
     // Update URL
-    const url = globalSearchService.buildSearchUrl(searchTerm, filters);
+    const url = globalSearchService.buildSearchUrl(queryText, filters);
     navigate(url, { replace: true });
 
     // Pass skipLoading flag if suggestion was selected
-    await performSearchWithParams(searchTerm, filters, suggestionSelected);
+    await performSearchWithParams(queryText, filters, suggestionSelected);
 
     // Reset suggestion selected flag
     setSuggestionSelected(false);
@@ -432,7 +445,9 @@ const Lookup = () => {
     if (statusFilter !== 'all') params.set('status', statusFilter);
     if (dateFilter) params.set('date_from', dateFilter);
     
-    window.open(`/lookup/print?${params.toString()}`, '_blank');
+    const printUrl = `/lookup/print?${params.toString()}`;
+    console.log('Opening print URL:', printUrl, 'searchTerm:', searchTerm);
+    window.open(printUrl, '_blank');
   };
 
   const handlePrintDuplicates = () => {

@@ -38,7 +38,7 @@ import {
 import { DateInput } from "@/components/ui/date-input";
 import appointmentService, { Appointment } from "@/services/appointmentService";
 import { toast } from "@/components/ui/use-toast";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,8 +66,8 @@ export const AppointmentsTableView = forwardRef(
     const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
     const [createdByFilter, setCreatedByFilter] = useState<string>("all");
     const [locationFilter, setLocationFilter] = useState<string>("all");
-    const [startDate, setStartDate] = useState<string>("");
-    const [endDate, setEndDate] = useState<string>("");
+    const [startDate, setStartDate] = useState<string>(format(startOfMonth(new Date()), "yyyy-MM-dd"));
+    const [endDate, setEndDate] = useState<string>(format(endOfMonth(new Date()), "yyyy-MM-dd"));
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalRecords, setTotalRecords] = useState(0);

@@ -32,6 +32,7 @@ import {
   Trash2,
   AlertTriangle,
   RotateCcw,
+  Printer,
 } from "lucide-react";
 import { Policy } from "@/types/policy";
 import PolicyService from "@/services/policyService";
@@ -52,6 +53,7 @@ import { PolicyReinstatementDialog } from "@/components/dialogs/PolicyReinstatem
 import { PolicyAuditTrail } from "@/components/policy/PolicyAuditTrail";
 import { DateInput } from "@/components/ui/date-input";
 import { TimePicker } from "@/components/ui/time-picker";
+import { openPolicyPrintPage } from "@/services/printService";
 
 interface PolicyDetailViewProps {
   policy: Policy;
@@ -478,8 +480,17 @@ export const PolicyDetailView: React.FC<PolicyDetailViewProps> = ({
 
           <div className="mt-4 h-[calc(90vh-200px)] overflow-y-auto">
             <TabsContent value="summary" className="space-y-6">
-              {/* Refresh Button */}
-              <div className="flex justify-end">
+              {/* Refresh and Print Buttons */}
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openPolicyPrintPage(currentPolicy.id)}
+                  className="flex items-center gap-2"
+                >
+                  <Printer className="h-4 w-4" />
+                  Print
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"

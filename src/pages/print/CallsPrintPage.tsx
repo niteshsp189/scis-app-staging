@@ -20,6 +20,9 @@ export const CallsPrintPage = () => {
   const customerType = searchParams.get('customerType') || undefined;
   const startDate = searchParams.get('startDate') || undefined;
   const endDate = searchParams.get('endDate') || undefined;
+  const performedBy = searchParams.get('performedBy') || undefined;
+  const calledFor = searchParams.get('calledFor') || undefined;
+  const customerId = searchParams.get('customerId') || undefined;
 
   useEffect(() => {
     const fetchCalls = async () => {
@@ -28,7 +31,7 @@ export const CallsPrintPage = () => {
         setError(null);
 
         const params: Record<string, string | number> = {
-          per_page: 500, // Get all for printing
+          per_page: 100, // Get records for printing (max allowed by API)
         };
 
         if (customerType && customerType !== 'all') {
@@ -39,6 +42,15 @@ export const CallsPrintPage = () => {
         }
         if (endDate) {
           params.end_date = endDate;
+        }
+        if (performedBy) {
+          params.performed_by = performedBy;
+        }
+        if (calledFor) {
+          params.called_for_user_id = calledFor;
+        }
+        if (customerId) {
+          params.customer_id = customerId;
         }
 
         const response = await api.get('/activities/global', { params });
@@ -57,7 +69,7 @@ export const CallsPrintPage = () => {
     };
 
     fetchCalls();
-  }, [customerType, startDate, endDate]);
+  }, [customerType, startDate, endDate, performedBy, calledFor, customerId]);
 
   if (isLoading) {
     return (
@@ -94,6 +106,9 @@ export const CallsPrintPage = () => {
     customerType,
     startDate,
     endDate,
+    performedBy,
+    calledFor,
+    customerId,
   };
 
   return (

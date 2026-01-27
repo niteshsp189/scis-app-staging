@@ -81,11 +81,13 @@ export const LookupPrintPage = () => {
             type: searchType as SearchFilters['type'],
             status: status || undefined,
             date_from: dateFrom || undefined,
-            limit: 500, // Get more for printing
+            limit: 100, // API max is 100
           };
 
           const response = await globalSearchService.search(query, filters);
-          setSearchResults(response.data?.results || []);
+          // Handle both response structures: response.data.results or response.results
+          const results = response?.data?.results || (response as unknown as { results: SearchResult[] })?.results || [];
+          setSearchResults(results);
 
         } else if (tabType === 'duplicates') {
           // Fetch Duplicate Finder results
@@ -120,15 +122,18 @@ export const LookupPrintPage = () => {
             customer_type: missingCustomerType && missingCustomerType !== 'all'
               ? missingCustomerType as MissingInfoSearchFilters['customer_type']
               : undefined,
-            limit: 500,
+            limit: 100, // API max is 100
           };
 
           const response = await missingInfoService.findMissingInformation(filters);
           setMissingInfoCustomers(response.data?.customers || []);
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Error fetching lookup data for print:', err);
-        setError('An error occurred while loading data');
+        const errorMessage = err instanceof Error 
+          ? err.message 
+          : (err as { message?: string })?.message || 'An error occurred while loading data';
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -157,19 +162,45 @@ export const LookupPrintPage = () => {
     return (
       <div style={{
         display: 'flex',
+        flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
         fontSize: '16px',
         color: '#ef4444',
+        gap: '8px',
       }}>
-        {error}
+        <div>{error}</div>
+        <div style={{ fontSize: '12px', color: '#9ca3af' }}>
+          Tab: {tabType}, Query: "{query}", Type: {searchType}
+        </div>
       </div>
     );
   }
 
   // Render based on tab type
   if (tabType === 'search') {
+    // If no results and no query, show a helpful message
+    if (!query && searchResults.length === 0) {
+      return (
+        <PrintLayout
+          title="Global Search Results"
+          subtitle="No search query provided"
+        >
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '40px',
+            color: '#6b7280',
+          }}>
+            <p>Please perform a search first, then click Print to generate a printable report.</p>
+            <p style={{ fontSize: '12px', marginTop: '8px' }}>
+              URL params: tab={tabType}, q={query || '(empty)'}, type={searchType}
+            </p>
+          </div>
+        </PrintLayout>
+      );
+    }
+    
     return (
       <PrintLayout
         title="Global Search Results"

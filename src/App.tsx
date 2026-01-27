@@ -57,6 +57,7 @@ import {
   CallsPrintPage,
   CallDetailPrintPage,
   LookupPrintPage,
+  PolicyPrintPage,
 } from "./pages/print";
 
 const queryClient = new QueryClient();
@@ -472,6 +473,16 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <CustomerHistoryPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Policy Print routes - open in new tabs, no layout */}
+                <Route
+                  path="/policies/:id/print"
+                  element={
+                    <ProtectedRoute>
+                      <PolicyPrintPage />
                     </ProtectedRoute>
                   }
                 />

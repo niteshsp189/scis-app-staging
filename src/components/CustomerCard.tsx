@@ -24,9 +24,7 @@ import { CustomerData } from "@/types/customer";
 import { MaskedDisplay } from "@/utils/dataMasking";
 import { usePermissions } from "@/contexts/PermissionContext";
 import { usePhoneSelection } from "@/hooks/usePhoneSelection";
-import { useEffect, useState } from "react";
-import { PolicyService } from "@/services/policyService";
-import { dependentService } from "@/services/dependentService";
+import { useState } from "react";
 import { Policy } from "@/types/policy";
 import { EditCustomerDialog } from "@/components/dialogs/EditCustomerDialog";
 
@@ -81,57 +79,24 @@ export const CustomerCard = ({ customer, isAdmin }: CustomerCardProps) => {
   const canViewSensitive = hasPermission && hasPermission("view_sensitive_data");
   const { handleCall, PhoneSelectionDialog, hasPhoneNumbers } = usePhoneSelection();
   
-  // State for calculated values
-  const [calculatedPremium, setCalculatedPremium] = useState<number | null>(null);
-  const [dependentsCount, setDependentsCount] = useState<number | null>(null);
+  // State for edit dialog
   const [showEditDialog, setShowEditDialog] = useState(false);
 
-  // Fetch policies and calculate premium on mount
-  useEffect(() => {
-    const fetchPoliciesAndCalculatePremium = async () => {
-      try {
-        const policiesResponse = await PolicyService.getPolicies(1, 100, {
-          customer_id: customer.id,
-        });
-        const policies = policiesResponse.data || [];
-        
-        // Calculate total premium using same logic as CustomerPoliciesTab
-        const totalPremium = policies.reduce((sum, policy) => {
-          const premiumValue = getPremiumValue(policy);
-          // Only include policies that have premium fields in their plan type
-          const planType = policy.plan?.planType || policy.plan?.plan_type;
-          if (planType?.extra_fields?.premium && premiumValue > 0) {
-            return sum + premiumValue;
-          }
-          return sum;
-        }, 0);
-        
-        setCalculatedPremium(totalPremium);
-      } catch (error) {
-        console.error("Failed to fetch policies for premium calculation:", error);
-        // Fallback to customer.totalPremium
-        setCalculatedPremium(customer.totalPremium);
-      }
-    };
+  // Use data from API response instead of making separate API calls (N+1 problem fix)
+  // The policies and dependents are already loaded with the customer list from the API
+  const policies = customer.policies || [];
+  const dependentsCount = customer.dependents?.length || 0;
+  
+  // Calculate total premium from already-loaded policies data
+  const calculatedPremium = policies.reduce((sum: number, policy: any) => {
+    const premiumValue = getPremiumValue(policy);
+    const planType = policy.plan?.planType || policy.plan?.plan_type;
+    if (planType?.extra_fields?.premium && premiumValue > 0) {
+      return sum + premiumValue;
+    }
+    return sum;
+  }, 0);
 
-    const fetchDependentsCount = async () => {
-      // Only fetch if dependents count from API is 0 or undefined
-      if ((customer.dependents?.length || 0) === 0) {
-        try {
-          const dependents = await dependentService.getDependents(customer.id);
-          setDependentsCount(dependents.length);
-        } catch (error) {
-          console.error("Failed to fetch dependents count:", error);
-          setDependentsCount(0);
-        }
-      } else {
-        setDependentsCount(customer.dependents?.length || 0);
-      }
-    };
-
-    fetchPoliciesAndCalculatePremium();
-    fetchDependentsCount();
-  }, [customer.id, customer.totalPremium, customer.dependents?.length]);
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active":

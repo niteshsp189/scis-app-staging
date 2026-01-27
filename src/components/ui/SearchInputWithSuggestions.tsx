@@ -7,7 +7,7 @@ import globalSearchService, { SearchSuggestion } from '@/services/globalSearchSe
 interface SearchInputWithSuggestionsProps {
   value: string;
   onChange: (value: string) => void;
-  onSearch: () => void;
+  onSearch: (searchText?: string) => void;
   onSuggestionSelect?: () => void;
   placeholder?: string;
   className?: string;
@@ -134,8 +134,9 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
     inputRef.current?.blur();
     // Notify parent that a suggestion was selected
     onSuggestionSelect?.();
-    // Trigger search after a short delay to allow state to update
-    setTimeout(() => onSearch(), 100);
+    // Trigger search immediately with the suggestion text
+    // Pass the text directly to avoid state timing issues
+    onSearch(suggestion.text);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

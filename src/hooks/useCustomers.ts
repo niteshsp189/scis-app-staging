@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useDebounce } from "./useDebounce";
 import {
   customerService,
@@ -24,11 +24,11 @@ export interface UseCustomersResult {
   setFilters: (filters: Partial<CustomerFilters>) => void;
   setSort: (sortBy: string, sortDirection: 'asc' | 'desc') => void;
   clearFilters: () => void;
-  refresh: () => Promise<void>;
+  refresh: () => void;
 
   // Pagination
-  goToPage: (page: number) => Promise<void>;
-  changePerPage: (perPage: number) => Promise<void>;
+  goToPage: (page: number) => void;
+  changePerPage: (perPage: number) => void;
 }
 
 export const useCustomers = (
@@ -52,9 +52,13 @@ export const useCustomers = (
       sortDirection: "desc",
     }
   );
-  const debouncedSearchTerm = useDebounce(filters.search, 300);
+  // Use longer debounce (500ms) to prevent excessive API calls while typing
+  const debouncedSearchTerm = useDebounce(filters.search, 500);
+  
+  // Track the last request to handle race conditions (use ref to avoid dependency issues)
+  const lastRequestIdRef = useRef(0);
 
-  const fetchCustomers = useCallback(async (filtersToUse: CustomerFilters, isSearchChange = false) => {
+  const fetchCustomers = useCallback(async (filtersToUse: CustomerFilters, isSearchChange = false, requestId?: number) => {
     // Set appropriate loading state
     if (isSearchChange) {
       setSearchLoading(true);
@@ -66,10 +70,13 @@ export const useCustomers = (
     try {
       const response = await customerService.getCustomers(filtersToUse);
 
-      setCustomers(response.data);
-      setPagination(response.pagination);
-      setFiltersState(filtersToUse);
-    } catch (err: any) {
+      // Only update state if this is the most recent request (prevents race conditions)
+      if (requestId === undefined || requestId === lastRequestIdRef.current) {
+        setCustomers(response.data);
+        setPagination(response.pagination);
+        setFiltersState(filtersToUse);
+      }
+    } catch (err: unknown) {
       // Check if it's a permission error (403 Forbidden)
       if (isPermissionError(err)) {
         const errorData = getErrorData(err);
@@ -83,7 +90,8 @@ export const useCustomers = (
         setError("You don't have permission to view customer data.");
       } else {
         // Handle other errors with friendly messages
-        const errorMessage = formatErrorMessage(err.message || err.response?.data?.message);
+        const axiosError = err as { message?: string; response?: { data?: { message?: string } } };
+        const errorMessage = formatErrorMessage(axiosError.message || axiosError.response?.data?.message);
         setError(errorMessage);
         
         toast({
@@ -130,7 +138,7 @@ export const useCustomers = (
   );
 
   const clearFilters = useCallback(() => {
-    const defaultFilters = {
+    const defaultFilters: CustomerFilters = {
       page: 1,
       per_page: 25,
       search: "",
@@ -165,13 +173,25 @@ export const useCustomers = (
   }, [fetchCustomers, filters]);
 
   useEffect(() => {
+    // Skip search if less than 2 characters (but allow empty to show all)
+    const searchTerm = debouncedSearchTerm?.trim() || '';
+    if (searchTerm.length > 0 && searchTerm.length < 2) {
+      // Don't search with 1 character - wait for more input
+      return;
+    }
+    
+    // Generate unique request ID for race condition handling
+    const requestId = Date.now();
+    lastRequestIdRef.current = requestId;
+    
     // Fetch customers when debounced search term changes
-    const filtersWithDebouncedSearch = {
+    const filtersWithDebouncedSearch: CustomerFilters = {
       ...filters,
-      search: debouncedSearchTerm,
+      search: searchTerm,
       page: 1
     };
-    fetchCustomers(filtersWithDebouncedSearch, true); // Mark as search change
+    fetchCustomers(filtersWithDebouncedSearch, true, requestId); // Mark as search change with request ID
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     debouncedSearchTerm,
     filters.status,
@@ -196,6 +216,7 @@ export const useCustomers = (
     error,
     pagination,
     filters,
+    fetchCustomers,
     setSearchTerm,
     setFilters,
     setSort,

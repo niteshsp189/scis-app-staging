@@ -20,6 +20,7 @@ import {
   Search,
   ExternalLink,
   Edit,
+  Printer,
 } from "lucide-react";
 import {
   Select,
@@ -456,6 +457,36 @@ export default function GlobalCalls() {
           <Button variant="outline" onClick={handleManualRefresh} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              const params = new URLSearchParams();
+              if (customerType && customerType !== 'all') {
+                params.set('customerType', customerType);
+              }
+              if (startDate) {
+                params.set('startDate', startDate);
+              }
+              if (endDate) {
+                params.set('endDate', endDate);
+              }
+              if (performedByFilter && performedByFilter !== 'all') {
+                params.set('performedBy', performedByFilter);
+              }
+              if (calledForFilter && calledForFilter !== 'all') {
+                params.set('calledFor', calledForFilter);
+              }
+              if (selectedCustomerFilter) {
+                params.set('customerId', selectedCustomerFilter.id.toString());
+              }
+              const queryString = params.toString();
+              window.open(`/calls/print${queryString ? `?${queryString}` : ''}`, '_blank');
+            }}
+            title="Print call logs"
+          >
+            <Printer className="h-4 w-4 mr-2" />
+            Print
           </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
