@@ -220,13 +220,36 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
               onMouseEnter={() => setActiveSuggestionIndex(index)}
             >
               <span className="text-lg">{getTypeIcon(suggestion.type)}</span>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-gray-900">{suggestion.text}</span>
-                  <span className={cn("text-xs capitalize", getTypeColor(suggestion.type))}>
-                    {suggestion.type}
-                  </span>
+                  {suggestion.type === 'customer' && suggestion.customer_type && (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
+                      {suggestion.customer_type}
+                    </span>
+                  )}
+                  {suggestion.type !== 'customer' && (
+                    <span className={cn("text-xs capitalize", getTypeColor(suggestion.type))}>
+                      {suggestion.type}
+                    </span>
+                  )}
                 </div>
+                {suggestion.type === 'customer' && (suggestion.phone || suggestion.address) && (
+                  <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
+                    {suggestion.phone && (
+                      <span className="flex items-center gap-1">
+                        <span>📞</span>
+                        <span>{suggestion.phone}</span>
+                      </span>
+                    )}
+                    {suggestion.address && (
+                      <span className="flex items-center gap-1 truncate">
+                        <span>🗺️</span>
+                        <span className="truncate">{suggestion.address}</span>
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </button>
           ))}

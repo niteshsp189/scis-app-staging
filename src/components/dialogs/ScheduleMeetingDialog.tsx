@@ -310,97 +310,61 @@ export const ScheduleMeetingDialog = ({
       }
 
       // Basic validation checks
-      const now = new Date();
-      const isPastAppointment = startDateTime < now;
-      // COMMENTED OUT: Weekend and business hours validation as per new requirements
-      // const dayOfWeek = startDateTime.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
-      // const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sunday or Saturday
-      // const isOutsideBusinessHours = hours < 9 || hours >= 17;
+      // REMOVED: Past date restriction as per client request to allow any date appointments
+      // const now = new Date();
+      // const isPastAppointment = startDateTime < now;
 
       let mockAvailability = {
         available: true,
         reason: "",
       };
 
-      if (isPastAppointment) {
-        mockAvailability = {
-          available: false,
-          reason: "Cannot schedule appointments in the past. Please select a future date and time.",
-        };
-      }
-      // COMMENTED OUT: Weekend validation as per new requirements to allow all-day booking
-      // else if (isWeekend) {
-      //   const dayName = dayOfWeek === 0 ? "Sunday" : "Saturday";
-      //   mockAvailability = {
-      //     available: false,
-      //     reason: `Appointments cannot be scheduled on ${dayName}. Please select a weekday (Monday-Friday).`,
-      //   };
-      // }
-      // COMMENTED OUT: Business hours validation as per new requirements to allow any time booking
-      // else if (isOutsideBusinessHours) {
-      //   mockAvailability = {
-      //     available: false,
-      //     reason: "Appointments can only be scheduled between 9:00 AM and 5:00 PM on weekdays.",
-      //   };
-      // } else if (endDateTime.getHours() > 17) {
-      //   mockAvailability = {
-      //     available: false,
-      //     reason: "Appointment end time cannot exceed 5:00 PM on weekdays.",
-      //   };
-      // }
-      else {
-        // Check for real appointment conflicts via API (keeping double booking, leave, holiday checks)
-        try {
-          const response = await appointmentService.checkAvailability({
-            start_datetime: startDateTime.toISOString(),
-            end_datetime: endDateTime.toISOString(),
-            assigned_to: selectedEmployeeId,
-            customer_id: customerId,
-          });
+      // REMOVED: Past date check to allow appointments for any date
+      // Check for real appointment conflicts via API (keeping double booking, leave, holiday checks)
+      try {
+        const response = await appointmentService.checkAvailability({
+          start_datetime: startDateTime.toISOString(),
+          end_datetime: endDateTime.toISOString(),
+          assigned_to: selectedEmployeeId,
+          customer_id: customerId,
+        });
 
-          if (!response.available) {
-            // Use detailed conflicts if available, otherwise fall back to message
-            let conflictReason = response.message || "This time slot conflicts with another appointment. Please select a different time.";
-            
-            if (response.conflicts && response.conflicts.length > 0) {
-              // Join all conflicts with line breaks for better readability
-              conflictReason = response.conflicts.join('\n• ');
-              // Add bullet point to first item for consistency
-              conflictReason = '• ' + conflictReason;
-            }
+        if (!response.available) {
+          // Use detailed conflicts if available, otherwise fall back to message
+          let conflictReason = response.message || "This time slot conflicts with another appointment. Please select a different time.";
+          
+          if (response.conflicts && response.conflicts.length > 0) {
+            // Join all conflicts with line breaks for better readability
+            conflictReason = response.conflicts.join('\n• ');
+            // Add bullet point to first item for consistency
+            conflictReason = '• ' + conflictReason;
+          }
+          
+          mockAvailability = {
+            available: false,
+            reason: conflictReason,
+          };
+        }
+      } catch (error: any) {
+        console.error("Error checking appointment conflicts:", error);
+        // On API error, check if we got detailed conflict information
+        if (error.response && error.response.data) {
+          const errorData = error.response.data;
+          
+          if (errorData.conflicts && errorData.conflicts.length > 0) {
+            // Use detailed conflicts
+            let conflictReason = errorData.conflicts.join('\n• ');
+            conflictReason = '• ' + conflictReason;
             
             mockAvailability = {
               available: false,
               reason: conflictReason,
             };
-          }
-        } catch (error: any) {
-          console.error("Error checking appointment conflicts:", error);
-          // On API error, check if we got detailed conflict information
-          if (error.response && error.response.data) {
-            const errorData = error.response.data;
-            
-            if (errorData.conflicts && errorData.conflicts.length > 0) {
-              // Use detailed conflicts
-              let conflictReason = errorData.conflicts.join('\n• ');
-              conflictReason = '• ' + conflictReason;
-              
-              mockAvailability = {
-                available: false,
-                reason: conflictReason,
-              };
-            } else if (errorData.message) {
-              mockAvailability = {
-                available: false,
-                reason: errorData.message,
-              };
-            } else {
-              // Allow scheduling but log the error for basic validation
-              mockAvailability = {
-                available: true,
-                reason: "",
-              };
-            }
+          } else if (errorData.message) {
+            mockAvailability = {
+              available: false,
+              reason: errorData.message,
+            };
           } else {
             // Allow scheduling but log the error for basic validation
             mockAvailability = {
@@ -408,6 +372,12 @@ export const ScheduleMeetingDialog = ({
               reason: "",
             };
           }
+        } else {
+          // Allow scheduling but log the error for basic validation
+          mockAvailability = {
+            available: true,
+            reason: "",
+          };
         }
       }
 

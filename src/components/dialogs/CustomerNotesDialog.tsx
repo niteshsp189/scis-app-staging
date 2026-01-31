@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -22,6 +21,8 @@ import {
   UpdateNoteRequest,
 } from "@/services/customerNotesService";
 import { api } from "@/services/api";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import { renderHtmlContent, stripHtml } from "@/lib/htmlUtils";
 
 interface CustomerNotesDialogProps {
   customerId: number;
@@ -359,19 +360,12 @@ const [backendError, setBackendError] = useState<string | null>(null);
                 )}
                 <div>
                   <Label htmlFor="content">Note Content</Label>
-                  <Textarea
-                    id="content"
-                    placeholder="Enter your note here..."
+                  <RichTextEditor
                     value={newNote.content}
-                    onChange={(e) => {
-                      const value = e.target.value.slice(0, 500);
-                      setNewNote({ ...newNote, content: value });
-                    }}
-                    rows={3}
+                    onChange={(value) => setNewNote({ ...newNote, content: value })}
+                    placeholder="Enter your note here..."
+                    maxLength={2000}
                   />
-                  <div className="text-xs text-gray-500 text-right mt-1">
-                    {newNote.content.length}/500
-                  </div>
                 </div>
                 <div>
                   <Label>Color</Label>
@@ -502,20 +496,12 @@ const [backendError, setBackendError] = useState<string | null>(null);
                       <div className="space-y-3">
                         <div>
                           <Label>Note Content</Label>
-                          <Textarea
+                          <RichTextEditor
                             value={editNote.content}
-                            onChange={(e) => {
-                              const value = e.target.value.slice(0, 500);
-                              setEditNote({
-                                ...editNote,
-                                content: value,
-                              });
-                            }}
-                            rows={3}
+                            onChange={(value) => setEditNote({ ...editNote, content: value })}
+                            placeholder="Enter your note here..."
+                            maxLength={2000}
                           />
-                          <div className="text-xs text-gray-500 text-right mt-1">
-                            {editNote.content.length}/500
-                          </div>
                         </div>
                         <div>
                           <Label>Color</Label>
@@ -664,7 +650,7 @@ const [backendError, setBackendError] = useState<string | null>(null);
                             </Button>
                           </div>
                         </div>
-                        <p className="text-sm">{note.content}</p>
+                        <p className="text-sm" dangerouslySetInnerHTML={renderHtmlContent(note.content)} />
                         <p className="text-xs text-gray-600 mt-1">
                           By: {customerNotesService.getFullName(note.creator)}
                         </p>

@@ -72,7 +72,7 @@ const CustomersByStatus = ({ status, title, description, showAddButton = false }
   // Pagination hook with status filter
   const paginationHook = useCustomers({
     page: 1,
-    per_page: 10,
+    per_page: 9,
     search: "",
     status: "", // Policy Status should be empty (all policies)
     account_status: status, // Set account_status to match the page status
@@ -83,7 +83,7 @@ const CustomersByStatus = ({ status, title, description, showAddButton = false }
   // Infinite scroll hook with status filter
   const infiniteHook = useInfiniteCustomers({
     page: 1,
-    per_page: 10,
+    per_page: 9,
     search: "",
     status: "", // Policy Status should be empty (all policies)
     account_status: status, // Set account_status to match the page status

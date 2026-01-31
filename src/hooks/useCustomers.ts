@@ -74,7 +74,10 @@ export const useCustomers = (
       if (requestId === undefined || requestId === lastRequestIdRef.current) {
         setCustomers(response.data);
         setPagination(response.pagination);
-        setFiltersState(filtersToUse);
+        // Don't update filters for search changes to avoid overwriting user's input with trimmed version
+        if (!isSearchChange) {
+          setFiltersState(filtersToUse);
+        }
       }
     } catch (err: unknown) {
       // Check if it's a permission error (403 Forbidden)
@@ -174,8 +177,9 @@ export const useCustomers = (
 
   useEffect(() => {
     // Skip search if less than 2 characters (but allow empty to show all)
-    const searchTerm = debouncedSearchTerm?.trim() || '';
-    if (searchTerm.length > 0 && searchTerm.length < 2) {
+    const searchTerm = debouncedSearchTerm || '';
+    const trimmedSearchTerm = searchTerm.trim();
+    if (trimmedSearchTerm.length > 0 && trimmedSearchTerm.length < 2) {
       // Don't search with 1 character - wait for more input
       return;
     }
@@ -185,9 +189,10 @@ export const useCustomers = (
     lastRequestIdRef.current = requestId;
     
     // Fetch customers when debounced search term changes
+    // Trim the search term only when sending to API, not while user is typing
     const filtersWithDebouncedSearch: CustomerFilters = {
       ...filters,
-      search: searchTerm,
+      search: trimmedSearchTerm,
       page: 1
     };
     fetchCustomers(filtersWithDebouncedSearch, true, requestId); // Mark as search change with request ID

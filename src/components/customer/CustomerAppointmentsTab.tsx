@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarIcon, Clock, User, MapPin, Plus, Edit } from "lucide-react";
 import appointmentService, { Appointment } from "@/services/appointmentService";
 import { useToast } from "@/hooks/use-toast";
+import { renderHtmlContent, stripHtml } from "@/lib/htmlUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScheduleMeetingDialog } from "@/components/dialogs/ScheduleMeetingDialog";
@@ -345,7 +346,7 @@ function AppointmentCard({ appointment, onStatusUpdate, showActions = true }: Ap
           </div>
           
           {appointment.description && (
-            <p className="text-sm text-gray-600 mb-2">{appointment.description}</p>
+            <div className="text-sm text-gray-600 mb-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={renderHtmlContent(appointment.description)} />
           )}
         </div>
         
@@ -399,9 +400,9 @@ function AppointmentCard({ appointment, onStatusUpdate, showActions = true }: Ap
 
       {appointment.notes && (
         <div className="mt-3 pt-3 border-t">
-          <p className="text-sm text-gray-600">
-            <strong>Notes:</strong> {appointment.notes}
-          </p>
+          <div className="text-sm text-gray-600">
+            <strong>Notes:</strong> <span dangerouslySetInnerHTML={renderHtmlContent(appointment.notes)} />
+          </div>
         </div>
       )}
 

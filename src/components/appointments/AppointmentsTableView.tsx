@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AppointmentDetailsDialog } from "@/components/dialogs/AppointmentDetailsDialog";
 import { usePreferences } from "@/contexts/PreferenceContext";
+import { stripHtml } from "@/lib/htmlUtils";
 
 interface AppointmentsTableViewProps {
   permissions?: {
@@ -669,7 +670,7 @@ export const AppointmentsTableView = forwardRef(
                             <div className="max-w-xs">
                               <div className="text-sm font-medium truncate">{appointment.title}</div>
                               {appointment.description && (
-                                <div className="text-xs text-gray-500 truncate">{appointment.description}</div>
+                                <div className="text-xs text-gray-500 truncate">{stripHtml(appointment.description)}</div>
                               )}
                             </div>
                           </TableCell>

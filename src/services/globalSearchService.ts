@@ -84,6 +84,9 @@ export interface SearchSuggestion {
   text: string;
   type: string;
   id: number;
+  phone?: string;
+  address?: string;
+  customer_type?: string;
 }
 
 export interface SuggestionsResponse {

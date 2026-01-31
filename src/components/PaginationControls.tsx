@@ -70,10 +70,10 @@ export function PaginationControls({
                 <SelectValue placeholder={perPage} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
+                <SelectItem value="9">9</SelectItem>
+                <SelectItem value="18">18</SelectItem>
+                <SelectItem value="27">27</SelectItem>
+                <SelectItem value="54">54</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -28,6 +28,7 @@ import appointmentService from "@/services/appointmentService";
 import { toast } from "@/components/ui/use-toast";
 import { EditAppointmentDialog } from "./EditAppointmentDialog";
 import { ConfirmationDialog } from "./ConfirmationDialog";
+import { renderHtmlContent } from "@/lib/htmlUtils";
 
 interface AppointmentDetailsDialogProps {
   appointment: Appointment | null;
@@ -280,9 +281,10 @@ export const AppointmentDetailsDialog = ({
                       <FileText className="h-4 w-4 text-gray-500 mt-0.5" />
                       <div className="flex-1">
                         <div className="text-sm font-medium">Notes</div>
-                        <div className="text-sm text-gray-600 mt-1">
-                          {appointment.notes || appointment.description}
-                        </div>
+                        <div 
+                          className="text-sm text-gray-600 mt-1 prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={renderHtmlContent(appointment.notes || appointment.description || '')}
+                        />
                       </div>
                     </div>
                   </CardContent>

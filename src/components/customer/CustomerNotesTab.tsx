@@ -8,6 +8,7 @@ import { CustomerNotesDialog } from "@/components/dialogs/CustomerNotesDialog";
 import { ConfirmationDialog } from "@/components/dialogs/ConfirmationDialog";
 import { customerNotesService } from "@/services/customerNotesService";
 import { toast } from "@/hooks/use-toast";
+import { renderHtmlContent } from "@/lib/htmlUtils";
 
 interface CustomerNotesTabProps {
   customerData: CustomerData;
@@ -267,7 +268,7 @@ export const CustomerNotesTab = ({
                     </Button>
                   </div>
                 </div>
-                <p className="text-sm font-medium mb-2">{note.content}</p>
+                <div className="text-sm font-medium mb-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={renderHtmlContent(note.content)} />
                 <p className="text-xs opacity-75">
                   Created by: {customerNotesService.getFullName(note.creator)}
                 </p>

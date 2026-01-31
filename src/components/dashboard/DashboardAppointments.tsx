@@ -3,6 +3,7 @@ import { Calendar, Clock, User, MapPin, Phone, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { renderHtmlContent, stripHtml } from '@/lib/htmlUtils';
 
 interface Appointment {
   id: string;
@@ -202,9 +203,7 @@ export const DashboardAppointments: React.FC<DashboardAppointmentsProps> = ({
                     )}
 
                     {appointment.notes && (
-                      <p className="text-sm text-slate-600 bg-slate-50 rounded p-2 mt-2">
-                        {appointment.notes}
-                      </p>
+                      <div className="text-sm text-slate-600 bg-slate-50 rounded p-2 mt-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={renderHtmlContent(appointment.notes)} />
                     )}
                   </div>
 

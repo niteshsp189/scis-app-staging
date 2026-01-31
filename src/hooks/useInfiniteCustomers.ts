@@ -71,7 +71,8 @@ export const useInfiniteCustomers = (
       
       setHasMore(response.pagination.current_page < response.pagination.total_pages);
       setCurrentPage(response.pagination.current_page);
-      setFiltersState(filtersToUse);
+      // Don't update filters to avoid overwriting user's input (e.g., trailing spaces)
+      // setFiltersState(filtersToUse);
     } catch (err: any) {
       setError(err.message || "Failed to fetch customers");
     } finally {

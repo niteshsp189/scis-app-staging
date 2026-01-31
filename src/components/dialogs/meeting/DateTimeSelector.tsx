@@ -139,10 +139,6 @@ export const DateTimeSelector = ({
   };
   // Render only date field when isDateOnly is true
   if (isDateOnly) {
-    // Get today's date at midnight in local timezone for consistent comparison
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
     return (
       <div className="grid gap-2">
         <Label>Date <span className="text-red-500">*</span></Label>
@@ -159,12 +155,6 @@ export const DateTimeSelector = ({
             }
           }}
           placeholder="Pick a date"
-          disabledDates={(checkDate) => {
-            // Normalize the check date to midnight for proper comparison
-            const normalizedCheckDate = new Date(checkDate);
-            normalizedCheckDate.setHours(0, 0, 0, 0);
-            return normalizedCheckDate < today;
-          }}
           className={errors?.date ? "border-red-500" : ""}
           required
         />
@@ -215,10 +205,6 @@ export const DateTimeSelector = ({
   }
 
   // Render the full component (original layout) when neither flag is set
-  // Get today's date at midnight in local timezone for consistent comparison
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
@@ -237,12 +223,6 @@ export const DateTimeSelector = ({
               }
             }}
             placeholder="Pick a date"
-            disabledDates={(checkDate) => {
-              // Normalize the check date to midnight for proper comparison
-              const normalizedCheckDate = new Date(checkDate);
-              normalizedCheckDate.setHours(0, 0, 0, 0);
-              return normalizedCheckDate < today;
-            }}
             className={errors?.date ? "border-red-500" : ""}
             required
           />

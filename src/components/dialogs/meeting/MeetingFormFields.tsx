@@ -1,7 +1,6 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -11,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect, useState } from "react";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 
 interface OfficeLocation {
   id: string;
@@ -214,18 +214,13 @@ export const MeetingFormFields = ({
 
       <div className="grid gap-2">
         <Label htmlFor="description">Notes</Label>
-        <Textarea
-          id="description"
+        <RichTextEditor
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={setDescription}
           placeholder="Additional notes about the appointment..."
-          rows={3}
-          maxLength={500}
+          maxLength={2000}
           className={errors.description ? 'border-red-500' : ''}
         />
-        <div className="flex justify-between items-center text-xs text-gray-500">
-          <span>{description.length}/500 characters</span>
-        </div>
         {errors.description && (
           <p className="text-sm text-red-500">{errors.description}</p>
         )}

@@ -4,6 +4,7 @@ import { FileText, Star } from "lucide-react";
 import { DashboardCustomerNote } from "@/services/dashboardService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { renderHtmlContent } from "@/lib/htmlUtils";
 import { formatDistanceToNow } from "date-fns";
 
 interface DashboardCustomerNotesProps {
@@ -89,7 +90,7 @@ export const DashboardCustomerNotes = ({ customerNotes, loading }: DashboardCust
                     {note.priority}
                   </Badge>
                 </div>
-                <p className="text-sm text-slate-700 mt-1 mb-2">{note.note}</p>
+                <div className="text-sm text-slate-700 mt-1 mb-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={renderHtmlContent(note.note)} />
                 <div className="flex items-center gap-4 text-xs text-slate-500">
                   <span>Category: {note.category}</span>
                   <span>By: {note.created_by}</span>
