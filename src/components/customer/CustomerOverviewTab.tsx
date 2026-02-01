@@ -960,7 +960,10 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                       )}
                     </Button>
                   </div>
-                  <p className="text-sm font-medium text-foreground">{note.content}</p>
+                  <div 
+                    className="text-sm font-medium text-foreground prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: note.content }}
+                  />
                 </div>
               ))}
             </div>
