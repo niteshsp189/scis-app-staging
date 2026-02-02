@@ -163,20 +163,20 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
 
   return (
     <>
-      <div className="space-y-3">
+      <div className="space-y-3 w-full">
         {customers.map((customer) => (
           <Card key={customer.id} className="hover:shadow-md transition-shadow border-l border-t border-b border-r">
             <CardContent className="p-4">
-              {/* 3 Equal Columns Layout */}
-              <div className="grid grid-cols-3 gap-4">
+              {/* Responsive Layout: Stack on mobile, 3 columns on desktop */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* First Column: Name, Phone, Email */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                       {getDisplayName(customer).split(' ').map(n => n[0]).join('').toUpperCase()}
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-base">{getDisplayName(customer)}</h3>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-base truncate">{getDisplayName(customer)}</h3>
                       <Badge className={`text-xs ${getStatusColor(customer.status)}`}>
                         {customer.status}
                       </Badge>
@@ -184,8 +184,8 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2">
-                      <Phone className="h-3 w-3 text-muted-foreground" />
-                      <span>
+                      <Phone className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                      <span className="truncate">
                         <MaskedDisplay 
                           value={getPrimaryPhone(customer) || "N/A"} 
                           visible={canViewSensitive}
@@ -193,7 +193,7 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Mail className="h-3 w-3 text-muted-foreground" />
+                      <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                       <span className="truncate">{customer.email || "No Email"}</span>
                     </div>
                   </div>
@@ -203,20 +203,20 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
                 <div className="space-y-2">
                   <div className="flex items-start gap-2">
                     <MapPin className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
-                    <span className="text-xs text-gray-600 leading-tight">{formatLocation(customer)}</span>
+                    <span className="text-xs text-gray-600 leading-tight break-words">{formatLocation(customer)}</span>
                   </div>
                 </div>
                 
                 {/* Third Column: Statistics and Buttons */}
                 <div className="space-y-3">
                   {/* First Line: Statistics */}
-                  <div className="flex items-center justify-between gap-4 text-center">
+                  <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
-                      <div className="text-lg font-semibold">{customer.totalPolicies || 0}</div>
+                      <div className="text-base md:text-lg font-semibold">{customer.totalPolicies || 0}</div>
                       <div className="text-xs text-muted-foreground">Policies</div>
                     </div>
                     <div>
-                      <div className="text-lg font-semibold">
+                      <div className="text-base md:text-lg font-semibold truncate">
                         ${calculatedValues[customer.id]?.premium !== undefined 
                           ? calculatedValues[customer.id].premium?.toLocaleString() || '0'
                           : customer.totalPremium?.toLocaleString() || '0'}
@@ -224,7 +224,7 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
                       <div className="text-xs text-muted-foreground">Premium</div>
                     </div>
                     <div>
-                      <div className="text-lg font-semibold">
+                      <div className="text-base md:text-lg font-semibold">
                         {calculatedValues[customer.id]?.dependents !== undefined 
                           ? calculatedValues[customer.id].dependents 
                           : (customer.dependents?.length || 0)}
@@ -233,7 +233,7 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
                     </div>
                   </div>
                   
-                  {/* Second Line: Action Buttons */}
+                  {/* Second Line: Action Buttons - Responsive */}
                   <div className="flex items-center gap-2">
                     <Button 
                       size="sm" 
@@ -242,8 +242,8 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
                       disabled={!hasPhoneNumbers(customer)}
                       className="flex-1"
                     >
-                      <Phone className="h-3 w-3 mr-1" />
-                      Call
+                      <Phone className="h-3 w-3 md:mr-1" />
+                      <span className="hidden md:inline">Call</span>
                     </Button>
                     <Button 
                       size="sm" 
@@ -252,8 +252,8 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
                       disabled={!customer.email}
                       className="flex-1"
                     >
-                      <Mail className="h-3 w-3 mr-1" />
-                      Email
+                      <Mail className="h-3 w-3 md:mr-1" />
+                      <span className="hidden md:inline">Email</span>
                     </Button>
                     <Link 
                       to={`/customers/${customer.id}`}
@@ -265,8 +265,8 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
                         variant="outline"
                         className="w-full"
                       >
-                        <Eye className="h-3 w-3 mr-1" />
-                        Details
+                        <Eye className="h-3 w-3 md:mr-1" />
+                        <span className="hidden md:inline">Details</span>
                       </Button>
                     </Link>
                   </div>

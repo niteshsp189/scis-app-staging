@@ -57,13 +57,21 @@ export function CustomersContentWithInfinite({
   const renderCurrentView = () => {
     switch (currentView) {
       case "list":
-        return <CustomerListView customers={customers} />;
+        return (
+          <div className="w-full">
+            <CustomerListView customers={customers} />
+          </div>
+        );
       case "table":
-        return <CustomersTable customers={customers} />;
+        return (
+          <div className="w-full">
+            <CustomersTable customers={customers} />
+          </div>
+        );
       case "cards":
       default:
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 w-full">
             {customers.map((customer) => (
               <CustomerCard key={customer.id} customer={customer} isAdmin={isAdmin} />
             ))}
@@ -76,7 +84,7 @@ export function CustomersContentWithInfinite({
   const shouldShowInfiniteScroll = viewMode === "infinite" && onLoadMore;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       {searchLoading && customers.length > 0 && (
         <div className="text-center py-2">
           <div className="inline-flex items-center text-sm text-gray-500">

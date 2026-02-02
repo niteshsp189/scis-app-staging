@@ -141,62 +141,62 @@ export function CustomersTable({ customers }: CustomersTableProps) {
 
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
-        <Table className="border-l">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto w-full">
+        <Table className="border-l w-full min-w-full">
           <TableHeader className="border-b border-t">
             <TableRow className="divide-x divide-gray-200">
-              <TableHead>Customer</TableHead>
-              <TableHead>Status</TableHead>
-               <TableHead className="hidden md:table-cell">Policies</TableHead>
-               <TableHead className="hidden md:table-cell">Premium</TableHead>
-               <TableHead className="hidden md:table-cell">Dependents</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[25%] min-w-[150px]">Customer</TableHead>
+              <TableHead className="w-[12%] min-w-[100px]">Status</TableHead>
+               <TableHead className="w-[10%] min-w-[80px]">Policies</TableHead>
+               <TableHead className="w-[12%] min-w-[100px]">Premium</TableHead>
+               <TableHead className="w-[12%] min-w-[100px]">Dependents</TableHead>
+              <TableHead className="text-right sticky right-0 bg-white shadow-[-2px_0_4px_rgba(0,0,0,0.05)] z-10 w-[15%] min-w-[120px] md:min-w-[140px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {customers.map((customer) => (
               <TableRow key={customer.id} className="divide-x divide-gray-200">
-                <TableCell>
-                  <div className="font-medium">{customer.fullName || `${customer.firstName} ${customer.lastName}`}</div>
-                  <div className="text-sm text-gray-500 hidden sm:block">{customer.email}</div>
+                <TableCell className="w-[25%] min-w-[150px]">
+                  <div className="font-medium truncate max-w-[200px]">{customer.fullName || `${customer.firstName} ${customer.lastName}`}</div>
+                  <div className="text-sm text-gray-500 hidden sm:block truncate max-w-[200px]">{customer.email}</div>
                 </TableCell>
-                <TableCell>
-                  <Badge variant={getStatusVariant(customer.status)} className="capitalize">
+                <TableCell className="w-[12%] min-w-[100px]">
+                  <Badge variant={getStatusVariant(customer.status)} className="capitalize whitespace-nowrap">
                     {customer.status}
                   </Badge>
                 </TableCell>
-                 <TableCell className="hidden md:table-cell">{customer.policies ? customer.policies.length : 0}</TableCell>
-                 <TableCell className="hidden md:table-cell">
+                 <TableCell className="w-[10%] min-w-[80px]">{customer.policies ? customer.policies.length : 0}</TableCell>
+                 <TableCell className="w-[12%] min-w-[100px] whitespace-nowrap">
                    ${calculatedValues[customer.id]?.premium !== undefined 
                      ? calculatedValues[customer.id].premium?.toLocaleString() || '0'
                      : customer.totalPremium?.toLocaleString() || '0'}
                  </TableCell>
-                 <TableCell className="hidden md:table-cell">
+                 <TableCell className="w-[12%] min-w-[100px]">
                    {calculatedValues[customer.id]?.dependents !== undefined 
                      ? calculatedValues[customer.id].dependents 
                      : (customer.dependents?.length || 0)}
                  </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-2">
+                <TableCell className="text-right sticky right-0 bg-white shadow-[-2px_0_4px_rgba(0,0,0,0.05)] z-10 w-[15%] min-w-[120px] md:min-w-[140px]">
+                  <div className="flex items-center justify-end gap-1 md:gap-2">
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0"
                       onClick={() => handleCall(customer)}
                       disabled={!hasPhoneNumbers(customer)}
                       title="Call Customer"
                     >
-                      <Phone className="h-4 w-4" />
+                      <Phone className="h-3 w-3 md:h-4 md:w-4" />
                     </Button>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0"
                       onClick={() => handleEmail(customer)}
                       disabled={!customer.email}
                       title="Email Customer"
                     >
-                      <Mail className="h-4 w-4" />
+                      <Mail className="h-3 w-3 md:h-4 md:w-4" />
                     </Button>
                     <Link
                       to={`/customers/${customer.id}`}
@@ -205,10 +205,10 @@ export function CustomersTable({ customers }: CustomersTableProps) {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0"
                         title="View Customer Details"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-3 w-3 md:h-4 md:w-4" />
                       </Button>
                     </Link>
                   </div>
