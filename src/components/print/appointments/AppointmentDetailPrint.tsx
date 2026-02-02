@@ -203,7 +203,7 @@ export const AppointmentDetailPrint = ({
                 <div style={rowStyle}>
                   <span style={labelStyle}>Date of Birth:</span>
                   <span style={valueStyle}>
-                    {customerData.date_of_birth 
+                    {customerData.date_of_birth
                       ? `${formatPrintDate(customerData.date_of_birth)} (Age: ${calculateAge(customerData.date_of_birth)})`
                       : 'N/A'}
                   </span>
@@ -316,7 +316,7 @@ export const AppointmentDetailPrint = ({
             <div style={rowStyle}>
               <span style={labelStyle}>Created By:</span>
               <span style={valueStyle}>
-                {appointment.creator 
+                {appointment.creator
                   ? `${appointment.creator.first_name} ${appointment.creator.last_name}`
                   : 'N/A'}
               </span>
@@ -324,7 +324,7 @@ export const AppointmentDetailPrint = ({
             <div style={rowStyle}>
               <span style={labelStyle}>Assigned To:</span>
               <span style={valueStyle}>
-                {appointment.assigned_user 
+                {appointment.assigned_user
                   ? `${appointment.assigned_user.first_name} ${appointment.assigned_user.last_name}`
                   : 'Unassigned'}
               </span>
@@ -340,13 +340,14 @@ export const AppointmentDetailPrint = ({
             NOTES
           </div>
           <div style={sectionContentStyle}>
-            <div style={{
-              whiteSpace: 'pre-wrap',
-              fontSize: '10pt',
-              lineHeight: '1.5',
-            }}>
-              {appointment.description || appointment.notes}
-            </div>
+            <div
+              style={{
+                whiteSpace: 'pre-wrap',
+                fontSize: '10pt',
+                lineHeight: '1.5',
+              }}
+              dangerouslySetInnerHTML={{ __html: appointment.description || appointment.notes || '' }}
+            />
           </div>
         </div>
       )}
@@ -358,9 +359,10 @@ export const AppointmentDetailPrint = ({
             CANCELLATION NOTES
           </div>
           <div style={sectionContentStyle}>
-            <div style={{ fontSize: '10pt', color: '#dc2626' }}>
-              {appointment.cancellation_notes}
-            </div>
+            <div
+              style={{ fontSize: '10pt', color: '#dc2626' }}
+              dangerouslySetInnerHTML={{ __html: appointment.cancellation_notes || '' }}
+            />
           </div>
         </div>
       )}

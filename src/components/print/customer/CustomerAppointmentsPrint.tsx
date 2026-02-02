@@ -78,11 +78,11 @@ const getDuration = (start: string, end: string): string => {
   const endDate = new Date(end);
   const diffMs = endDate.getTime() - startDate.getTime();
   const diffMins = Math.round(diffMs / 60000);
-  
+
   if (diffMins < 60) {
     return `${diffMins} min`;
   }
-  
+
   const hours = Math.floor(diffMins / 60);
   const mins = diffMins % 60;
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
@@ -116,34 +116,36 @@ export const CustomerAppointmentsPrint = ({ appointments }: CustomerAppointments
           <div style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '8px', color: '#166534' }}>
             Upcoming Appointments ({upcomingAppointments.length})
           </div>
-          <table className="print-table">
-            <thead>
-              <tr>
-                <th>Date/Time</th>
-                <th>Type</th>
-                <th>Duration</th>
-                <th>Location</th>
-                <th>Assigned To</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {upcomingAppointments.map((apt) => (
-                <tr key={apt.id}>
-                  <td>{formatPrintDateTime(apt.start_datetime)}</td>
-                  <td>{getAppointmentTypeLabel(apt.appointment_type)}</td>
-                  <td>{getDuration(apt.start_datetime, apt.end_datetime)}</td>
-                  <td>{apt.location || 'N/A'}</td>
-                  <td>{getAssignedUserName(apt.assigned_user)}</td>
-                  <td>
-                    <span className={`print-badge ${getStatusColor(apt.status)}`}>
-                      {getStatusLabel(apt.status)}
-                    </span>
-                  </td>
+          <div className="print-table-wrapper">
+            <table className="print-table">
+              <thead>
+                <tr>
+                  <th>Date/Time</th>
+                  <th>Type</th>
+                  <th>Duration</th>
+                  <th>Location</th>
+                  <th>Assigned To</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {upcomingAppointments.map((apt) => (
+                  <tr key={apt.id}>
+                    <td>{formatPrintDateTime(apt.start_datetime)}</td>
+                    <td>{getAppointmentTypeLabel(apt.appointment_type)}</td>
+                    <td>{getDuration(apt.start_datetime, apt.end_datetime)}</td>
+                    <td>{apt.location || 'N/A'}</td>
+                    <td>{getAssignedUserName(apt.assigned_user)}</td>
+                    <td>
+                      <span className={`print-badge ${getStatusColor(apt.status)}`}>
+                        {getStatusLabel(apt.status)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -153,34 +155,36 @@ export const CustomerAppointmentsPrint = ({ appointments }: CustomerAppointments
           <div style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '8px', color: '#6b7280' }}>
             Past Appointments ({pastAppointments.length})
           </div>
-          <table className="print-table">
-            <thead>
-              <tr>
-                <th>Date/Time</th>
-                <th>Type</th>
-                <th>Duration</th>
-                <th>Location</th>
-                <th>Assigned To</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pastAppointments.slice(0, 10).map((apt) => (
-                <tr key={apt.id}>
-                  <td>{formatPrintDateTime(apt.start_datetime)}</td>
-                  <td>{getAppointmentTypeLabel(apt.appointment_type)}</td>
-                  <td>{getDuration(apt.start_datetime, apt.end_datetime)}</td>
-                  <td>{apt.location || 'N/A'}</td>
-                  <td>{getAssignedUserName(apt.assigned_user)}</td>
-                  <td>
-                    <span className={`print-badge ${getStatusColor(apt.status)}`}>
-                      {getStatusLabel(apt.status)}
-                    </span>
-                  </td>
+          <div className="print-table-wrapper">
+            <table className="print-table">
+              <thead>
+                <tr>
+                  <th>Date/Time</th>
+                  <th>Type</th>
+                  <th>Duration</th>
+                  <th>Location</th>
+                  <th>Assigned To</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {pastAppointments.slice(0, 10).map((apt) => (
+                  <tr key={apt.id}>
+                    <td>{formatPrintDateTime(apt.start_datetime)}</td>
+                    <td>{getAppointmentTypeLabel(apt.appointment_type)}</td>
+                    <td>{getDuration(apt.start_datetime, apt.end_datetime)}</td>
+                    <td>{apt.location || 'N/A'}</td>
+                    <td>{getAssignedUserName(apt.assigned_user)}</td>
+                    <td>
+                      <span className={`print-badge ${getStatusColor(apt.status)}`}>
+                        {getStatusLabel(apt.status)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           {pastAppointments.length > 10 && (
             <p style={{ fontSize: '10px', color: '#6b7280', marginTop: '5px' }}>
               ... and {pastAppointments.length - 10} more past appointments

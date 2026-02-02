@@ -111,39 +111,41 @@ export const CustomerDependentsPrint = ({
   return (
     <div className="print-section">
       <h3 className="print-section-title">Related People</h3>
-      
-      <table className="print-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th style={{ width: '60px' }}>Age</th>
-            <th style={{ width: '80px' }}>Gender</th>
-            <th>Relation</th>
-          </tr>
-        </thead>
-        <tbody>
-          {allRelatedPeople.map((person) => (
-            <tr key={person.id}>
-              <td>
-                <span style={{ color: '#2563eb' }}>{person.name}</span>
-                {person.status === 'Deceased' && (
-                  <span style={{ marginLeft: '5px', color: '#6b7280', fontSize: '9px' }}>
-                    (Deceased)
-                  </span>
-                )}
-                {person.status === 'Prospect' && (
-                  <span style={{ marginLeft: '5px', color: '#92400e', fontSize: '9px' }}>
-                    (Prospect)
-                  </span>
-                )}
-              </td>
-              <td>{person.age !== null ? person.age : 'N/A'}</td>
-              <td>{person.gender}</td>
-              <td>{person.relationship}</td>
+
+      <div className="print-table-wrapper">
+        <table className="print-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th style={{ width: '60px' }}>Age</th>
+              <th style={{ width: '80px' }}>Gender</th>
+              <th>Relation</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {allRelatedPeople.map((person) => (
+              <tr key={person.id}>
+                <td>
+                  <span style={{ color: '#2563eb' }}>{person.name}</span>
+                  {person.status === 'Deceased' && (
+                    <span style={{ marginLeft: '5px', color: '#6b7280', fontSize: '9px' }}>
+                      (Deceased)
+                    </span>
+                  )}
+                  {person.status === 'Prospect' && (
+                    <span style={{ marginLeft: '5px', color: '#92400e', fontSize: '9px' }}>
+                      (Prospect)
+                    </span>
+                  )}
+                </td>
+                <td>{person.age !== null ? person.age : 'N/A'}</td>
+                <td>{person.gender}</td>
+                <td>{person.relationship}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

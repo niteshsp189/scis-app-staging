@@ -15,7 +15,7 @@ export interface PrintPageOptions {
  */
 export const openPrintPage = (url: string, options?: PrintPageOptions): Window | null => {
   const printWindow = window.open(url, '_blank');
-  
+
   if (printWindow && options?.showPrintDialog) {
     // Wait for the page to load before triggering print
     printWindow.addEventListener('load', () => {
@@ -27,7 +27,7 @@ export const openPrintPage = (url: string, options?: PrintPageOptions): Window |
       }, 500);
     });
   }
-  
+
   return printWindow;
 };
 
@@ -41,14 +41,14 @@ export const buildPrintUrl = (
   if (!params || Object.keys(params).length === 0) {
     return baseUrl;
   }
-  
+
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
       searchParams.append(key, String(value));
     }
   });
-  
+
   return `${baseUrl}?${searchParams.toString()}`;
 };
 
@@ -178,6 +178,20 @@ export const PRINT_STYLES = `
       box-shadow: none;
       padding: 30px 50px;
     }
+
+    /* Tablet responsiveness */
+    @media (max-width: 768px) {
+      .print-container {
+        padding: 20px 30px;
+      }
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 480px) {
+      .print-container {
+        padding: 15px 20px;
+      }
+    }
   }
 `;
 
@@ -229,6 +243,8 @@ export const PRINT_CSS = `
   .print-section {
     margin-bottom: 25px;
     page-break-inside: avoid;
+    border-right: 1px solid #e5e7eb;
+    padding-right: 15px;
   }
 
   .print-section-title {
@@ -534,6 +550,230 @@ export const PRINT_CSS = `
   /* Spacing for toolbar */
   .print-content-with-toolbar {
     margin-top: 60px;
+  }
+
+  /* Table wrapper for horizontal scroll */
+  .print-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 15px;
+  }
+
+  /* ========================================
+     MOBILE RESPONSIVE STYLES
+     ======================================== */
+
+  /* Tablet styles (≤768px) */
+  @media screen and (max-width: 768px) {
+    /* Header adjustments */
+    .print-header-title {
+      font-size: 20px;
+    }
+
+    .print-header-meta {
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    /* Grid layouts - reduce to 2 columns */
+    .print-grid-3,
+    .print-grid-4 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Policy grid */
+    .print-policy-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Call client info */
+    .print-call-client-info {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Tables - reduce font size */
+    .print-table {
+      font-size: 9px;
+    }
+
+    .print-table th,
+    .print-table td {
+      padding: 5px 6px;
+    }
+
+    /* Toolbar adjustments */
+    .print-toolbar {
+      padding: 10px 15px;
+    }
+
+    .print-toolbar-title {
+      font-size: 14px;
+    }
+
+    .print-toolbar-btn {
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+  }
+
+  /* Mobile styles (≤480px) */
+  @media screen and (max-width: 480px) {
+    /* Header adjustments */
+    .print-header-title {
+      font-size: 18px;
+    }
+
+    .print-header-subtitle {
+      font-size: 12px;
+    }
+
+    .print-header-meta {
+      font-size: 10px;
+    }
+
+    .print-header-meta > div {
+      width: 100%;
+    }
+
+    .print-header-meta span {
+      display: block;
+      margin-left: 0 !important;
+      margin-top: 4px;
+    }
+
+    /* Section titles */
+    .print-section-title {
+      font-size: 12px;
+    }
+
+    /* Grid layouts - stack to single column */
+    .print-grid,
+    .print-grid-3,
+    .print-grid-4 {
+      grid-template-columns: 1fr;
+    }
+
+    /* Info rows - keep inline but adjust sizing */
+    .print-info-row {
+      flex-direction: row;
+      margin-bottom: 8px;
+      font-size: 10px;
+    }
+
+    .print-info-label {
+      min-width: 80px;
+      flex-shrink: 0;
+      font-size: 10px;
+    }
+
+    .print-info-value {
+      font-size: 10px;
+      word-break: break-word;
+    }
+
+    /* Policy cards */
+    .print-policy-card {
+      padding: 10px;
+    }
+
+    .print-policy-grid {
+      grid-template-columns: 1fr;
+      font-size: 9px;
+    }
+
+    .print-policy-header {
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* Notes */
+    .print-note {
+      padding: 8px;
+    }
+
+    .print-note-header {
+      flex-direction: column;
+      gap: 4px;
+      align-items: flex-start;
+    }
+
+    /* Tables - enable horizontal scroll */
+    .print-table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .print-table {
+      font-size: 8px;
+      min-width: 500px; /* Force horizontal scroll for wide tables */
+    }
+
+    .print-table th,
+    .print-table td {
+      padding: 4px 5px;
+    }
+
+    /* Call cards */
+    .print-call-card {
+      padding: 10px;
+    }
+
+    .print-call-client-info {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+
+    .print-call-message {
+      font-size: 10px;
+      padding: 8px;
+    }
+
+    /* Toolbar - stack buttons on very small screens */
+    .print-toolbar {
+      padding: 8px 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .print-toolbar-title {
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .print-toolbar-actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .print-toolbar-btn {
+      padding: 6px 10px;
+      font-size: 12px;
+      flex: 1;
+      max-width: 120px;
+    }
+
+    /* Fix close button - make it square */
+    .print-toolbar-btn:last-child {
+      flex: 0 0 auto;
+      max-width: 40px;
+      padding: 6px;
+    }
+
+    .print-content-with-toolbar {
+      margin-top: 100px; /* More space for wrapped toolbar and title visibility */
+    }
+
+    /* Add more padding to sections on mobile */
+    .print-section {
+      padding-right: 10px;
+    }
+
+    /* Badges */
+    .print-badge {
+      font-size: 8px;
+      padding: 2px 6px;
+    }
   }
 `;
 

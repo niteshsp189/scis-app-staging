@@ -53,11 +53,11 @@ export const CustomerNotesPrint = ({ notes }: CustomerNotesPrintProps) => {
   return (
     <div className="print-section">
       <h3 className="print-section-title">Notes</h3>
-      
+
       {sortedNotes.map((note) => {
         const colorClass = getPrintNoteColorClass(note.color);
         const creatorName = getCreatorName(note);
-        
+
         return (
           <div key={note.id} className={`print-note ${colorClass}`}>
             <div className="print-note-header">
@@ -68,9 +68,10 @@ export const CustomerNotesPrint = ({ notes }: CustomerNotesPrintProps) => {
               </span>
               <span>© {formatPrintDateTime(note.created_at)}</span>
             </div>
-            <div className="print-note-content">
-              {note.content}
-            </div>
+            <div
+              className="print-note-content"
+              dangerouslySetInnerHTML={{ __html: note.content }}
+            />
           </div>
         );
       })}

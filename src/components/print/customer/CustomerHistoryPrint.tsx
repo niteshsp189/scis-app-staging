@@ -73,33 +73,35 @@ export const CustomerHistoryPrint = ({ historyLogs }: CustomerHistoryPrintProps)
   return (
     <div className="print-section">
       <h3 className="print-section-title">History</h3>
-      
-      <table className="print-table">
-        <thead>
-          <tr>
-            <th style={{ width: '150px' }}>Date/Time</th>
-            <th style={{ width: '100px' }}>Action</th>
-            <th>Description</th>
-            <th style={{ width: '70px' }}>Changes</th>
-            <th style={{ width: '120px' }}>User</th>
-          </tr>
-        </thead>
-        <tbody>
-          {historyLogs.map((log) => (
-            <tr key={log.id}>
-              <td>{formatPrintDateTime(log.created_at)}</td>
-              <td>
-                <span className={`print-badge ${getEventColor(log.event)}`}>
-                  {log.event_label || getEventLabel(log.event)}
-                </span>
-              </td>
-              <td>{log.description || 'No description'}</td>
-              <td style={{ textAlign: 'center' }}>{log.changes_count || 0}</td>
-              <td>{getUserName(log.user)}</td>
+
+      <div className="print-table-wrapper">
+        <table className="print-table">
+          <thead>
+            <tr>
+              <th style={{ width: '150px' }}>Date/Time</th>
+              <th style={{ width: '100px' }}>Action</th>
+              <th>Description</th>
+              <th style={{ width: '70px' }}>Changes</th>
+              <th style={{ width: '120px' }}>User</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {historyLogs.map((log) => (
+              <tr key={log.id}>
+                <td>{formatPrintDateTime(log.created_at)}</td>
+                <td>
+                  <span className={`print-badge ${getEventColor(log.event)}`}>
+                    {log.event_label || getEventLabel(log.event)}
+                  </span>
+                </td>
+                <td>{log.description || 'No description'}</td>
+                <td style={{ textAlign: 'center' }}>{log.changes_count || 0}</td>
+                <td>{getUserName(log.user)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

@@ -40,14 +40,14 @@ export const CustomerCredentialsPrint = ({
   credentials,
   canViewSensitive = false,
 }: CustomerCredentialsPrintProps) => {
-  const hasMedicareInfo = credentials.medicare_number || 
-    credentials.medicare_gov_username || 
+  const hasMedicareInfo = credentials.medicare_number ||
+    credentials.medicare_gov_username ||
     credentials.medicare_gov_password;
-  
-  const hasBankingInfo = credentials.bank_account_type || 
-    credentials.routing_number || 
+
+  const hasBankingInfo = credentials.bank_account_type ||
+    credentials.routing_number ||
     credentials.account_number;
-  
+
   const hasMedications = credentials.medications && credentials.medications.length > 0;
 
   if (!hasMedicareInfo && !hasBankingInfo && !hasMedications) {
@@ -85,7 +85,7 @@ export const CustomerCredentialsPrint = ({
             <div className="print-info-row">
               <span className="print-info-label">Medicare.gov Password:</span>
               <span className="print-info-value">
-                {canViewSensitive 
+                {canViewSensitive
                   ? (credentials.medicare_gov_password || 'N/A')
                   : (credentials.medicare_gov_password ? '********' : 'N/A')}
               </span>
@@ -110,7 +110,7 @@ export const CustomerCredentialsPrint = ({
             <div className="print-info-row">
               <span className="print-info-label">Routing Number:</span>
               <span className="print-info-value">
-                {canViewSensitive 
+                {canViewSensitive
                   ? (credentials.routing_number || 'N/A')
                   : maskRoutingNumber(credentials.routing_number)}
               </span>
@@ -118,7 +118,7 @@ export const CustomerCredentialsPrint = ({
             <div className="print-info-row">
               <span className="print-info-label">Account Number:</span>
               <span className="print-info-value">
-                {canViewSensitive 
+                {canViewSensitive
                   ? (credentials.account_number || 'N/A')
                   : maskAccountNumber(credentials.account_number)}
               </span>
@@ -133,24 +133,26 @@ export const CustomerCredentialsPrint = ({
           <div style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '8px', color: '#374151' }}>
             Medications
           </div>
-          <table className="print-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Dosage</th>
-                <th>Frequency</th>
-              </tr>
-            </thead>
-            <tbody>
-              {credentials.medications!.map((medication, index) => (
-                <tr key={index}>
-                  <td>{medication.name}</td>
-                  <td>{medication.dosage}</td>
-                  <td>{medication.frequency}</td>
+          <div className="print-table-wrapper">
+            <table className="print-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Dosage</th>
+                  <th>Frequency</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {credentials.medications!.map((medication, index) => (
+                  <tr key={index}>
+                    <td>{medication.name}</td>
+                    <td>{medication.dosage}</td>
+                    <td>{medication.frequency}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
