@@ -11,20 +11,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { DateInput } from "@/components/ui/date-input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { TimePicker } from "@/components/ui/time-picker";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Clock, Bell, User, X } from "lucide-react";
+import { Clock, Bell, User, X, ChevronsUpDown, Check } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { reminderService } from "@/services/reminderService";
 import { customerService } from "@/services/customerService";
+import { api } from "@/lib/axios";
 import { useState, useEffect } from "react";
 
 import { type CustomerData } from "@/types/customer";
@@ -44,6 +51,8 @@ interface ReminderFormProps {
   setSelectedAgent: (agentId: string | undefined) => void;
   onSubmit: () => void;
   submitting?: boolean;
+  isEditing?: boolean;
+  onCancelEdit?: () => void;
 }
 
 export function ReminderForm({
@@ -61,6 +70,8 @@ export function ReminderForm({
   setSelectedAgent,
   onSubmit,
   submitting = false,
+  isEditing = false,
+  onCancelEdit,
 }: ReminderFormProps) {
   const isMobile = useIsMobile();
   const [customers, setCustomers] = useState<CustomerData[]>([]);
@@ -69,6 +80,8 @@ export function ReminderForm({
   const [agentSearch, setAgentSearch] = useState("");
   const [loadingCustomers, setLoadingCustomers] = useState(false);
   const [loadingAgents, setLoadingAgents] = useState(false);
+  const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
+  const [userPopoverOpen, setUserPopoverOpen] = useState(false);
 
   // Load customers and agents for selection
   useEffect(() => {
@@ -89,22 +102,16 @@ export function ReminderForm({
     const loadAgents = async () => {
       try {
         setLoadingAgents(true);
-        const response = await fetch('/api/users/agents', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && Array.isArray(data.data)) {
-            setAgents(data.data);
-          }
-        } else {
-          console.error('Failed to load agents:', response.status, response.statusText);
+        const response = await api.get('/team-members?per_page=100');
+        if (response.data?.success && response.data?.data?.data && Array.isArray(response.data.data.data)) {
+          setAgents(response.data.data.data);
+        } else if (response.data?.success && Array.isArray(response.data?.data)) {
+          setAgents(response.data.data);
+        } else if (Array.isArray(response.data)) {
+          setAgents(response.data);
         }
       } catch (error) {
-        console.error("Failed to load agents:", error);
+        console.error("Failed to load team members:", error);
       } finally {
         setLoadingAgents(false);
       }
@@ -149,10 +156,12 @@ export function ReminderForm({
           className={`${isMobile ? "text-lg" : "text-xl"} flex items-center gap-2`}
         >
           <Bell className="h-5 w-5" />
-          Create New Reminder
+          {isEditing ? "Edit Reminder" : "Create New Reminder"}
         </CardTitle>
         <CardDescription>
-          Set up a reminder for important tasks and follow-ups
+          {isEditing
+            ? "Update the reminder details below"
+            : "Set up a reminder for important tasks and follow-ups"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -233,67 +242,79 @@ export function ReminderForm({
               </Button>
             </div>
           ) : (
-            <Select
-              value={selectedCustomer?.toString() || "none"}
-              onValueChange={(value) =>
-                setSelectedCustomer(
-                  value === "none" ? undefined : parseInt(value),
-                )
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a customer">
+            <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={customerPopoverOpen}
+                  className="w-full justify-between font-normal"
+                >
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4" />
                     <span>Select a customer</span>
                   </div>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <div className="p-2">
-                  <Input
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command shouldFilter={false}>
+                  <CommandInput
                     placeholder="Search customers..."
                     value={customerSearch}
-                    onChange={(e) => setCustomerSearch(e.target.value)}
-                    className="mb-2"
+                    onValueChange={setCustomerSearch}
                   />
-                </div>
-                <SelectItem value="none">No customer selected</SelectItem>
-                {loadingCustomers ? (
-                  <SelectItem value="loading" disabled>
-                    Loading customers...
-                  </SelectItem>
-                ) : filteredCustomers.length === 0 ? (
-                  <SelectItem value="no-results" disabled>
-                    No customers found
-                  </SelectItem>
-                ) : (
-                  filteredCustomers.map((customer) => (
-                    <SelectItem
-                      key={customer.id}
-                      value={customer.id.toString()}
-                    >
-                      <div className="flex flex-col">
-                        <span>
-                          {customer.firstName} {customer.lastName}
-                        </span>
-                        {customer.email && (
-                          <span className="text-xs text-muted-foreground">
-                            {customer.email}
-                          </span>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+                  <CommandList>
+                    <CommandEmpty>
+                      {loadingCustomers ? "Loading customers..." : "No customers found"}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        value="none"
+                        onSelect={() => {
+                          setSelectedCustomer(undefined);
+                          setCustomerPopoverOpen(false);
+                          setCustomerSearch("");
+                        }}
+                      >
+                        No customer selected
+                      </CommandItem>
+                      {filteredCustomers.map((customer) => (
+                        <CommandItem
+                          key={customer.id}
+                          value={customer.id.toString()}
+                          onSelect={() => {
+                            setSelectedCustomer(customer.id);
+                            setCustomerPopoverOpen(false);
+                            setCustomerSearch("");
+                          }}
+                        >
+                          <div className="flex flex-col">
+                            <span>
+                              {customer.firstName} {customer.lastName}
+                            </span>
+                            {customer.email && (
+                              <span className="text-xs text-muted-foreground">
+                                {customer.email}
+                              </span>
+                            )}
+                          </div>
+                          {selectedCustomer === customer.id && (
+                            <Check className="ml-auto h-4 w-4" />
+                          )}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
 
-        {/* Agent Selection */}
+        {/* User Selection */}
         <div className="space-y-2">
-          <Label htmlFor="agent">Assign to Agent (Optional)</Label>
+          <Label htmlFor="agent">Assign to User (Optional)</Label>
           {selectedAgentData ? (
             <div className="flex items-center justify-between p-2 border rounded-md bg-muted/50">
               <div className="flex items-center gap-2">
@@ -316,56 +337,73 @@ export function ReminderForm({
               </Button>
             </div>
           ) : (
-            <Select
-              value={selectedAgent || "none"}
-              onValueChange={(value) =>
-                setSelectedAgent(value === "none" ? undefined : value)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select an agent">
+            <Popover open={userPopoverOpen} onOpenChange={setUserPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={userPopoverOpen}
+                  className="w-full justify-between font-normal"
+                >
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4" />
-                    <span>Select an agent</span>
+                    <span>Select a user</span>
                   </div>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <div className="p-2">
-                  <Input
-                    placeholder="Search agents..."
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command shouldFilter={false}>
+                  <CommandInput
+                    placeholder="Search users..."
                     value={agentSearch}
-                    onChange={(e) => setAgentSearch(e.target.value)}
-                    className="mb-2"
+                    onValueChange={setAgentSearch}
                   />
-                </div>
-                <SelectItem value="none">No agent assigned</SelectItem>
-                {loadingAgents ? (
-                  <SelectItem value="loading" disabled>
-                    Loading agents...
-                  </SelectItem>
-                ) : filteredAgents.length === 0 ? (
-                  <SelectItem value="no-results" disabled>
-                    No agents found
-                  </SelectItem>
-                ) : (
-                  filteredAgents.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
-                      <div className="flex flex-col">
-                        <span>
-                          {agent.name || `${agent.first_name || ''} ${agent.last_name || ''}`.trim()}
-                        </span>
-                        {agent.email && (
-                          <span className="text-xs text-muted-foreground">
-                            {agent.email}
-                          </span>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+                  <CommandList>
+                    <CommandEmpty>
+                      {loadingAgents ? "Loading users..." : "No users found"}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        value="none"
+                        onSelect={() => {
+                          setSelectedAgent(undefined);
+                          setUserPopoverOpen(false);
+                          setAgentSearch("");
+                        }}
+                      >
+                        No user assigned
+                      </CommandItem>
+                      {filteredAgents.map((agent) => (
+                        <CommandItem
+                          key={agent.id}
+                          value={agent.id}
+                          onSelect={() => {
+                            setSelectedAgent(agent.id);
+                            setUserPopoverOpen(false);
+                            setAgentSearch("");
+                          }}
+                        >
+                          <div className="flex flex-col">
+                            <span>
+                              {agent.name || `${agent.first_name || ''} ${agent.last_name || ''}`.trim()}
+                            </span>
+                            {agent.email && (
+                              <span className="text-xs text-muted-foreground">
+                                {agent.email}
+                              </span>
+                            )}
+                          </div>
+                          {selectedAgent === agent.id && (
+                            <Check className="ml-auto h-4 w-4" />
+                          )}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
 
@@ -382,13 +420,31 @@ export function ReminderForm({
         </div>
 
         {/* Submit Button */}
-        <Button
-          onClick={onSubmit}
-          className="w-full"
-          disabled={submitting || !title || !dueDate || !dueTime}
-        >
-          {submitting ? "Creating..." : "Create Reminder"}
-        </Button>
+        <div className={`flex gap-2 ${isEditing ? "" : ""}`}>
+          {isEditing && onCancelEdit && (
+            <Button
+              variant="outline"
+              onClick={onCancelEdit}
+              className="flex-1"
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+          )}
+          <Button
+            onClick={onSubmit}
+            className={isEditing ? "flex-1" : "w-full"}
+            disabled={submitting || !title || !dueDate || !dueTime}
+          >
+            {submitting
+              ? isEditing
+                ? "Updating..."
+                : "Creating..."
+              : isEditing
+                ? "Update Reminder"
+                : "Create Reminder"}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

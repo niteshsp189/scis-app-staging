@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { ReminderForm } from "@/components/reminders/ReminderForm";
 import { RemindersList } from "@/components/reminders/RemindersList";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { api } from "@/lib/axios";
 import {
   reminderService,
   type Reminder,
@@ -74,6 +75,10 @@ export default function Reminders() {
     number | undefined
   >();
   const [selectedAgent, setSelectedAgent] = useState<string | undefined>();
+
+  // Edit mode state
+  const [editingReminderId, setEditingReminderId] = useState<string | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
 
   // Filter states
   const [filters, setFilters] = useState<ReminderFilters>({
@@ -183,35 +188,20 @@ export default function Reminders() {
   // Load employees and agents for filters
   const loadEmployeesAndAgents = async () => {
     try {
-      // Load employees for "Created by" filter
-      const employeesResponse = await fetch("/api/users", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (employeesResponse.ok) {
-        const employeesData = await employeesResponse.json();
-        if (employeesData.success && Array.isArray(employeesData.data)) {
-          setEmployees(employeesData.data);
-        }
+      // Load team members for "Created by" and "Assign to" filters
+      const response = await api.get('/team-members?per_page=100');
+      let teamMembers: any[] = [];
+      if (response.data?.success && response.data?.data?.data && Array.isArray(response.data.data.data)) {
+        teamMembers = response.data.data.data;
+      } else if (response.data?.success && Array.isArray(response.data?.data)) {
+        teamMembers = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        teamMembers = response.data;
       }
-
-      // Load agents for "Assign to" filter using the specific agents endpoint
-      const agentsResponse = await fetch("/api/users/agents", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (agentsResponse.ok) {
-        const agentsData = await agentsResponse.json();
-        if (agentsData.success && Array.isArray(agentsData.data)) {
-          setAgents(agentsData.data);
-        }
-      }
+      setEmployees(teamMembers);
+      setAgents(teamMembers);
     } catch (error) {
-      console.error("Failed to load employees and agents:", error);
+      console.error("Failed to load team members:", error);
     }
   };
 
@@ -303,7 +293,7 @@ export default function Reminders() {
     loadReminders(newFilters);
   };
 
-  // Handle form submission
+  // Handle form submission (create or update)
   const handleSubmit = async () => {
     if (!title || !dueDate || !dueTime) {
       toast({
@@ -322,7 +312,7 @@ export default function Reminders() {
       const [hours, minutes] = time24Hour.split(":").map(Number);
       reminderDateTime.setHours(hours, minutes, 0, 0);
 
-      if (reminderDateTime <= new Date()) {
+      if (!editingReminderId && reminderDateTime <= new Date()) {
         toast({
           title: "Error",
           description: "Please select a future date and time for the reminder.",
@@ -332,17 +322,39 @@ export default function Reminders() {
         return;
       }
 
-      const reminderData: CreateReminderData = {
-        title,
-        description: description || undefined,
-        reminder_datetime: reminderDateTime.toISOString(),
-        reminder_type: "custom",
-        customer_id: selectedCustomer,
-        agent_id: selectedAgent,
-        notification_methods: ["email"],
-      };
+      if (editingReminderId) {
+        // Update existing reminder
+        await reminderService.updateReminder(editingReminderId, {
+          title,
+          description: description || undefined,
+          reminder_datetime: reminderDateTime.toISOString(),
+          customer_id: selectedCustomer,
+          agent_id: selectedAgent,
+        });
 
-      await reminderService.createReminder(reminderData);
+        toast({
+          title: "Success",
+          description: "Reminder updated successfully.",
+        });
+      } else {
+        // Create new reminder
+        const reminderData: CreateReminderData = {
+          title,
+          description: description || undefined,
+          reminder_datetime: reminderDateTime.toISOString(),
+          reminder_type: "custom",
+          customer_id: selectedCustomer,
+          agent_id: selectedAgent,
+          notification_methods: ["email"],
+        };
+
+        await reminderService.createReminder(reminderData);
+
+        toast({
+          title: "Success",
+          description: "Reminder created successfully.",
+        });
+      }
 
       // Reset form
       setTitle("");
@@ -351,14 +363,10 @@ export default function Reminders() {
       setDueTime("");
       setSelectedCustomer(undefined);
       setSelectedAgent(undefined);
+      setEditingReminderId(null);
 
       // Reload reminders
       await loadReminders();
-
-      toast({
-        title: "Success",
-        description: "Reminder created successfully.",
-      });
     } catch (error: any) {
       console.error("Failed to create reminder:", error);
       let errorMessage =
@@ -453,6 +461,44 @@ export default function Reminders() {
         variant: "destructive",
       });
     }
+  };
+
+  // Handle edit reminder - populate form with existing values
+  const handleEdit = (reminder: Reminder) => {
+    setEditingReminderId(reminder.id);
+    setTitle(reminder.title);
+    setDescription(reminder.description || "");
+    
+    // Parse reminder datetime
+    const reminderDate = new Date(reminder.reminder_datetime);
+    setDueDate(reminderDate);
+    
+    // Format time as 12-hour for TimePicker
+    let hours = reminderDate.getHours();
+    const mins = reminderDate.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    if (hours === 0) hours = 12;
+    setDueTime(`${hours}:${mins} ${ampm}`);
+    
+    setSelectedCustomer(reminder.customer_id || undefined);
+    setSelectedAgent(reminder.assigned_to || reminder.agent_id || undefined);
+    
+    // Scroll to form
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  };
+
+  // Handle cancel edit - reset form to create mode
+  const handleCancelEdit = () => {
+    setEditingReminderId(null);
+    setTitle("");
+    setDescription("");
+    setDueDate(undefined);
+    setDueTime("");
+    setSelectedCustomer(undefined);
+    setSelectedAgent(undefined);
   };
 
   // Handle print reminders list
@@ -644,10 +690,10 @@ export default function Reminders() {
                   onValueChange={setAssignedToFilter}
                 >
                   <SelectTrigger id="assignedTo">
-                    <SelectValue placeholder="All agents" />
+                    <SelectValue placeholder="All users" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All agents</SelectItem>
+                    <SelectItem value="all">All users</SelectItem>
                     {agents.map((agent) => (
                       <SelectItem key={agent.id} value={agent.id}>
                         {agent.name ||
@@ -734,6 +780,7 @@ export default function Reminders() {
       <div
         className={`grid ${isMobile ? "grid-cols-1 gap-4" : "grid-cols-1 lg:grid-cols-2 gap-6"}`}
       >
+        <div ref={formRef} className="scroll-mt-4">
         <ReminderForm
           title={title}
           description={description}
@@ -749,7 +796,10 @@ export default function Reminders() {
           setSelectedAgent={setSelectedAgent}
           onSubmit={handleSubmit}
           submitting={submitting}
+          isEditing={!!editingReminderId}
+          onCancelEdit={handleCancelEdit}
         />
+        </div>
 
         <RemindersList
           reminders={reminders}
@@ -758,6 +808,7 @@ export default function Reminders() {
           onToggleComplete={handleToggleComplete}
           onDelete={handleDelete}
           onSnooze={handleSnooze}
+          onEdit={handleEdit}
           onPageChange={handlePageChange}
         />
       </div>

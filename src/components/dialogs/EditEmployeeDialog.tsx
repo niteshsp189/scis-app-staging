@@ -40,6 +40,7 @@ interface TeamMember {
   company?: string;
   location?: string;
   is_active: boolean;
+  is_agent?: boolean;
   roles: Role[];
 }
 
@@ -76,6 +77,7 @@ export const EditEmployeeDialog = ({
     location: emp?.location || "no-location",
     roles: emp?.roles?.map((role) => role.id) || [],
     is_active: emp?.is_active !== undefined ? emp.is_active : true,
+    is_agent: emp?.is_agent !== undefined ? emp.is_agent : false,
   });
 
   const [formData, setFormData] = useState(getInitialFormData(employee));
@@ -557,6 +559,19 @@ export const EditEmployeeDialog = ({
             />
             <Label htmlFor="is_active">
               Active (User can login and access the system)
+            </Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="is_agent"
+              checked={formData.is_agent}
+              onCheckedChange={(checked) =>
+                setFormData((prev) => ({ ...prev, is_agent: checked }))
+              }
+            />
+            <Label htmlFor="is_agent">
+              Is Agent (Will appear in Agent of Record and Writing Agent dropdowns)
             </Label>
           </div>
 

@@ -100,7 +100,7 @@ export const EditAppointmentDialog = ({
   const [status, setStatus] = useState(appointment.status || "scheduled");
   const [cancellationNotes, setCancellationNotes] = useState(appointment.cancellation_notes || "");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(
-    appointment.assigned_to,
+    appointment.assigned_to || "any",
   );
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -188,7 +188,7 @@ export const EditAppointmentDialog = ({
     setLocation(appointment.location || "");
     setStatus(appointment.status || "scheduled");
     setCancellationNotes(appointment.cancellation_notes || "");
-    setSelectedEmployeeId(appointment.assigned_to || "");
+    setSelectedEmployeeId(appointment.assigned_to || "any");
         
     // Store original values for reset functionality
     setOriginalValues({
@@ -200,7 +200,7 @@ export const EditAppointmentDialog = ({
       location: appointment.location || "",
       meetingType: appointment.appointment_type ? appointment.appointment_type.split(',') : ['review'],
       priority: (appointment.priority as 'low' | 'medium' | 'high' | 'urgent') || 'medium',
-      selectedEmployeeId: appointment.assigned_to || "",
+      selectedEmployeeId: appointment.assigned_to || "any",
       status: appointment.status || "scheduled",
       cancellationNotes: appointment.cancellation_notes || ""
     });
@@ -290,6 +290,12 @@ export const EditAppointmentDialog = ({
   const checkAvailability = async () => {
     if (!date || !time) return;
 
+    // Skip availability check for 'Any' employee
+    if (selectedEmployeeId === 'any' || !selectedEmployeeId) {
+      setAvailabilityCheck({ available: true });
+      return;
+    }
+
     setLoading(true);
     try {
       // Prepare start time
@@ -307,66 +313,15 @@ export const EditAppointmentDialog = ({
         endDateTime.setHours(startDateTime.getHours() + 1);
       }
 
-      // Basic validation checks
-      const now = new Date();
-      const isPastAppointment = startDateTime < now;
-      // COMMENTED OUT: Weekend and business hours validation as per new requirements
-      // const dayOfWeek = startDateTime.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
-      // const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sunday or Saturday
-      // const isOutsideBusinessHours = hours < 9 || hours >= 17;
+      // REMOVED: Past date restriction as per client request to allow any date appointments
+      // REMOVED: Weekend and business hours validation as per new requirements
 
       let mockAvailability = {
         available: true,
         reason: "",
       };
 
-      // Generate alternative times - COMMENTED OUT as no longer needed
-      let alternativeTimes: string[] = [];
-
-      if (isPastAppointment) {
-        mockAvailability = {
-          available: false,
-          reason: "Cannot schedule appointments in the past. Please select a future date and time.",
-        };
-      }
-      // COMMENTED OUT: Weekend validation as per new requirements to allow all-day booking  
-      // else if (isWeekend) {
-      //   const dayName = dayOfWeek === 0 ? "Sunday" : "Saturday";
-      //   mockAvailability = {
-      //     available: false,
-      //     reason: `Appointments cannot be scheduled on ${dayName}. Please select a weekday (Monday-Friday).`,
-      //   };
-
-      //   // Suggest next Monday
-      //   const nextMonday = new Date(date);
-      //   while (nextMonday.getDay() !== 1) {
-      //     nextMonday.setDate(nextMonday.getDate() + 1);
-      //   }
-      //   alternativeTimes = ["09:00", "10:00", "11:00", "14:00", "15:00"];
-      // }
-      // COMMENTED OUT: Business hours validation as per new requirements to allow any time booking
-      // else if (isOutsideBusinessHours) {
-      //   mockAvailability = {
-      //     available: false,
-      //     reason: "Appointments can only be scheduled between 9:00 AM and 5:00 PM on weekdays.",
-      //   };
-
-      //   alternativeTimes = [
-      //     "09:00",
-      //     "10:00",
-      //     "11:00",
-      //     "14:00",
-      //     "15:00",
-      //     "16:00",
-      //   ];
-      // } else if (endDateTime.getHours() > 17) {
-      //   mockAvailability = {
-      //     available: false,
-      //     reason: "Appointment end time cannot exceed 5:00 PM on weekdays.",
-      //   };
-      // }
-      else {
-        // Check for real appointment conflicts via API (keeping double booking, leave, holiday checks)
+      // Check for real appointment conflicts via API (keeping double booking, leave, holiday checks)
         try {
           // Use timezone service to create proper datetime strings for API
           const startDatetimeISO = await timezoneService.createOrganizationDateTime(startDateTime);
@@ -375,7 +330,7 @@ export const EditAppointmentDialog = ({
           const response = await appointmentService.checkAvailability({
             start_datetime: startDatetimeISO,
             end_datetime: endDatetimeISO,
-            assigned_to: selectedEmployeeId,
+            assigned_to: selectedEmployeeId === 'any' ? null : selectedEmployeeId,
             customer_id: appointment.customer_id || undefined,
             exclude_id: appointment.id, // Exclude current appointment from conflict check
           });
@@ -431,23 +386,8 @@ export const EditAppointmentDialog = ({
             };
           }
         }
-      }
-
-      // COMMENTED OUT: Original appointment time validation - now allowing any time changes
-      // Original appointment time is always available for edit (only if no validation errors)
-      // if (
-      //   appointment.id &&
-      //   format(parseISO(appointment.start_datetime), "yyyy-MM-dd") ===
-      //     format(date, "yyyy-MM-dd") &&
-      //   format(parseISO(appointment.start_datetime), "HH:mm") === time &&
-      //   !isWeekend && !isOutsideBusinessHours && !isPastAppointment
-      // ) {
-      //   mockAvailability.available = true;
-      //   mockAvailability.reason = "";
-      // }
 
       setAvailabilityCheck(mockAvailability);
-      setAlternativeTimes(alternativeTimes);
     } catch (error) {
       console.error("Error checking availability:", error);
       setAvailabilityCheck({
@@ -471,7 +411,7 @@ export const EditAppointmentDialog = ({
     }
 
     if (!selectedEmployeeId) {
-      newErrors.selectedEmployeeId = "Please select an employee";
+      newErrors.selectedEmployeeId = "Please select an employee or 'Any'";
     }
 
     if (!meetingType || meetingType.length === 0) {
@@ -590,7 +530,7 @@ export const EditAppointmentDialog = ({
         location,
         appointment_type: meetingType.join(','), // Join multiple types with comma
         priority: priority,
-        assigned_to: selectedEmployeeId,
+        assigned_to: selectedEmployeeId === 'any' ? null : selectedEmployeeId,
         status: status,
         notes: description,
       };
@@ -727,10 +667,13 @@ export const EditAppointmentDialog = ({
                   <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId} required>
                     <SelectTrigger className={errors.selectedEmployeeId ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select an employee">
-                        {selectedEmployeeId ? users.find(user => user.id === selectedEmployeeId)?.first_name + ' ' + users.find(user => user.id === selectedEmployeeId)?.last_name || selectedEmployeeId : "Select an employee"}
+                        {selectedEmployeeId === 'any' ? 'Any' : selectedEmployeeId ? users.find(user => user.id === selectedEmployeeId)?.first_name + ' ' + users.find(user => user.id === selectedEmployeeId)?.last_name || selectedEmployeeId : "Select an employee"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="any" className="font-medium text-primary">
+                        Any
+                      </SelectItem>
                       {Array.isArray(users) && users.length > 0 ? (
                         users.map((user) => (
                           <SelectItem key={user.id} value={user.id}>

@@ -86,6 +86,7 @@ export interface SearchSuggestion {
   id: number;
   phone?: string;
   address?: string;
+  ssn?: string;
   customer_type?: string;
 }
 

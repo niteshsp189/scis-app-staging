@@ -36,6 +36,7 @@ import {
   ChevronRight,
   AlertTriangle,
   ChevronDown,
+  Pencil,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { reminderService, type Reminder } from "@/services/reminderService";
@@ -63,6 +64,7 @@ interface RemindersListProps {
   onToggleComplete: (id: string) => void;
   onDelete: (id: string) => void;
   onSnooze?: (id: string, minutes: number) => void;
+  onEdit?: (reminder: Reminder) => void;
   onPageChange: (page: number) => void;
 }
 
@@ -73,6 +75,7 @@ export function RemindersList({
   onToggleComplete,
   onDelete,
   onSnooze,
+  onEdit,
   onPageChange,
 }: RemindersListProps) {
   const isMobile = useIsMobile();
@@ -227,6 +230,19 @@ export function RemindersList({
                       <div
                         className={`flex gap-2 ${isMobile ? "flex-col" : "justify-end"}`}
                       >
+                        {/* Edit button */}
+                        {onEdit && reminder.status !== "completed" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onEdit(reminder)}
+                            className={isMobile ? "w-full" : "min-w-0"}
+                          >
+                            <Pencil className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        )}
+
                         <Button
                           variant={
                             reminder.status === "completed"

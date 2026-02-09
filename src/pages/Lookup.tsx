@@ -214,20 +214,32 @@ const Lookup = () => {
     filters: SearchFilters,
     skipLoading = false,
   ) => {
-    if (!query.trim()) {
-      return;
+    // Allow search if query is empty but filters might be present
+    // The backend validation handles the final check
+    if (!query.trim() && Object.keys(filters).length === 0) {
+      // logic to check if filters are truly empty of meaningful values if needed, 
+      // but strictly speaking, filters object always has 'limit'.
+      // safe to just remove the check or make it minimal? 
+      // Let's just remove the check to allow the controller to decide, 
+      // OR check if query is empty AND we want to prevent partial searches?
+      // The user wants to search by filters. 
     }
+
+    // Removing the strict query check to allow filter-only searches
+    // if (!query.trim()) {
+    //   return;
+    // }
 
     if (!skipLoading) {
       setIsSearching(true);
     }
 
     try {
-      console.log('Performing search with query:', query, 'filters:', filters);
+      // console.log('Performing search with query:', query, 'filters:', filters);
       const response = await globalSearchService.search(query, filters);
-      console.log('Search response:', response);
+      // console.log('Search response:', response);
       const results = response.data?.results || [];
-      console.log('Parsed results:', results.length, 'items');
+      // console.log('Parsed results:', results.length, 'items');
       setResults(results);
       setFiltersEnabled(true); // Enable filters after results are received
     } catch (error) {
@@ -243,9 +255,25 @@ const Lookup = () => {
   const performSearch = async (searchText?: string | React.MouseEvent) => {
     // Handle case where event object is passed (from button click) vs string (from suggestion)
     const queryText = typeof searchText === 'string' ? searchText : searchTerm;
-    
-    if (!queryText.trim()) {
-      toast.error("Please enter a search term");
+
+    // Build filters object first to check for active filters
+    const filters: SearchFilters = {
+      type: searchType,
+      status: statusFilter !== "all" ? statusFilter : undefined,
+      date_from: dateFilter || undefined,
+      limit: 50,
+      ...advancedFilters, // Merge advanced filters
+    };
+
+    // Check if we have any active filters (excluding 'limit' and default 'type: all')
+    const hasActiveFilters =
+      (statusFilter !== "all") ||
+      (!!dateFilter) ||
+      (searchType !== 'all') ||
+      (Object.keys(advancedFilters).length > 0);
+
+    if (!queryText.trim() && !hasActiveFilters) {
+      toast.error("Please enter a search term or select a filter");
       return;
     }
 
@@ -255,14 +283,6 @@ const Lookup = () => {
     }
 
     setFiltersEnabled(false); // Disable filters during search
-
-    const filters: SearchFilters = {
-      type: searchType,
-      status: statusFilter !== "all" ? statusFilter : undefined,
-      date_from: dateFilter || undefined,
-      limit: 50,
-      ...advancedFilters, // Merge advanced filters
-    };
 
     // Update URL
     const url = globalSearchService.buildSearchUrl(queryText, filters);
@@ -444,7 +464,7 @@ const Lookup = () => {
     if (searchType !== 'all') params.set('type', searchType);
     if (statusFilter !== 'all') params.set('status', statusFilter);
     if (dateFilter) params.set('date_from', dateFilter);
-    
+
     const printUrl = `/lookup/print?${params.toString()}`;
     console.log('Opening print URL:', printUrl, 'searchTerm:', searchTerm);
     window.open(printUrl, '_blank');
@@ -460,7 +480,7 @@ const Lookup = () => {
       params.set('customerType', duplicateCustomerType);
     }
     params.set('matchType', matchType);
-    
+
     window.open(`/lookup/print?${params.toString()}`, '_blank');
   };
 
@@ -473,7 +493,7 @@ const Lookup = () => {
     if (missingInfoCustomerType !== 'all') {
       params.set('missingCustomerType', missingInfoCustomerType);
     }
-    
+
     window.open(`/lookup/print?${params.toString()}`, '_blank');
   };
 

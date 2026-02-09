@@ -390,10 +390,15 @@ function AppointmentCard({ appointment, onStatusUpdate, showActions = true }: Ap
           </div>
         )}
         
-        {appointment.assigned_user && (
+        {appointment.assigned_user ? (
           <div className="flex items-center gap-2">
             <User className="h-4 w-4" />
             <span>Assigned to: {appointment.assigned_user.first_name} {appointment.assigned_user.last_name}</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-gray-400" />
+            <span className="italic text-gray-400">Any (Unassigned)</span>
           </div>
         )}
       </div>

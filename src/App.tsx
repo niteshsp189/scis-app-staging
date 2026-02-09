@@ -58,6 +58,7 @@ import {
   CallDetailPrintPage,
   LookupPrintPage,
   PolicyPrintPage,
+  ReportPrintPage,
 } from "./pages/print";
 
 const queryClient = new QueryClient();
@@ -262,7 +263,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/reports"
+                  path="/reports/*"
                   element={
                     <ProtectedRoute
                       requiredPermissions={['view_reports']}
@@ -555,6 +556,16 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <LookupPrintPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Report Print route - open in new tab, no layout */}
+                <Route
+                  path="/reports/print"
+                  element={
+                    <ProtectedRoute>
+                      <ReportPrintPage />
                     </ProtectedRoute>
                   }
                 />

@@ -119,7 +119,8 @@ const Dashboard = () => {
         </div>
       </div>
       
-      <DashboardStats stats={data?.stats} loading={loading} />
+      {/* Stats section hidden per client request */}
+      {/* <DashboardStats stats={data?.stats} loading={loading} /> */}
       
       <DashboardReminders 
         reminders={data?.reminders} 

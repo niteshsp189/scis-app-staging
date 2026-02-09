@@ -2,7 +2,7 @@ import { api, type ApiResponse } from './api';
 
 export interface Notification {
   id: string;
-  type: 'reminder' | 'appointment' | 'leave' | 'policy' | 'birthday' | 'system';
+  type: 'reminder' | 'appointment' | 'call_forwarded' | 'system';
   subtype?: string;
   title: string;
   message: string;
@@ -16,6 +16,7 @@ export interface Notification {
 }
 
 export interface NotificationCounts {
+  forwarded_calls: number;
   reminders: number;
   appointments: number;
   leave_requests: number;
@@ -28,8 +29,16 @@ export const notificationService = {
    */
   async getNotifications(): Promise<{ data: Notification[]; total: number; unread_count: number }> {
     try {
-      const result = await api.get<ApiResponse<{ data: Notification[]; total: number; unread_count: number }>>('/notifications');
-      return result.data || { data: [], total: 0, unread_count: 0 };
+      const result = await api.get<ApiResponse<Notification[]>>('/notifications');
+      // Backend returns: { success: true, data: [...], total: N, unread_count: N }
+      // api.get returns the parsed JSON response object
+      const response = result as any;
+      const notifications: Notification[] = Array.isArray(response.data) ? response.data : [];
+      return {
+        data: notifications,
+        total: response.total || notifications.length,
+        unread_count: response.unread_count ?? notifications.filter((n: Notification) => !n.read).length,
+      };
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
       throw new Error('Failed to fetch notifications');
@@ -42,7 +51,16 @@ export const notificationService = {
   async getNotificationCounts(): Promise<NotificationCounts> {
     try {
       const result = await api.get<ApiResponse<NotificationCounts>>('/notifications/counts');
-      return result.data || { reminders: 0, appointments: 0, leave_requests: 0, total: 0 };
+      // Backend returns: { success: true, data: { forwarded_calls: N, reminders: N, ... } }
+      const response = result as any;
+      const counts = response.data || response;
+      return {
+        forwarded_calls: counts.forwarded_calls || 0,
+        reminders: counts.reminders || 0,
+        appointments: counts.appointments || 0,
+        leave_requests: counts.leave_requests || 0,
+        total: counts.total || 0,
+      };
     } catch (error) {
       console.error('Failed to fetch notification counts:', error);
       throw new Error('Failed to fetch notification counts');

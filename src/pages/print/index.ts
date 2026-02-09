@@ -27,3 +27,6 @@ export { PolicyPrintPage } from './PolicyPrintPage';
 
 // Lookup print pages
 export { LookupPrintPage } from './LookupPrintPage';
+
+// Report print pages
+export { ReportPrintPage } from './ReportPrintPage';

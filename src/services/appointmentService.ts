@@ -12,7 +12,7 @@ export interface Appointment {
   customer_id?: number;
   lead_id?: number;
   policy_id?: number;
-  assigned_to: string;
+  assigned_to: string | null;
   created_by?: string;
   status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show' | 'rescheduled';
   notes?: string;
@@ -93,8 +93,7 @@ export interface CreateAppointmentData {
   customer_id?: number;
   lead_id?: number;
   policy_id?: number;
-  assigned_to: string;
-  notes?: string;
+  assigned_to: string | null;
   cancellation_notes?: string;
   reminder_minutes?: number;
   is_recurring?: boolean;
@@ -129,7 +128,7 @@ export interface AppointmentResponse {
 export interface CheckAvailabilityData {
   start_datetime: string;
   end_datetime: string;
-  assigned_to: string;
+  assigned_to: string | null;
   customer_id?: number;
   exclude_id?: string;
 }

@@ -21,7 +21,8 @@ import {
   Edit,
   Trash2,
   X,
-  Printer
+  Printer,
+  UserCheck
 } from "lucide-react";
 import { Appointment } from "@/services/appointmentService";
 import appointmentService from "@/services/appointmentService";
@@ -29,6 +30,7 @@ import { toast } from "@/components/ui/use-toast";
 import { EditAppointmentDialog } from "./EditAppointmentDialog";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { renderHtmlContent } from "@/lib/htmlUtils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AppointmentDetailsDialogProps {
   appointment: Appointment | null;
@@ -48,14 +50,48 @@ export const AppointmentDetailsDialog = ({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [assigning, setAssigning] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [cancellationNotes, setCancellationNotes] = useState("");
+  const { user: currentUser } = useAuth();
 
   if (!appointment) return null;
 
   const handleEdit = () => {
     setShowEditDialog(true);
+  };
+
+  const handleAssignToMe = async () => {
+    if (!currentUser?.id) {
+      toast({
+        title: "Error",
+        description: "Unable to identify current user",
+        variant: "destructive",
+      });
+      return;
+    }
+    setAssigning(true);
+    try {
+      await appointmentService.updateAppointment(appointment.id, {
+        assigned_to: currentUser.id,
+      });
+      toast({
+        title: "Success",
+        description: "Appointment assigned to you successfully",
+      });
+      onAppointmentUpdated?.();
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Failed to assign appointment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to assign appointment",
+        variant: "destructive",
+      });
+    } finally {
+      setAssigning(false);
+    }
   };
 
   const handleCancel = () => {
@@ -245,7 +281,7 @@ export const AppointmentDetailsDialog = ({
                       <div>
                         <div className="text-sm font-medium">Assigned To</div>
                         <div className="text-sm text-gray-600">
-                          {appointment.assigned_user ? `${appointment.assigned_user.first_name} ${appointment.assigned_user.last_name}` : 'N/A'}
+                          {appointment.assigned_user ? `${appointment.assigned_user.first_name} ${appointment.assigned_user.last_name}` : <span className="italic text-gray-400">Any (Unassigned)</span>}
                         </div>
                       </div>
                     </div>
@@ -349,6 +385,15 @@ export const AppointmentDetailsDialog = ({
               >
                 <Printer className="h-4 w-4" />
                 Print
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleAssignToMe}
+                disabled={assigning || appointment.assigned_to === currentUser?.id}
+                className="gap-2"
+              >
+                <UserCheck className="h-4 w-4" />
+                {assigning ? "Assigning..." : "Assign to Me"}
               </Button>
               <Button
                 variant="outline"

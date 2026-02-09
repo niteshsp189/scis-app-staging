@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Search, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ export const CustomerSearch = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
+  const navigate = useNavigate();
 
   // Fetch suggestions when search term changes
   useEffect(() => {
@@ -140,11 +142,11 @@ export const CustomerSearch = ({
   };
 
   const handleSuggestionClick = (suggestion: SearchSuggestion) => {
-    setJustSelectedSuggestion(true);
-    onSearch(suggestion.text);
     setShowSuggestions(false);
     setActiveSuggestionIndex(-1);
     inputRef.current?.blur();
+    // Navigate directly to the customer detail page
+    navigate(`/customers/${suggestion.id}`);
   };
 
   const getTypeColor = (type: string) => {
@@ -165,7 +167,7 @@ export const CustomerSearch = ({
       <div className="relative w-full">
         <Input
           ref={inputRef}
-          placeholder="Search by name, email, or company..."
+          placeholder="Search by name, phone, SSN, or zip code..."
           value={searchTerm}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
@@ -217,12 +219,18 @@ export const CustomerSearch = ({
                       </span>
                     )}
                   </div>
-                  {(suggestion.phone || suggestion.address) && (
+                  {(suggestion.phone || suggestion.address || suggestion.ssn) && (
                     <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
                       {suggestion.phone && (
                         <span className="flex items-center gap-1">
                           <span>📞</span>
                           <span>{suggestion.phone}</span>
+                        </span>
+                      )}
+                      {suggestion.ssn && (
+                        <span className="flex items-center gap-1">
+                          <span>🔒</span>
+                          <span>{suggestion.ssn}</span>
                         </span>
                       )}
                       {suggestion.address && (

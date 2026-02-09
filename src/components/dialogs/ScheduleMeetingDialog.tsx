@@ -128,7 +128,7 @@ export const ScheduleMeetingDialog = ({
     "low" | "medium" | "high" | "urgent"
   >("medium");
   const [location, setLocation] = useState("");
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("any");
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
@@ -185,7 +185,7 @@ export const ScheduleMeetingDialog = ({
       // Ensure we have an array
       if (Array.isArray(fetchedUsers) && fetchedUsers.length > 0) {
         setUsers(fetchedUsers);
-        setSelectedEmployeeId(fetchedUsers[0].id);
+        // Keep 'any' as default - don't auto-select first user
       } else {
         // For permission errors, the service already shows a toast
         // So we just use fallback data without showing another error
@@ -213,7 +213,7 @@ export const ScheduleMeetingDialog = ({
         ];
         
         setUsers(fallbackUsers);
-        setSelectedEmployeeId(fallbackUsers[0].id);
+        // Keep 'any' as default
       }
     } catch (error) {
       console.error("Error loading users:", error);
@@ -251,9 +251,7 @@ export const ScheduleMeetingDialog = ({
         },
       ];
       setUsers(fallbackUsers);
-      if (fallbackUsers.length > 0) {
-        setSelectedEmployeeId(fallbackUsers[0].id);
-      }
+      // Keep 'any' as default
     } finally {
       setUsersLoading(false);
     }
@@ -291,6 +289,12 @@ export const ScheduleMeetingDialog = ({
 
   const checkAvailability = useCallback(async () => {
     if (!date || !time || !selectedEmployeeId) return;
+
+    // Skip availability check for 'Any' employee
+    if (selectedEmployeeId === 'any') {
+      setAvailabilityCheck({ available: true });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -478,7 +482,7 @@ export const ScheduleMeetingDialog = ({
     }
 
     if (!selectedEmployeeId) {
-      newErrors.selectedEmployeeId = "Please select an employee";
+      newErrors.selectedEmployeeId = "Please select an employee or 'Any'";
     }
 
     if (!meetingType || meetingType.length === 0) {
@@ -602,7 +606,7 @@ export const ScheduleMeetingDialog = ({
     setLocation("");
     setMeetingType(['review']);
     setPriority("medium");
-    setSelectedEmployeeId(users.length > 0 ? users[0].id : "");
+    setSelectedEmployeeId("any");
     setErrors({});
     setAvailabilityCheck(null);
   };
@@ -677,7 +681,7 @@ export const ScheduleMeetingDialog = ({
           appointment_type: meetingType.join(','), // Join multiple types with comma
           priority: priority,
           customer_id: customerId,
-          assigned_to: selectedEmployeeId,
+          assigned_to: selectedEmployeeId === 'any' ? null : selectedEmployeeId,
           notes: description,
         };      // Log the request data for debugging
 
@@ -702,7 +706,7 @@ export const ScheduleMeetingDialog = ({
           setLocation("");
           setMeetingType(['review']);
           setPriority("medium");
-          setSelectedEmployeeId(users.length > 0 ? users[0].id : "");
+          setSelectedEmployeeId("any");
           setErrors({});
           setAvailabilityCheck(null);
           
@@ -865,10 +869,13 @@ export const ScheduleMeetingDialog = ({
                   <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId} required>
                     <SelectTrigger className={errors.selectedEmployeeId ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select an employee">
-                        {selectedEmployeeId ? users.find(user => user.id === selectedEmployeeId)?.first_name + ' ' + users.find(user => user.id === selectedEmployeeId)?.last_name || selectedEmployeeId : "Select an employee"}
+                        {selectedEmployeeId === 'any' ? 'Any' : selectedEmployeeId ? users.find(user => user.id === selectedEmployeeId)?.first_name + ' ' + users.find(user => user.id === selectedEmployeeId)?.last_name || selectedEmployeeId : "Select an employee"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="any" className="font-medium text-primary">
+                        Any
+                      </SelectItem>
                       {Array.isArray(users) && users.length > 0 ? (
                         users.map((user) => (
                           <SelectItem key={user.id} value={user.id}>

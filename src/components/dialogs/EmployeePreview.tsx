@@ -22,6 +22,7 @@ interface EmployeePreviewProps {
     location: string;
     roles: number[];
     is_active: boolean;
+    is_agent?: boolean;
   };
   roles?: Role[];
 }
@@ -71,6 +72,12 @@ export function EmployeePreview({ formData, roles = [] }: EmployeePreviewProps) 
             <p className="text-sm font-medium text-gray-500">Account Status</p>
             <Badge variant={formData.is_active ? "default" : "secondary"}>
               {formData.is_active ? "Active" : "Inactive"}
+            </Badge>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Agent Status</p>
+            <Badge variant={formData.is_agent ? "default" : "secondary"}>
+              {formData.is_agent ? "Yes — Listed as Agent" : "No"}
             </Badge>
           </div>
         </CardContent>

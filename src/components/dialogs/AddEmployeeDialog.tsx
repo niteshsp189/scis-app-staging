@@ -64,6 +64,7 @@ export const AddEmployeeDialog = ({
     location: "",
     roles: [] as number[],
     is_active: true,
+    is_agent: false,
   };
   
   const [formData, setFormData] = useState(defaultFormData);
@@ -239,6 +240,7 @@ export const AddEmployeeDialog = ({
       location: "",
       roles: [],
       is_active: true,
+      is_agent: false,
     });
 
     // Clear localStorage
@@ -343,6 +345,7 @@ export const AddEmployeeDialog = ({
         location: "",
         roles: [],
         is_active: true,
+        is_agent: false,
       });
       
       // Clear localStorage after successful submission
@@ -634,6 +637,17 @@ export const AddEmployeeDialog = ({
                 />
                 <Label htmlFor="is_active">
                   Active (User can login and access the system)
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="is_agent"
+                  checked={formData.is_agent}
+                  onCheckedChange={(checked) => handleInputChange('is_agent', checked)}
+                />
+                <Label htmlFor="is_agent">
+                  Is Agent (Will appear in Agent of Record and Writing Agent dropdowns)
                 </Label>
               </div>
 

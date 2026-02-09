@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,26 +10,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
   Bell,
-  Cake,
-  FileText,
-  Calendar,
   Check,
   Clock,
   ChevronDown,
-  CheckCircle,
-  XCircle,
   RefreshCw,
 } from "lucide-react";
 import {
@@ -44,9 +28,6 @@ import {
   notificationService,
   type Notification,
 } from "@/services/notificationService";
-import { useAuth } from "@/contexts/AuthContext";
-import { usePermissions } from "@/contexts/PermissionContext";
-import { authService } from "@/services/authService";
 
 const snoozeOptions = [
   { label: "1 hour", minutes: 60 },
@@ -58,15 +39,18 @@ const snoozeOptions = [
   { label: "1 week", minutes: 10080 },
 ];
 
-const API_BASE_URL = "/api";
+function formatSnoozeLabel(minutes: number): string {
+  if (minutes < 60) return `${minutes} minutes`;
+  if (minutes < 1440) return `${Math.round(minutes / 60)} hours`;
+  if (minutes < 10080) return `${Math.round(minutes / 1440)} days`;
+  return `${Math.round(minutes / 10080)} weeks`;
+}
 
 const Notifications = () => {
-  const { user } = useAuth();
-  const { hasPermission } = usePermissions();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
-  const [readStatusFilter, setReadStatusFilter] = useState<string>("unread");
+  const [readStatusFilter, setReadStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     loadNotifications();
@@ -76,24 +60,7 @@ const Notifications = () => {
     try {
       setLoading(true);
       const result = await notificationService.getNotifications();
-
-      // Handle different response structures - same logic as NotificationButton
-      let notificationData = [];
-
-      if (result.success && result.data) {
-        // API returns {success: true, data: {data: [...], unread_count: 0}}
-        if (result.data.data) {
-          notificationData = result.data.data;
-        } else if (Array.isArray(result.data)) {
-          notificationData = result.data;
-        }
-      } else if (Array.isArray(result.data)) {
-        notificationData = result.data;
-      } else if (Array.isArray(result)) {
-        notificationData = result;
-      }
-
-      setNotifications(notificationData);
+      setNotifications(result.data);
     } catch (error) {
       console.error("Failed to load notifications:", error);
       toast({
@@ -106,196 +73,16 @@ const Notifications = () => {
     }
   };
 
-  // Helper function for authenticated requests
-  const makeAuthenticatedRequest = async (
-    url: string,
-    options: RequestInit = {},
-  ) => {
-    const token = authService.getToken();
-    const headers = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    };
-
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      const error: any = new Error(
-        `HTTP ${response.status}: ${response.statusText}`,
-      );
-      try {
-        error.response = await response.json();
-      } catch (e) {
-        // The response might not be a valid JSON
-      }
-      throw error;
-    }
-
-    return response;
-  };
-
-  // Permission check functions
-  const canApproveLeaveRequest = (notification: Notification) => {
-    if (!user || notification.type !== "leave") {
-      return false;
-    }
-
-    // Check specific permissions using usePermissions hook
-    if (hasPermission("approve_leave_requests")) {
-      return true;
-    }
-
-    // Check if user has admin, super admin, or manager roles
-    const userRoles = user?.roles || [];
-    const canApproveRoles = [
-      "admin",
-      "super_admin",
-      "manager",
-      "system_administrator",
-      "administrator",
-      "Super Admin",
-      "Admin",
-      "Manager",
-    ];
-    const hasApprovalRole = userRoles.some((role) =>
-      canApproveRoles.includes(role),
-    );
-
-    if (hasApprovalRole) {
-      return true;
-    }
-
-    // Check if user is the assigned manager for this leave request
-    if (notification.data && notification.data.manager_id) {
-      return notification.data.manager_id === user.id;
-    }
-
-    return false;
-  };
-
-  const canRejectLeaveRequest = (notification: Notification) => {
-    if (!user || notification.type !== "leave") {
-      return false;
-    }
-
-    // Check specific permissions using usePermissions hook
-    if (hasPermission("reject_leave_requests")) {
-      return true;
-    }
-
-    // Check if user has admin, super admin, or manager roles
-    const userRoles = user?.roles || [];
-    const canRejectRoles = [
-      "admin",
-      "super_admin",
-      "manager",
-      "system_administrator",
-      "administrator",
-      "Super Admin",
-      "Admin",
-      "Manager",
-    ];
-    const hasRejectionRole = userRoles.some((role) =>
-      canRejectRoles.includes(role),
-    );
-
-    if (hasRejectionRole) {
-      return true;
-    }
-
-    // Check if user is the assigned manager for this leave request
-    if (notification.data && notification.data.manager_id) {
-      return notification.data.manager_id === user.id;
-    }
-
-    return false;
-  };
-
-  // Leave request approval/rejection handlers
-  const handleApproveLeaveRequest = async (notification: Notification) => {
-    try {
-      const leaveRequestId = notification.data?.leave_id;
-      if (!leaveRequestId) {
-        throw new Error("Leave request ID not found");
-      }
-
-      const response = await makeAuthenticatedRequest(
-        `${API_BASE_URL}/leave-requests/${leaveRequestId}/approve`,
-        {
-          method: "PATCH",
-        },
-      );
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Leave request approved successfully",
-        });
-
-        // Remove notification from local state
-        setNotifications((prev) =>
-          prev.filter((n) => n.id !== notification.id),
-        );
-      }
-    } catch (error) {
-      console.error("Error approving leave request:", error);
-      toast({
-        title: "Error",
-        description: "Failed to approve leave request",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleRejectLeaveRequest = async (notification: Notification) => {
-    try {
-      const leaveRequestId = notification.data?.leave_id;
-      if (!leaveRequestId) {
-        throw new Error("Leave request ID not found");
-      }
-
-      const response = await makeAuthenticatedRequest(
-        `${API_BASE_URL}/leave-requests/${leaveRequestId}/reject`,
-        {
-          method: "PATCH",
-        },
-      );
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Leave request rejected successfully",
-        });
-
-        // Remove notification from local state
-        setNotifications((prev) =>
-          prev.filter((n) => n.id !== notification.id),
-        );
-      }
-    } catch (error) {
-      console.error("Error rejecting leave request:", error);
-      toast({
-        title: "Error",
-        description: "Failed to reject leave request",
-        variant: "destructive",
-      });
-    }
+  const refreshNotificationCounts = () => {
+    // Dispatch event so the NotificationButton in the header refreshes its badge count
+    window.dispatchEvent(new Event("refreshNotifications"));
   };
 
   const handleCompleteReminder = async (notification: Notification) => {
     try {
-      // Extract reminder ID from notification data or ID
-      let reminderId = notification.id;
-      if (notification.data && notification.data.reminder_id) {
-        reminderId = notification.data.reminder_id;
-      } else if (notification.id.startsWith("reminder_")) {
-        reminderId = notification.id.replace("reminder_", "");
-      }
+      const reminderId =
+        notification.data?.reminder_id ||
+        notification.id.replace("reminder_", "");
 
       await notificationService.completeReminder(reminderId);
 
@@ -304,8 +91,8 @@ const Notifications = () => {
         description: "Reminder marked as completed",
       });
 
-      // Remove from local state
       setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+      refreshNotificationCounts();
     } catch (error) {
       console.error("Failed to complete reminder:", error);
       toast({
@@ -318,35 +105,22 @@ const Notifications = () => {
 
   const handleSnoozeReminder = async (
     notification: Notification,
-    minutes: number = 60,
+    minutes: number,
   ) => {
     try {
-      // Extract reminder ID from notification data or ID
-      let reminderId = notification.id;
-      if (notification.data && notification.data.reminder_id) {
-        reminderId = notification.data.reminder_id;
-      } else if (notification.id.startsWith("reminder_")) {
-        reminderId = notification.id.replace("reminder_", "");
-      }
+      const reminderId =
+        notification.data?.reminder_id ||
+        notification.id.replace("reminder_", "");
 
       await notificationService.snoozeReminder(reminderId, minutes);
 
-      const label =
-        minutes < 60
-          ? `${minutes} minutes`
-          : minutes < 1440
-            ? `${Math.round(minutes / 60)} hours`
-            : minutes < 10080
-              ? `${Math.round(minutes / 1440)} days`
-              : `${Math.round(minutes / 10080)} weeks`;
-
       toast({
         title: "Success",
-        description: `Reminder snoozed for ${label}`,
+        description: `Reminder snoozed for ${formatSnoozeLabel(minutes)}`,
       });
 
-      // Remove from local state
       setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+      refreshNotificationCounts();
     } catch (error) {
       console.error("Failed to snooze reminder:", error);
       toast({
@@ -357,18 +131,43 @@ const Notifications = () => {
     }
   };
 
+  const handleMarkForwardedCallAsRead = async (notification: Notification) => {
+    try {
+      const notifDbId = notification.data?.notification_db_id;
+      if (!notifDbId) return;
+
+      await notificationService.markForwardedCallAsRead(notifDbId);
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === notification.id ? { ...n, read: true } : n
+        )
+      );
+      refreshNotificationCounts();
+      toast({
+        title: "Success",
+        description: "Notification marked as read",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update notification",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getIcon = (type: string) => {
     switch (type) {
-      case "policy":
-        return <FileText className="h-4 w-4 text-blue-500" />;
-      case "appointment":
-        return <Calendar className="h-4 w-4 text-green-500" />;
       case "reminder":
-        return <Bell className="h-4 w-4 text-yellow-500" />;
-      case "leave":
-        return <Clock className="h-4 w-4 text-orange-500" />;
+        return "⏰";
+      case "appointment":
+        return "📅";
+      case "call_forwarded":
+        return "📞";
+      case "system":
+        return "⚙️";
       default:
-        return <Bell className="h-4 w-4 text-gray-500" />;
+        return "🔔";
     }
   };
 
@@ -385,14 +184,17 @@ const Notifications = () => {
     }
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60),
     );
-  };
 
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    if (diffInMinutes < 1) return "just now";
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    return `${Math.floor(diffInMinutes / 1440)}d ago`;
   };
 
   const filteredNotifications = notifications.filter((notification) => {
@@ -400,7 +202,6 @@ const Notifications = () => {
     if (filter !== "all" && notification.type !== filter) {
       return false;
     }
-    
     // Filter by read status
     if (readStatusFilter === "read" && !notification.read) {
       return false;
@@ -408,11 +209,8 @@ const Notifications = () => {
     if (readStatusFilter === "unread" && notification.read) {
       return false;
     }
-    
     return true;
   });
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   if (loading) {
     return (
@@ -444,7 +242,9 @@ const Notifications = () => {
             disabled={loading}
             title="Refresh notifications"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+            />
           </Button>
           <Select value={readStatusFilter} onValueChange={setReadStatusFilter}>
             <SelectTrigger className="w-40">
@@ -457,15 +257,14 @@ const Notifications = () => {
             </SelectContent>
           </Select>
           <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-48">
               <SelectValue placeholder="Filter notifications" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Notifications</SelectItem>
               <SelectItem value="reminder">Reminders</SelectItem>
-              <SelectItem value="policy">Policies</SelectItem>
               <SelectItem value="appointment">Appointments</SelectItem>
-              <SelectItem value="leave">Leave Requests</SelectItem>
+              <SelectItem value="call_forwarded">Forwarded Calls</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -486,14 +285,16 @@ const Notifications = () => {
           filteredNotifications.map((notification) => (
             <Card
               key={notification.id}
-              className={`cursor-pointer transition-colors border-l-4 ${getPriorityColor(notification.priority)} ${
+              className={`transition-colors border-l-4 ${getPriorityColor(notification.priority)} ${
                 notification.read ? "bg-gray-50" : "bg-white hover:bg-gray-50"
               }`}
             >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3 flex-1">
-                    {getIcon(notification.type)}
+                    <span className="text-xl">
+                      {getIcon(notification.type)}
+                    </span>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3
@@ -510,107 +311,48 @@ const Notifications = () => {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-gray-600 text-sm mb-2">
+                      <p className="text-gray-600 text-sm mb-1">
                         {notification.message}
                       </p>
+                      {notification.customer_name && (
+                        <p className="text-sm text-blue-600 mb-1">
+                          Customer: {notification.customer_name}
+                        </p>
+                      )}
+                      {notification.data?.called_for_user && (
+                        <p className="text-sm text-purple-600 mb-1">
+                          Called For:{" "}
+                          {notification.data.called_for_user.first_name}{" "}
+                          {notification.data.called_for_user.last_name}
+                        </p>
+                      )}
+                      {notification.data?.forwarded_to_user && (
+                        <p className="text-sm text-orange-600 mb-1">
+                          Forwarded To:{" "}
+                          {notification.data.forwarded_to_user.first_name}{" "}
+                          {notification.data.forwarded_to_user.last_name}
+                        </p>
+                      )}
                       <p className="text-xs text-gray-400">
-                        {notification.time}
+                        {formatTimeAgo(notification.created_at)}
                       </p>
 
                       {/* Action buttons for call forwarded notifications */}
-                      {notification.type === "call_forwarded" && (
-                        <div className="flex gap-2 mt-3">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={async () => {
-                              try {
-                                const notifDbId = notification.data?.notification_db_id;
-                                if (notifDbId) {
-                                  if (notification.read) {
-                                    // Mark as unread - currently not supported, just show message
-                                    toast({
-                                      title: "Info",
-                                      description: "Mark as unread is not supported yet",
-                                    });
-                                  } else {
-                                    // Mark as read
-                                    await notificationService.markForwardedCallAsRead(notifDbId);
-                                    setNotifications((prev) => 
-                                      prev.map((n) => 
-                                        n.id === notification.id ? { ...n, read: true } : n
-                                      )
-                                    );
-                                    toast({
-                                      title: "Success",
-                                      description: "Notification marked as read",
-                                    });
-                                  }
-                                }
-                              } catch (error) {
-                                toast({
-                                  title: "Error",
-                                  description: "Failed to update notification",
-                                  variant: "destructive",
-                                });
+                      {notification.type === "call_forwarded" &&
+                        !notification.read && (
+                          <div className="flex gap-2 mt-3">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                handleMarkForwardedCallAsRead(notification)
                               }
-                            }}
-                          >
-                            <Check className="h-3 w-3 mr-1" />
-                            {notification.read ? "Mark as Unread" : "Mark as Read"}
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button size="sm" variant="outline">
-                                <Clock className="h-3 w-3 mr-1" />
-                                Snooze
-                                <ChevronDown className="h-2 w-2 ml-1" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-32">
-                              {snoozeOptions.map((option, index) => (
-                                <div key={option.minutes}>
-                                  <DropdownMenuItem
-                                    onClick={async () => {
-                                      try {
-                                        const notifDbId = notification.data?.notification_db_id;
-                                        if (notifDbId) {
-                                          // Mark as read (snooze behavior for call forwarded)
-                                          await notificationService.markForwardedCallAsRead(notifDbId);
-                                          setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
-                                          const label =
-                                            option.minutes < 60
-                                              ? `${option.minutes} minutes`
-                                              : option.minutes < 1440
-                                                ? `${Math.round(option.minutes / 60)} hours`
-                                                : option.minutes < 10080
-                                                  ? `${Math.round(option.minutes / 1440)} days`
-                                                  : `${Math.round(option.minutes / 10080)} weeks`;
-                                          toast({
-                                            title: "Success",
-                                            description: `Notification snoozed for ${label}`,
-                                          });
-                                        }
-                                      } catch (error) {
-                                        toast({
-                                          title: "Error",
-                                          description: "Failed to snooze notification",
-                                          variant: "destructive",
-                                        });
-                                      }
-                                    }}
-                                    className="text-sm cursor-pointer"
-                                  >
-                                    <Clock className="h-3 w-3 mr-2" />
-                                    {option.label}
-                                  </DropdownMenuItem>
-                                  {index === 2 && <DropdownMenuSeparator />}
-                                </div>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      )}
+                            >
+                              <Check className="h-3 w-3 mr-1" />
+                              Mark as Read
+                            </Button>
+                          </div>
+                        )}
 
                       {/* Action buttons for reminders */}
                       {notification.type === "reminder" && (
@@ -618,10 +360,12 @@ const Notifications = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleCompleteReminder(notification)}
+                            onClick={() =>
+                              handleCompleteReminder(notification)
+                            }
                           >
                             <Check className="h-3 w-3 mr-1" />
-                            Mark as Read
+                            Complete
                           </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -655,7 +399,6 @@ const Notifications = () => {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 ml-4"></div>
                 </div>
               </CardContent>
             </Card>

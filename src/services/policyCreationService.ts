@@ -508,7 +508,7 @@ class PolicyCreationService {
   async getUsers(): Promise<User[]> {
     try {
       const response = await axios.get<{ data: User[] } | User[]>(
-        `${API_BASE_URL}/users`,
+        `${API_BASE_URL}/users/agents`,
         { headers: this.getAuthHeaders() },
       );
 
@@ -523,14 +523,14 @@ class PolicyCreationService {
       return [];
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error("Failed to fetch users:", error.response?.data);
+        console.error("Failed to fetch agents:", error.response?.data);
       } else {
         console.error(
-          "An unexpected error occurred while fetching users:",
+          "An unexpected error occurred while fetching agents:",
           error,
         );
       }
-      throw new Error("Failed to fetch users");
+      throw new Error("Failed to fetch agents");
     }
   }
 

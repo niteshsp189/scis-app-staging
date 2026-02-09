@@ -18,6 +18,16 @@ import {
   BookOpen,
   CalendarClock,
   Phone,
+  BarChart3,
+  UserMinus,
+  Ban,
+  ArrowRightLeft,
+  FileSearch,
+  ClipboardList,
+  UsersRound,
+  Cake,
+  Clock,
+  CalendarDays,
 } from "lucide-react";
 
 import { useLocation, Link } from "react-router-dom";
@@ -123,6 +133,22 @@ export function AppSidebar() {
       submenu: [
         { title: "Global Search", url: "/lookup", icon: Search, permission: "view_global_search" },
         { title: "Global Book", url: "/global-book", icon: BookOpen, permission: "view_customers" },
+      ]
+    },
+    {
+      title: "Reports",
+      icon: BarChart3,
+      permission: "view_reports",
+      submenu: [
+        { title: "Lost Clients", url: "/reports/lost-clients", icon: UserMinus, permission: "view_reports" },
+        { title: "Cancelled Customers", url: "/reports/cancelled-customers", icon: Ban, permission: "view_reports" },
+        { title: "Transfers Report", url: "/reports/transfers", icon: ArrowRightLeft, permission: "view_reports" },
+        { title: "Custom Report", url: "/reports/custom", icon: FileSearch, permission: "view_reports" },
+        { title: "General Report", url: "/reports/general", icon: ClipboardList, permission: "view_reports" },
+        { title: "Customers Report", url: "/reports/customers", icon: UsersRound, permission: "view_reports" },
+        { title: "Upcoming Birthdays", url: "/reports/upcoming-birthdays", icon: Cake, permission: "view_reports" },
+        { title: "Turning Age", url: "/reports/turning-age", icon: Clock, permission: "view_reports" },
+        { title: "Effective Date", url: "/reports/effective-date", icon: CalendarDays, permission: "view_reports" },
       ]
     },
     { title: "Audit Logs", url: "/audit", icon: Shield, permission: "view_audit_logs" },

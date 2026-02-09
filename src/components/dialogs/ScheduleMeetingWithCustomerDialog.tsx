@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,12 +18,13 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, User, Plus } from "lucide-react";
+import { Search, User, Plus, Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { ScheduleMeetingDialog } from "./ScheduleMeetingDialog";
 import { api } from "@/lib/axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import globalSearchService from "@/services/globalSearchService";
 
 interface ScheduleMeetingWithCustomerDialogProps {
   trigger?: React.ReactNode;
@@ -50,50 +51,70 @@ export const ScheduleMeetingWithCustomerDialog = ({
   const [internalOpen, setInternalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
-  const [filteredCustomers, setFilteredCustomers] = useState<CustomerOption[]>(
-    [],
-  );
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerOption | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [schedulingDialogOpen, setSchedulingDialogOpen] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  
+  const debounceRef = useRef<NodeJS.Timeout>();
 
   // Use external open state if provided, otherwise use internal state
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = externalOnOpenChange || setInternalOpen;
 
-  // Load customers when dialog opens
+  // Load initial customers when dialog opens
   useEffect(() => {
     if (open) {
-      loadCustomers();
+      loadInitialCustomers();
+    } else {
+      // Reset state when dialog closes
+      setSearchTerm("");
+      setCustomers([]);
+      setHasSearched(false);
     }
   }, [open]);
 
-  // Filter customers based on search term
+  // Search customers when search term changes (debounced)
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredCustomers(customers);
-    } else {
-      const searchLower = searchTerm.toLowerCase();
-      const filtered = customers.filter(
-        (customer) =>
-          customer.name.toLowerCase().includes(searchLower) ||
-          customer.email?.toLowerCase().includes(searchLower) ||
-          customer.phone?.includes(searchTerm) ||
-          customer.id.toString().includes(searchTerm),
-      );
-      setFilteredCustomers(filtered);
+    // Clear existing timeout
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
     }
-  }, [searchTerm, customers]);
 
-  const loadCustomers = async () => {
+    // If search term is empty, load initial customers
+    if (!searchTerm.trim()) {
+      if (hasSearched) {
+        loadInitialCustomers();
+        setHasSearched(false);
+      }
+      return;
+    }
+
+    // Only search if input has at least 2 characters
+    if (searchTerm.trim().length >= 2) {
+      debounceRef.current = setTimeout(async () => {
+        await searchCustomers(searchTerm.trim());
+      }, 300);
+    }
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [searchTerm]);
+
+  // Load initial customers (recent/all customers)
+  const loadInitialCustomers = async () => {
     setLoading(true);
     try {
-
-      // Use axios API directly to get raw response
       const response = await api.get("/customers", {
         params: {
-          per_page: 200,
+          per_page: 50,
+          sort_by: "created_at",
+          sort_direction: "desc",
         },
       });
 
@@ -111,15 +132,9 @@ export const ScheduleMeetingWithCustomerDialog = ({
           }),
         );
 
-        // Sort customers alphabetically by name
-        customerOptions.sort((a, b) => a.name.localeCompare(b.name));
-
         setCustomers(customerOptions);
-        setFilteredCustomers(customerOptions);
       } else {
-        
         setCustomers([]);
-        setFilteredCustomers([]);
       }
     } catch (error) {
       console.error("Error loading customers:", error);
@@ -129,9 +144,68 @@ export const ScheduleMeetingWithCustomerDialog = ({
         variant: "destructive",
       });
       setCustomers([]);
-      setFilteredCustomers([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Search customers using the global search service (same as customer list)
+  const searchCustomers = async (query: string) => {
+    setIsSearching(true);
+    setHasSearched(true);
+    try {
+      // Use the same search API as the customer list
+      const response = await globalSearchService.getSuggestions(query, 20);
+      
+      // Filter to only customer type suggestions
+      const customerSuggestions = response.data.filter(
+        (s: any) => s.type === 'customer'
+      );
+
+      const customerOptions: CustomerOption[] = customerSuggestions.map(
+        (suggestion: any) => ({
+          id: suggestion.id,
+          name: suggestion.text,
+          email: "",
+          phone: suggestion.phone || "",
+        }),
+      );
+
+      setCustomers(customerOptions);
+    } catch (error) {
+      console.error("Error searching customers:", error);
+      // Fallback to API search if suggestions fail
+      try {
+        const response = await api.get("/customers", {
+          params: {
+            search: query,
+            per_page: 20,
+          },
+        });
+
+        if (response.data.data && Array.isArray(response.data.data)) {
+          const customerOptions: CustomerOption[] = response.data.data.map(
+            (customer: any) => ({
+              id: customer.id,
+              name: `${customer.first_name} ${customer.last_name}`.trim(),
+              email: customer.email || "",
+              phone:
+                customer.cell_phone ||
+                customer.home_phone ||
+                customer.work_phone ||
+                "",
+            }),
+          );
+          setCustomers(customerOptions);
+        } else {
+          setCustomers([]);
+        }
+      } catch (fallbackError) {
+        console.error("Fallback search also failed:", fallbackError);
+        setCustomers([]);
+      }
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -179,12 +253,15 @@ export const ScheduleMeetingWithCustomerDialog = ({
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   id="search"
-                  placeholder="Search by name, email, phone, or ID..."
+                  placeholder="Search by name, phone, SSN, or zip code..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 pr-10"
                   autoComplete="off"
                 />
+                {isSearching && (
+                  <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 animate-spin" />
+                )}
               </div>
             </div>
 
@@ -204,7 +281,7 @@ export const ScheduleMeetingWithCustomerDialog = ({
                       </div>
                     ))}
                   </div>
-                ) : filteredCustomers.length === 0 ? (
+                ) : customers.length === 0 ? (
                   <div className="p-4 text-center text-gray-500">
                     {searchTerm
                       ? `No customers found matching "${searchTerm}". Try a different search term.`
@@ -212,7 +289,7 @@ export const ScheduleMeetingWithCustomerDialog = ({
                   </div>
                 ) : (
                   <div className="divide-y">
-                    {filteredCustomers.map((customer) => (
+                    {customers.map((customer) => (
                       <button
                         key={customer.id}
                         onClick={() => handleCustomerSelect(customer)}
@@ -249,7 +326,7 @@ export const ScheduleMeetingWithCustomerDialog = ({
             <Alert>
               <AlertDescription>
                 Select a customer from the list above to schedule an
-                appointment. You can search by name, email, or phone number to
+                appointment. You can search by name, phone, SSN, or zip code to
                 find the right customer quickly.
               </AlertDescription>
             </Alert>

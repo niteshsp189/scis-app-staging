@@ -102,7 +102,7 @@ export const CustomerCredentialsTab = ({ customerData }: CustomerCredentialsTabP
       });
     } catch (error: any) {
       console.error("Failed to save credentials:", error);
-      
+
       // Handle validation errors
       if (error.errors) {
         setValidationErrors(error.errors);
@@ -222,25 +222,25 @@ export const CustomerCredentialsTab = ({ customerData }: CustomerCredentialsTabP
   };
 
   const formatMedicareNumber = (value: string) => {
-    // Remove all non-digits
-    const digits = value.replace(/\D/g, "");
+    // Remove all non-alphanumeric characters and convert to uppercase
+    const chars = value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
 
     // Format as xxxx-xxx-xxxx
-    if (digits.length >= 4) {
-      let formatted = digits.slice(0, 4);
-      if (digits.length >= 7) {
-        formatted += "-" + digits.slice(4, 7);
-        if (digits.length >= 11) {
-          formatted += "-" + digits.slice(7, 11);
-        } else if (digits.length > 7) {
-          formatted += "-" + digits.slice(7);
+    if (chars.length >= 4) {
+      let formatted = chars.slice(0, 4);
+      if (chars.length >= 7) {
+        formatted += "-" + chars.slice(4, 7);
+        if (chars.length >= 11) {
+          formatted += "-" + chars.slice(7, 11);
+        } else if (chars.length > 7) {
+          formatted += "-" + chars.slice(7);
         }
-      } else if (digits.length > 4) {
-        formatted += "-" + digits.slice(4);
+      } else if (chars.length > 4) {
+        formatted += "-" + chars.slice(4);
       }
       return formatted;
     }
-    return digits;
+    return chars;
   };
 
   if (loading) {

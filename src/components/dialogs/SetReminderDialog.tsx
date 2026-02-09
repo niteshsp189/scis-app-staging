@@ -15,17 +15,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { DateInput } from "@/components/ui/date-input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Clock, Bell, Loader2, User, X } from "lucide-react";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Clock, Bell, Loader2, User, X, ChevronsUpDown, Check } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/use-toast";
 import { TimePicker } from "@/components/ui/time-picker";
+import { api } from "@/lib/axios";
 import {
   reminderService,
   type CreateReminderData,
@@ -49,6 +56,7 @@ export const SetReminderDialog = ({
   const [agents, setAgents] = useState<any[]>([]);
   const [loadingAgents, setLoadingAgents] = useState(false);
   const [agentSearch, setAgentSearch] = useState("");
+  const [userPopoverOpen, setUserPopoverOpen] = useState(false);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -62,22 +70,16 @@ export const SetReminderDialog = ({
     const loadAgents = async () => {
       try {
         setLoadingAgents(true);
-        const response = await fetch('/api/users/agents', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && Array.isArray(data.data)) {
-            setAgents(data.data);
-          }
-        } else {
-          console.error('Failed to load agents:', response.status, response.statusText);
+        const response = await api.get('/team-members?per_page=100');
+        if (response.data?.success && response.data?.data?.data && Array.isArray(response.data.data.data)) {
+          setAgents(response.data.data.data);
+        } else if (response.data?.success && Array.isArray(response.data?.data)) {
+          setAgents(response.data.data);
+        } else if (Array.isArray(response.data)) {
+          setAgents(response.data);
         }
       } catch (error) {
-        console.error("Failed to load agents:", error);
+        console.error("Failed to load team members:", error);
       } finally {
         setLoadingAgents(false);
       }
@@ -147,7 +149,6 @@ export const SetReminderDialog = ({
         description: description || undefined,
         reminder_datetime: reminderDateTime.toISOString(),
         reminder_type: "custom",
-        priority: "medium",
         customer_id: customerId,
         agent_id: selectedAgent,
         notification_methods: ["email"],
@@ -223,78 +224,97 @@ export const SetReminderDialog = ({
             />
           </div>
 
-          {/* Agent Selection */}
+          {/* User Selection */}
           <div className="grid gap-2">
-            <Label htmlFor="agent">Assign to Agent (Optional)</Label>
-            <Select
-              value={selectedAgent || "none"}
-              onValueChange={(value) =>
-                setSelectedAgent(value === "none" ? undefined : value)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select an agent">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span>
-                      {selectedAgent 
-                        ? agents.find(a => a.id === selectedAgent)?.name
-                        : "Select an agent"
-                      }
-                    </span>
-                  </div>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <div className="p-2">
-                  <Input
-                    placeholder="Search agents..."
-                    value={agentSearch}
-                    onChange={(e) => setAgentSearch(e.target.value)}
-                    className="mb-2"
-                  />
+            <Label htmlFor="agent">Assign to User (Optional)</Label>
+            {selectedAgent ? (
+              <div className="flex items-center justify-between p-2 border rounded-md bg-muted/50">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span>
+                    {(() => {
+                      const found = agents.find(a => a.id === selectedAgent);
+                      return found ? (found.name || `${found.first_name || ''} ${found.last_name || ''}`.trim()) : "Selected user";
+                    })()}
+                  </span>
                 </div>
-                <SelectItem value="none">No agent assigned</SelectItem>
-                {loadingAgents ? (
-                  <SelectItem value="loading" disabled>
-                    Loading agents...
-                  </SelectItem>
-                ) : agents.filter(agent =>
-                    agentSearch === "" ||
-                    agent.name
-                      .toLowerCase()
-                      .includes(agentSearch.toLowerCase()) ||
-                    agent.email?.toLowerCase().includes(agentSearch.toLowerCase())
-                  ).length === 0 ? (
-                  <SelectItem value="no-results" disabled>
-                    No agents found
-                  </SelectItem>
-                ) : (
-                  agents
-                    .filter(agent =>
-                      agentSearch === "" ||
-                      agent.name
-                        .toLowerCase()
-                        .includes(agentSearch.toLowerCase()) ||
-                      agent.email?.toLowerCase().includes(agentSearch.toLowerCase())
-                    )
-                    .map((agent) => (
-                      <SelectItem key={agent.id} value={agent.id}>
-                        <div className="flex flex-col">
-                          <span>
-                            {agent.name}
-                          </span>
-                          {agent.email && (
-                            <span className="text-xs text-muted-foreground">
-                              {agent.email}
-                            </span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))
-                )}
-              </SelectContent>
-            </Select>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  type="button"
+                  onClick={() => setSelectedAgent(undefined)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Popover open={userPopoverOpen} onOpenChange={setUserPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    type="button"
+                    aria-expanded={userPopoverOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      <span>Select a user</span>
+                    </div>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command shouldFilter={false}>
+                    <CommandInput
+                      placeholder="Search users..."
+                      value={agentSearch}
+                      onValueChange={setAgentSearch}
+                    />
+                    <CommandList>
+                      <CommandEmpty>
+                        {loadingAgents ? "Loading users..." : "No users found"}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {agents
+                          .filter(agent =>
+                            agentSearch === "" ||
+                            (agent.name || `${agent.first_name || ''} ${agent.last_name || ''}`.trim())
+                              .toLowerCase()
+                              .includes(agentSearch.toLowerCase()) ||
+                            agent.email?.toLowerCase().includes(agentSearch.toLowerCase())
+                          )
+                          .map((agent) => (
+                            <CommandItem
+                              key={agent.id}
+                              value={agent.id}
+                              onSelect={() => {
+                                setSelectedAgent(agent.id);
+                                setUserPopoverOpen(false);
+                                setAgentSearch("");
+                              }}
+                            >
+                              <div className="flex flex-col">
+                                <span>
+                                  {agent.name || `${agent.first_name || ''} ${agent.last_name || ''}`.trim()}
+                                </span>
+                                {agent.email && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {agent.email}
+                                  </span>
+                                )}
+                              </div>
+                              {selectedAgent === agent.id && (
+                                <Check className="ml-auto h-4 w-4" />
+                              )}
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
 
           {/* Date and Time */}
