@@ -27,9 +27,9 @@ const Customers = () => {
   );
   const hasHandledRefresh = useRef(false);
 
-  // Redirect to /customers/clients as the default customer view
+  // Redirect to /clients as the default customer view
   useEffect(() => {
-    navigate("/customers/clients", { replace: true });
+    navigate("/clients", { replace: true });
   }, [navigate]);
 
   // Handle add customer success

@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Phone, Mail, MapPin, Calendar, DollarSign, FileText, Eye } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 import { CustomerData } from "@/types/customer";
 import { usePhoneSelection } from "@/hooks/usePhoneSelection";
 import { MaskedDisplay } from "@/utils/dataMasking";
@@ -256,7 +257,7 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
                       <span className="hidden md:inline">Email</span>
                     </Button>
                     <Link 
-                      to={`/customers/${customer.id}`}
+                      to={getCustomerViewUrl(customer.id, customer.status)}
                       target="_blank"
                       className="flex-1"
                     >

@@ -690,7 +690,7 @@ const Policies = () => {
                           <div>
                             {policy.customer?.id ? (
                               <a
-                                href={`/customers/${policy.customer.id}`}
+                                href={`/clients/view/${policy.customer.id}`}
                                 className="text-lg font-semibold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
                                 title={`View ${policy.customer.name} profile`}
                               >

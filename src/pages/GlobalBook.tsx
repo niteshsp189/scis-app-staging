@@ -34,6 +34,7 @@ import {
 import { globalBookService, GlobalBookFilters } from "@/services/globalBookService";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 import { format } from "date-fns";
 
 export default function GlobalBook() {
@@ -290,7 +291,7 @@ export default function GlobalBook() {
                   <TableRow 
                     key={customer.id} 
                     className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => navigate(`/customers/${customer.id}`)}
+                    onClick={() => navigate(getCustomerViewUrl(customer.id, customer.status))}
                   >
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -363,7 +364,7 @@ export default function GlobalBook() {
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/customers/${customer.id}`);
+                          navigate(getCustomerViewUrl(customer.id, customer.status));
                         }}
                       >
                         View

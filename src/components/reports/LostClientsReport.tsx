@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 import { useQuery } from "@tanstack/react-query";
 import { reportService } from "@/services/reportService";
 import { Card, CardContent } from "@/components/ui/card";
@@ -146,7 +147,7 @@ export function LostClientsReport() {
                       <TableRow key={row.id}>
                         <TableCell>{row.id}</TableCell>
                         <TableCell>
-                          <Link to={`/customers/${row.id}`} className="text-blue-600 hover:underline">{row.full_name}</Link>
+                          <Link to={getCustomerViewUrl(row.id, row.status)} className="text-blue-600 hover:underline">{row.full_name}</Link>
                         </TableCell>
                         <TableCell>{row.gender}</TableCell>
                         <TableCell>{row.date_of_birth}</TableCell>
@@ -162,7 +163,7 @@ export function LostClientsReport() {
                               <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => navigate(`/customers/${row.id}`)}><Eye className="h-4 w-4 mr-2" />View Profile</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => navigate(getCustomerViewUrl(row.id, row.status))}><Eye className="h-4 w-4 mr-2" />View Profile</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>

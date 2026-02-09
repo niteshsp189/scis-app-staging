@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -2152,7 +2153,7 @@ const Lookup = () => {
                               size="sm"
                               onClick={() => {
                                 // Navigate to customer view page in new tab
-                                window.open(`/customers/${customer.id}`, '_blank');
+                                window.open(getCustomerViewUrl(customer.id, customer.status), '_blank');
                               }}
                             >
                               <User className="h-4 w-4 mr-1" />
@@ -2421,7 +2422,7 @@ const Lookup = () => {
                           size="sm"
                           onClick={() => {
                             // Navigate to customer view page in new tab
-                            window.open(`/customers/${customer.id}`, '_blank');
+                            window.open(getCustomerViewUrl(customer.id, customer.customer_type || customer.status), '_blank');
                           }}
                         >
                           <User className="h-4 w-4 mr-1" />

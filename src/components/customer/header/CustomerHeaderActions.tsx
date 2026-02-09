@@ -49,7 +49,7 @@ export const CustomerHeaderActions = ({
 
   const handleDeleteSuccess = () => {
     // Navigate back to customers list with a refresh flag
-    navigate("/customers/clients", { state: { refresh: true } });
+    navigate("/clients", { state: { refresh: true } });
     setShowEnhancedDeleteDialog(false);
   };
 

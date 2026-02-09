@@ -81,10 +81,10 @@ const allNavigationItems = [
     icon: Users,
     permission: "view_customers",
     submenu: [
-      { title: "Clients", url: "/customers/clients", icon: UserCheck, permission: "view_clients" },
-      { title: "Former", url: "/customers/former", icon: UserX, permission: "view_former_customers" },
-      { title: "Deceased", url: "/customers/deceased", icon: HeartHandshake, permission: "view_deceased_customers" },
-      { title: "Prospects", url: "/customers/prospects", icon: User, permission: "view_prospects" },
+      { title: "Clients", url: "/clients", icon: UserCheck, permission: "view_clients" },
+      { title: "Former", url: "/formers", icon: UserX, permission: "view_former_customers" },
+      { title: "Deceased", url: "/deceaseds", icon: HeartHandshake, permission: "view_deceased_customers" },
+      { title: "Prospects", url: "/prospects", icon: User, permission: "view_prospects" },
     ]
   },
   { title: "Policies", url: "/policies", icon: FileText, permission: "view_policies" },

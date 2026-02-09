@@ -152,7 +152,7 @@ const CustomerDetails = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate("/customers/clients")}
+              onClick={() => navigate("/clients")}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -181,7 +181,7 @@ const CustomerDetails = () => {
               <div>
                 <Button
                   variant="secondary"
-                  onClick={() => navigate("/customers/clients")}
+                  onClick={() => navigate("/clients")}
                   className="mr-2"
                 >
                   View All Customers
@@ -212,7 +212,7 @@ const CustomerDetails = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate("/customers/clients")}
+              onClick={() => navigate("/clients")}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -225,7 +225,7 @@ const CustomerDetails = () => {
               <p>Customer not found.</p>
               <Button
                 variant="outline"
-                onClick={() => navigate("/customers/clients")}
+                onClick={() => navigate("/clients")}
               >
                 View All Customers
               </Button>
@@ -475,7 +475,7 @@ const CustomerDetails = () => {
           isOpen={isDeleteDialogOpen}
           onClose={() => setIsDeleteDialogOpen(false)}
           customer={customer}
-          onCustomerDeleted={() => navigate("/customers")}
+          onCustomerDeleted={() => navigate("/clients")}
         />
 
         {customer && (

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1003,7 +1004,7 @@ export default function GlobalCalls() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => navigate(`/customers/${call.customer!.id}?tab=calls`)}
+                                onClick={() => navigate(getCustomerViewUrl(call.customer!.id, call.customer!.status) + '?tab=calls')}
                                 className="h-7 w-7 p-0"
                               >
                                 <ExternalLink className="h-4 w-4" />

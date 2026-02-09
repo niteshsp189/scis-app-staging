@@ -18,13 +18,13 @@ export const DesktopCustomerHeader = ({ customerData, onEditCustomer, onConvertP
   const getBackNavigation = () => {
     switch (customerData.status) {
       case "Prospect":
-        return { text: "Back to Prospects", url: "/customers/prospects" };
+        return { text: "Back to Prospects", url: "/prospects" };
       case "Former":
-        return { text: "Back to Former Customers", url: "/customers/former" };
+        return { text: "Back to Former Customers", url: "/formers" };
       case "Deceased":
-        return { text: "Back to Deceased Customers", url: "/customers/deceased" };
+        return { text: "Back to Deceased Customers", url: "/deceaseds" };
       default:
-        return { text: "Back to Customers", url: "/customers" };
+        return { text: "Back to Customers", url: "/clients" };
     }
   };
 

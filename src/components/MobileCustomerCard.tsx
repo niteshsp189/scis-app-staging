@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Phone, Mail, User, MapPin, Users, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 
 interface Customer {
   id: number;
@@ -55,7 +56,7 @@ export const MobileCustomerCard = ({ customer }: MobileCustomerCardProps) => {
   };
 
   const handleViewDetails = () => {
-    navigate(`/customers/${customer.id}`);
+    navigate(getCustomerViewUrl(customer.id, customer.status));
   };
 
   return (

@@ -183,7 +183,7 @@ export function EffectiveDateReport() {
                           <TableCell>{row.customer_id ?? row.id}</TableCell>
                           <TableCell className="font-mono text-sm">{row.policy_number}</TableCell>
                           <TableCell>
-                            <Link to={`/customers/${row.customer_id ?? row.id}`} className="text-blue-600 hover:underline">{row.customer_name}</Link>
+                            <Link to={`/clients/view/${row.customer_id ?? row.id}`} className="text-blue-600 hover:underline">{row.customer_name}</Link>
                           </TableCell>
                           <TableCell>{row.plan_name}</TableCell>
                           <TableCell>{row.company_name}</TableCell>
@@ -205,7 +205,7 @@ export function EffectiveDateReport() {
                                 <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => navigate(`/customers/${row.customer_id ?? row.id}`)}><Eye className="h-4 w-4 mr-2" />View Profile</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate(`/clients/view/${row.customer_id ?? row.id}`)}><Eye className="h-4 w-4 mr-2" />View Profile</DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Search, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import globalSearchService, { SearchSuggestion } from "@/services/globalSearchService";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 
 interface CustomerSearchProps {
   searchTerm: string;
@@ -146,7 +147,7 @@ export const CustomerSearch = ({
     setActiveSuggestionIndex(-1);
     inputRef.current?.blur();
     // Navigate directly to the customer detail page
-    navigate(`/customers/${suggestion.id}`);
+    navigate(getCustomerViewUrl(suggestion.id, suggestion.customer_type));
   };
 
   const getTypeColor = (type: string) => {

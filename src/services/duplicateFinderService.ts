@@ -1,4 +1,5 @@
 import { api } from './api';
+import { getCustomerViewUrl } from '@/utils/customerRoutes';
 
 export interface DuplicateSearchFilters {
   columns: string[];
@@ -168,8 +169,8 @@ class DuplicateFinderService {
   /**
    * Build navigation URL for customer
    */
-  getCustomerUrl(customerId: number): string {
-    return `/customers/${customerId}`;
+  getCustomerUrl(customerId: number, status?: string): string {
+    return getCustomerViewUrl(customerId, status);
   }
 }
 

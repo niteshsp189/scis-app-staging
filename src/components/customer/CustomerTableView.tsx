@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Phone, Mail, FileText, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 import { Currency } from "@/components/ui/currency";
 
 interface Customer {
@@ -104,7 +105,7 @@ export const CustomerTableView = ({ customers }: CustomerTableViewProps) => {
                     size="sm" 
                     variant="ghost" 
                     className="h-6 w-6 p-0"
-                    onClick={() => navigate(`/customers/${customer.id}`)}
+                    onClick={() => navigate(getCustomerViewUrl(customer.id, customer.status)))
                   >
                     <Eye className="h-3 w-3" />
                   </Button>

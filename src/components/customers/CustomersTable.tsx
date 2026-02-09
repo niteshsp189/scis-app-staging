@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { CustomerData } from "@/types/customer";
 import { Eye, Mail, Phone } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 import { usePhoneSelection } from "@/hooks/usePhoneSelection";
 import { useEffect, useState } from "react";
 import { PolicyService } from "@/services/policyService";
@@ -199,7 +200,7 @@ export function CustomersTable({ customers }: CustomersTableProps) {
                       <Mail className="h-3 w-3 md:h-4 md:w-4" />
                     </Button>
                     <Link
-                      to={`/customers/${customer.id}`}
+                      to={getCustomerViewUrl(customer.id, customer.status)}
                       target="_blank"
                     >
                       <Button

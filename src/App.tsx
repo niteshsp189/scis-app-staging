@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { MobileLayout } from "@/components/MobileLayout";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PreferenceProvider } from "@/contexts/PreferenceContext";
@@ -156,8 +156,9 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                {/* Primary routes matching old system URL pattern */}
                 <Route
-                  path="/customers/prospects"
+                  path="/prospects"
                   element={
                     <ProtectedRoute
                       requiredPermissions={['view_customers']}
@@ -169,7 +170,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/customers/clients"
+                  path="/clients"
                   element={
                     <ProtectedRoute
                       requiredPermissions={['view_customers']}
@@ -181,7 +182,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/customers/former"
+                  path="/formers"
                   element={
                     <ProtectedRoute
                       requiredPermissions={['view_customers']}
@@ -193,7 +194,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/customers/deceased"
+                  path="/deceaseds"
                   element={
                     <ProtectedRoute
                       requiredPermissions={['view_customers']}
@@ -204,6 +205,60 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                {/* Customer detail view - old system pattern: /clients/view/:id */}
+                <Route
+                  path="/clients/view/:id"
+                  element={
+                    <ProtectedRoute
+                      requiredPermissions={['view_customers']}
+                    >
+                      <MobileLayout>
+                        <CustomerDetails />
+                      </MobileLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/prospects/view/:id"
+                  element={
+                    <ProtectedRoute
+                      requiredPermissions={['view_customers']}
+                    >
+                      <MobileLayout>
+                        <CustomerDetails />
+                      </MobileLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/formers/view/:id"
+                  element={
+                    <ProtectedRoute
+                      requiredPermissions={['view_customers']}
+                    >
+                      <MobileLayout>
+                        <CustomerDetails />
+                      </MobileLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/deceaseds/view/:id"
+                  element={
+                    <ProtectedRoute
+                      requiredPermissions={['view_customers']}
+                    >
+                      <MobileLayout>
+                        <CustomerDetails />
+                      </MobileLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Legacy redirects: /customers/* → new paths */}
+                <Route path="/customers/clients" element={<Navigate to="/clients" replace />} />
+                <Route path="/customers/prospects" element={<Navigate to="/prospects" replace />} />
+                <Route path="/customers/former" element={<Navigate to="/formers" replace />} />
+                <Route path="/customers/deceased" element={<Navigate to="/deceaseds" replace />} />
                 <Route
                   path="/customers/:id"
                   element={

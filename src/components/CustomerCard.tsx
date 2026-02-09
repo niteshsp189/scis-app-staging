@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -283,7 +284,7 @@ export const CustomerCard = ({ customer, isAdmin }: CustomerCardProps) => {
             Email
           </Button>
           <Link 
-            to={`/customers/${customer.id}`}
+            to={getCustomerViewUrl(customer.id, customer.status)}
             className="flex-1"
           >
             <Button 

@@ -253,7 +253,7 @@ const AppointmentDetails = () => {
             <div className="pt-4 border-t">
               <Button 
                 variant="outline" 
-                onClick={() => navigate(`/customers/${appointment.customer.id}`)}
+                onClick={() => navigate(`/clients/view/${appointment.customer.id}`)}
                 className="w-full"
               >
                 View Customer Profile

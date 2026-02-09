@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -865,7 +866,7 @@ export function AddCustomerDialog({
                                 size="sm"
                                 className="ml-4"
                                 onClick={() => {
-                                  window.open(`/customers/${customer.id}`, '_blank');
+                                  window.open(getCustomerViewUrl(customer.id, customer.status), '_blank');
                                 }}
                               >
                                 <Eye className="h-4 w-4 mr-1" />
