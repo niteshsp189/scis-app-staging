@@ -38,7 +38,8 @@ import {
 import { DateInput } from "@/components/ui/date-input";
 import appointmentService, { Appointment } from "@/services/appointmentService";
 import { toast } from "@/components/ui/use-toast";
-import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import { formatTimeUTC, formatDateUTC, formatDateTimeUTC } from "@/utils/dateFormatters";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -262,7 +263,7 @@ export const AppointmentsTableView = forwardRef(
 
     const formatDateTime = (dateString: string) => {
       try {
-        return format(parseISO(dateString), "MMM dd, yyyy HH:mm");
+        return formatDateTimeUTC(dateString);
       } catch {
         return dateString;
       }
@@ -270,7 +271,7 @@ export const AppointmentsTableView = forwardRef(
 
     const formatDate = (dateString: string) => {
       try {
-        return format(parseISO(dateString), "MMM dd, yyyy");
+        return formatDateUTC(dateString);
       } catch {
         return dateString;
       }
@@ -278,7 +279,7 @@ export const AppointmentsTableView = forwardRef(
 
     const formatTime = (dateString: string) => {
       try {
-        return format(parseISO(dateString), "HH:mm");
+        return formatTimeUTC(dateString);
       } catch {
         return dateString;
       }

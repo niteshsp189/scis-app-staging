@@ -93,11 +93,10 @@ export const CalendarView = forwardRef<{ refreshAppointments: () => Promise<void
         end_date: `${year}-${(month + 1).toString().padStart(2, '0')}-${new Date(year, month + 1, 0).getDate().toString().padStart(2, '0')}T23:59:59`,
       };
       
-      // TEMPORARILY: Disable user filtering to debug
-      // Filter by current user's assignments only
-      // if (currentUserId) {
-      //   filters.assigned_to = currentUserId;
-      // }
+      // Filter by current user's assignments only (My Appointments view)
+      if (currentUserId) {
+        filters.assigned_to = currentUserId;
+      }
 
       const response = await appointmentService.getAppointments(filters);
 

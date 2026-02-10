@@ -473,9 +473,9 @@ export default function Reminders() {
     const reminderDate = new Date(reminder.reminder_datetime);
     setDueDate(reminderDate);
     
-    // Format time as 12-hour for TimePicker
-    let hours = reminderDate.getHours();
-    const mins = reminderDate.getMinutes().toString().padStart(2, "0");
+    // Format time as 12-hour for TimePicker (using UTC to match stored values)
+    let hours = reminderDate.getUTCHours();
+    const mins = reminderDate.getUTCMinutes().toString().padStart(2, "0");
     const ampm = hours >= 12 ? "PM" : "AM";
     hours = hours % 12;
     if (hours === 0) hours = 12;

@@ -11,6 +11,7 @@ export const formatPrintDate = (date: string | Date | null | undefined): string 
   const d = new Date(date);
   if (isNaN(d.getTime())) return 'N/A';
   return d.toLocaleDateString('en-US', {
+    timeZone: 'UTC',
     month: '2-digit',
     day: '2-digit',
     year: 'numeric',
@@ -25,6 +26,7 @@ export const formatPrintDateTime = (date: string | Date | null | undefined): str
   const d = new Date(date);
   if (isNaN(d.getTime())) return 'N/A';
   return d.toLocaleString('en-US', {
+    timeZone: 'UTC',
     month: '2-digit',
     day: '2-digit',
     year: 'numeric',
@@ -42,6 +44,7 @@ export const formatPrintTime = (date: string | Date | null | undefined): string 
   const d = new Date(date);
   if (isNaN(d.getTime())) return 'N/A';
   return d.toLocaleString('en-US', {
+    timeZone: 'UTC',
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,

@@ -83,13 +83,18 @@ export const EditAppointmentDialog = ({
 
   const [title, setTitle] = useState(appointment.title);
   const [description, setDescription] = useState(appointment.description || "");
-  const [date, setDate] = useState<Date>(parseISO(appointment.start_datetime));
-  const [time, setTime] = useState(
-    format(parseISO(appointment.start_datetime), "HH:mm"),
-  );
-  const [endTime, setEndTime] = useState(
-    format(parseISO(appointment.end_datetime || appointment.start_datetime), "HH:mm"),
-  );
+  const [date, setDate] = useState<Date>(() => {
+    const d = new Date(appointment.start_datetime);
+    return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  });
+  const [time, setTime] = useState(() => {
+    const d = new Date(appointment.start_datetime);
+    return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}`;
+  });
+  const [endTime, setEndTime] = useState(() => {
+    const d = new Date(appointment.end_datetime || appointment.start_datetime);
+    return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}`;
+  });
   const [meetingType, setMeetingType] = useState<string[]>(
     appointment.appointment_type ? appointment.appointment_type.split(',').map(t => t.trim()) : ['review']
   );
@@ -166,11 +171,11 @@ export const EditAppointmentDialog = ({
     }
 
     // Initialize all form values directly from appointment
-    const appointmentDate = parseISO(appointment.start_datetime);
-    const startTimeFormatted = format(appointmentDate, "HH:mm");
-    const endTimeFormatted = appointment.end_datetime 
-      ? format(parseISO(appointment.end_datetime), "HH:mm") 
-      : startTimeFormatted;
+    const startDate = new Date(appointment.start_datetime);
+    const appointmentDate = new Date(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
+    const startTimeFormatted = `${startDate.getUTCHours().toString().padStart(2, '0')}:${startDate.getUTCMinutes().toString().padStart(2, '0')}`;
+    const endDate = new Date(appointment.end_datetime || appointment.start_datetime);
+    const endTimeFormatted = `${endDate.getUTCHours().toString().padStart(2, '0')}:${endDate.getUTCMinutes().toString().padStart(2, '0')}`;
 
     // Set all form values directly from appointment
     setTitle(appointment.title);
@@ -568,10 +573,10 @@ export const EditAppointmentDialog = ({
           const conflict = response.conflicts[0];
           const conflictDate = new Date(
             conflict.start_datetime,
-          ).toLocaleDateString();
+          ).toLocaleDateString('en-US', { timeZone: 'UTC' });
           const conflictTime = new Date(
             conflict.start_datetime,
-          ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          ).toLocaleTimeString('en-US', { timeZone: 'UTC', hour: 'numeric', minute: '2-digit', hour12: true });
 
           setErrors({
             general: `Appointment conflicts with "${conflict.title}" on ${conflictDate} at ${conflictTime}`,

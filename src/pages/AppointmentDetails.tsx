@@ -70,14 +70,17 @@ const AppointmentDetails = () => {
     const date = new Date(dateTime);
     return {
       date: date.toLocaleDateString('en-US', { 
+        timeZone: 'UTC',
         weekday: 'long', 
         year: 'numeric', 
         month: 'long', 
         day: 'numeric' 
       }),
       time: date.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+        timeZone: 'UTC',
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true
       })
     };
   };

@@ -80,17 +80,24 @@ export const DashboardAppointments: React.FC<DashboardAppointmentsProps> = ({
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const timeString = date.toLocaleTimeString('en-US', {
+      timeZone: 'UTC',
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
     });
 
-    if (date.toDateString() === today.toDateString()) {
+    // Compare dates in UTC to avoid timezone shift issues
+    const dateUTC = date.toLocaleDateString('en-US', { timeZone: 'UTC' });
+    const todayUTC = today.toLocaleDateString('en-US', { timeZone: 'UTC' });
+    const tomorrowUTC = tomorrow.toLocaleDateString('en-US', { timeZone: 'UTC' });
+
+    if (dateUTC === todayUTC) {
       return `Today at ${timeString}`;
-    } else if (date.toDateString() === tomorrow.toDateString()) {
+    } else if (dateUTC === tomorrowUTC) {
       return `Tomorrow at ${timeString}`;
     } else {
       return `${date.toLocaleDateString('en-US', {
+        timeZone: 'UTC',
         month: 'short',
         day: 'numeric',
       })} at ${timeString}`;

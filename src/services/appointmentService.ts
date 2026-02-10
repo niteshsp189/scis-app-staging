@@ -285,16 +285,19 @@ class AppointmentService {
 
   formatDateTime(dateTime: string): string {
     return new Date(dateTime).toLocaleString('en-US', {
+      timeZone: 'UTC',
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
     });
   }
 
   formatDate(date: string): string {
     return new Date(date).toLocaleDateString('en-US', {
+      timeZone: 'UTC',
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -303,8 +306,10 @@ class AppointmentService {
 
   formatTime(dateTime: string): string {
     return new Date(dateTime).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
+      timeZone: 'UTC',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
     });
   }
 

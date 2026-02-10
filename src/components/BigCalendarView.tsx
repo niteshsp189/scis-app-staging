@@ -193,7 +193,7 @@ export function MainCalendarView() {
                   }`}
                   title={`${event.title} - ${event.customer}`}
                 >
-                  {format(event.start, "HH:mm")} {event.title}
+                  {event.start.toLocaleTimeString('en-US', { timeZone: 'UTC', hour: 'numeric', minute: '2-digit', hour12: true })} {event.title}
                 </div>
               ))}
               {dayEvents.length > 3 && (
@@ -360,7 +360,7 @@ export function MainCalendarView() {
                       <div className="font-medium">{event.title}</div>
                       <div className="text-xs opacity-90 flex items-center gap-2">
                         <Clock className="h-3 w-3" />
-                        {format(event.start, "HH:mm")} - {format(event.end, "HH:mm")}
+                        {event.start.toLocaleTimeString('en-US', { timeZone: 'UTC', hour: 'numeric', minute: '2-digit', hour12: true })} - {event.end.toLocaleTimeString('en-US', { timeZone: 'UTC', hour: 'numeric', minute: '2-digit', hour12: true })}
                         {event.customer && (
                           <>
                             <User className="h-3 w-3 ml-2" />

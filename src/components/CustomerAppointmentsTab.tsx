@@ -7,27 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar, Clock, MapPin, Plus, Search, Filter } from 'lucide-react';
 import appointmentService, { type Appointment } from '@/services/appointmentService';
 
+import { formatTimeUTC, formatDateUTC } from '@/utils/dateFormatters';
+
 interface CustomerAppointmentsTabProps {
   customerId: string;
 }
 
-// Utility functions for date formatting
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-};
-
-const formatTime = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
+// Utility functions for date formatting (using centralized UTC formatters)
+const formatDate = (dateString: string): string => formatDateUTC(dateString);
+const formatTime = (dateString: string): string => formatTimeUTC(dateString);
 
 const CustomerAppointmentsTab: React.FC<CustomerAppointmentsTabProps> = ({ customerId }) => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
