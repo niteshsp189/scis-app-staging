@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { usePermissions } from "@/contexts/PermissionContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, MapPin, Calendar, DollarSign, FileText, Users, MessageSquare, User, Heart, Home, PhoneIncoming, PhoneOutgoing, Link, Trash2, Pin, PinOff, Plus, Edit2, BookOpen, PhoneOff } from "lucide-react";
+import { Phone, Mail, MapPin, Calendar, DollarSign, FileText, Users, MessageSquare, User, Heart, Home, PhoneIncoming, PhoneOutgoing, Link, Trash2, Pin, PinOff, Plus, Edit2, BookOpen, PhoneOff, ExternalLink } from "lucide-react";
 import { customerActivitiesService, CustomerActivity } from "@/services/customerActivitiesService";
 import { api } from "@/lib/axios";
 import { useDataMasking, MaskedDisplay } from "@/utils/dataMasking";
@@ -15,7 +16,7 @@ import {
 import { toast } from "@/components/ui/use-toast";
 import { CustomerNotesDialog } from "@/components/dialogs/CustomerNotesDialog";
 import { customerNotesService } from "@/services/customerNotesService";
-import { useEventListener } from "@/hooks/useEventListener";
+import { useEventListener, useEventDispatcher } from "@/hooks/useEventListener";
 import { dependentService } from "@/services/dependentService";
 import { PolicyService } from "@/services/policyService";
 import {
@@ -171,6 +172,8 @@ const defaultCustomer: Customer = {
 };
 
 export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = false }: CustomerOverviewTabProps) => {
+  const navigate = useNavigate();
+  const dispatchTabChange = useEventDispatcher("changeTab");
   const {
     getMaskedSSN,
     getMaskedPhone,
@@ -1012,6 +1015,7 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 addedDate: rel.created_at,
                 isEditable: true,
                 isDeletable: true,
+                navigateTo: rel.related_customer?.id ? `/customers/${rel.related_customer.id}` : null,
               })),
               // Dependents from dependentService
               ...(dependents || []).map((dependent) => ({
@@ -1024,6 +1028,7 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 isEditable: false,
                 isDeletable: false,
                 policies: (dependentsPolicies[dependent.id] || []).map((policy: any) => policy.policy_number),
+                navigateTo: 'tab:dependencies' as string | null,
               })),
             ];
 
@@ -1053,9 +1058,29 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h5 className="font-medium text-foreground">
-                            {person.displayName}
-                          </h5>
+                          {person.navigateTo ? (
+                            <a
+                              href={person.navigateTo!.startsWith('tab:') ? undefined : person.navigateTo!}
+                              className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex items-center gap-1"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (person.navigateTo!.startsWith('tab:')) {
+                                  dispatchTabChange(person.navigateTo!.replace('tab:', ''));
+                                } else {
+                                  navigate(person.navigateTo!);
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }
+                              }}
+                              title={`View ${person.displayName}`}
+                            >
+                              {person.displayName}
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          ) : (
+                            <h5 className="font-medium text-foreground">
+                              {person.displayName}
+                            </h5>
+                          )}
                           <Badge
                             variant="outline"
                             className={person.badgeColor}

@@ -159,7 +159,13 @@ export function CustomersTable({ customers }: CustomersTableProps) {
               <TableRow key={customer.id} className="divide-x divide-gray-200">
                 <TableCell className="w-[25%] min-w-[150px]">
                   <div className="font-medium truncate max-w-[200px]">{customer.fullName || `${customer.firstName} ${customer.lastName}`}</div>
-                  <div className="text-sm text-gray-500 hidden sm:block truncate max-w-[200px]">{customer.email}</div>
+                  {customer.email ? (
+                    <a href={`mailto:${customer.email}`} className="text-sm text-blue-700 hover:underline hidden sm:block truncate max-w-[200px]">
+                      {customer.email}
+                    </a>
+                  ) : (
+                    <div className="text-sm text-gray-500 hidden sm:block truncate max-w-[200px]">No Email</div>
+                  )}
                 </TableCell>
                 <TableCell className="w-[12%] min-w-[100px]">
                   <Badge variant={getStatusVariant(customer.status)} className="capitalize whitespace-nowrap">

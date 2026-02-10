@@ -6,6 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { getCustomerViewUrl } from "@/utils/customerRoutes";
 import { CustomerData } from "@/types/customer";
 import { usePhoneSelection } from "@/hooks/usePhoneSelection";
+import { useMapSelection } from "@/hooks/useMapSelection";
 import { MaskedDisplay } from "@/utils/dataMasking";
 import { usePermissions } from "@/contexts/PermissionContext";
 import { useEffect, useState } from "react";
@@ -62,6 +63,7 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
   const { hasPermission } = usePermissions();
   const canViewSensitive = hasPermission && hasPermission("view_sensitive_data");
   const { handleCall, PhoneSelectionDialog, hasPhoneNumbers } = usePhoneSelection();
+  const { handleMapClick, MapSelectionDialog } = useMapSelection();
   
   // State for calculated values per customer
   const [calculatedValues, setCalculatedValues] = useState<Record<number, { premium: number | null; dependents: number | null }>>({});
@@ -195,7 +197,13 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                      <span className="truncate">{customer.email || "No Email"}</span>
+                      {customer.email ? (
+                        <a href={`mailto:${customer.email}`} className="truncate hover:underline text-blue-700">
+                          {customer.email}
+                        </a>
+                      ) : (
+                        <span className="truncate">No Email</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -203,8 +211,13 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
                 {/* Second Column: Address Only */}
                 <div className="space-y-2">
                   <div className="flex items-start gap-2">
-                    <MapPin className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
-                    <span className="text-xs text-gray-600 leading-tight break-words">{formatLocation(customer)}</span>
+                    <MapPin className="h-3 w-3 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <span
+                      className="text-xs text-blue-700 leading-tight break-words hover:underline cursor-pointer"
+                      onClick={() => handleMapClick(formatLocation(customer))}
+                    >
+                      {formatLocation(customer)}
+                    </span>
                   </div>
                 </div>
                 
@@ -279,6 +292,7 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
       </div>
       
       <PhoneSelectionDialog />
+      <MapSelectionDialog />
     </>
   );
 };

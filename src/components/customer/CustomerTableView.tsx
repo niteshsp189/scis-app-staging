@@ -1,8 +1,9 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, FileText, Eye } from "lucide-react";
+import { Phone, Mail, MapPin, FileText, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useMapSelection } from "@/hooks/useMapSelection";
 import { getCustomerViewUrl } from "@/utils/customerRoutes";
 import { Currency } from "@/components/ui/currency";
 
@@ -31,6 +32,7 @@ interface CustomerTableViewProps {
 
 export const CustomerTableView = ({ customers }: CustomerTableViewProps) => {
   const navigate = useNavigate();
+  const { handleMapClick, MapSelectionDialog } = useMapSelection();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -79,10 +81,27 @@ export const CustomerTableView = ({ customers }: CustomerTableViewProps) => {
               <TableCell>
                 <div className="space-y-1">
                   <div className="text-sm">{customer.phone}</div>
-                  <div className="text-xs text-muted-foreground">{customer.email}</div>
+                  {customer.email ? (
+                    <a href={`mailto:${customer.email}`} className="text-xs text-blue-700 hover:underline">
+                      {customer.email}
+                    </a>
+                  ) : (
+                    <div className="text-xs text-muted-foreground">No Email</div>
+                  )}
                 </div>
               </TableCell>
-              <TableCell>{customer.location}</TableCell>
+              <TableCell>
+                {customer.location && customer.location !== 'N/A' ? (
+                  <span
+                    className="text-blue-700 hover:underline text-sm cursor-pointer"
+                    onClick={() => handleMapClick(customer.location)}
+                  >
+                    {customer.location}
+                  </span>
+                ) : (
+                  <span>{customer.location}</span>
+                )}
+              </TableCell>
               <TableCell>
                 <Badge className={`text-xs ${getStatusColor(customer.status)}`}>
                   {customer.status}
@@ -95,17 +114,17 @@ export const CustomerTableView = ({ customers }: CustomerTableViewProps) => {
               <TableCell>{customer.dependents.length}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-1">
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { if (customer.phone) window.open(`tel:${customer.phone}`, '_self'); }} title="Call">
                     <Phone className="h-3 w-3" />
                   </Button>
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { if (customer.email) window.location.href = `mailto:${customer.email}`; }} disabled={!customer.email} title="Email">
                     <Mail className="h-3 w-3" />
                   </Button>
                   <Button 
                     size="sm" 
                     variant="ghost" 
                     className="h-6 w-6 p-0"
-                    onClick={() => navigate(getCustomerViewUrl(customer.id, customer.status)))
+                    onClick={() => navigate(getCustomerViewUrl(customer.id, customer.status))}
                   >
                     <Eye className="h-3 w-3" />
                   </Button>
@@ -115,6 +134,7 @@ export const CustomerTableView = ({ customers }: CustomerTableViewProps) => {
           ))}
         </TableBody>
       </Table>
+      <MapSelectionDialog />
     </div>
   );
 };

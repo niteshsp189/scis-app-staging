@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CustomerDetailsHeader } from "@/components/customer/CustomerDetailsHeader";
@@ -37,7 +37,9 @@ const CustomerDetails = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("overview");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "overview";
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [mobileActiveTab, setMobileActiveTab] = useState<string>("more");
   const [notesCount, setNotesCount] = useState<number>(0);
 

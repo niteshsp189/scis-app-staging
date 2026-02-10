@@ -19,7 +19,6 @@ import {
   FileText,
   Search,
   DollarSign,
-  Calendar,
   AlertTriangle,
   Eye,
   RefreshCw,
@@ -172,6 +171,88 @@ export const CustomerPoliciesTab = ({
       policy.policy_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       policy.plan?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+
+  // Sort: Active first, then Pending, then others; within each group, sort by effective_date desc
+  const statusOrder: Record<string, number> = {
+    'active': 0,
+    'pending': 1,
+    'suspended': 2,
+    'lapsed': 3,
+    'expired': 4,
+    'cancelled': 5,
+  };
+
+  const sortedPolicies = [...filteredPolicies].sort((a, b) => {
+    const statusA = statusOrder[a.status?.toLowerCase()] ?? 99;
+    const statusB = statusOrder[b.status?.toLowerCase()] ?? 99;
+    if (statusA !== statusB) return statusA - statusB;
+
+    // Within same status, sort by effective_date from field_values desc, fallback to start_date
+    const getEffectiveDate = (p: Policy): string => {
+      let fv = p.field_values;
+      if (typeof fv === 'string') { try { fv = JSON.parse(fv); } catch { fv = null; } }
+      return (fv as any)?.effective_date || p.start_date || '';
+    };
+    return getEffectiveDate(b).localeCompare(getEffectiveDate(a));
+  });
+
+  // Group policies by status for section headers
+  const groupedPolicies = sortedPolicies.reduce<Record<string, Policy[]>>((groups, policy) => {
+    const status = policy.status || 'Unknown';
+    if (!groups[status]) groups[status] = [];
+    groups[status].push(policy);
+    return groups;
+  }, {});
+
+  // Helper to get field details table rows from a policy
+  const getFieldDetails = (policy: Policy) => {
+    const planType = policy.plan?.planType || policy.plan?.plan_type;
+    const extraFields = planType?.extra_fields || {};
+
+    let fieldValues = policy.field_values;
+    if (typeof fieldValues === 'string') {
+      try { fieldValues = JSON.parse(fieldValues); } catch { fieldValues = {}; }
+    }
+    if (!fieldValues || typeof fieldValues !== 'object') fieldValues = {};
+
+    // Build rows: only show fields that are included in the plan type
+    const rows: { label: string; value: string }[] = [];
+    for (const [key, config] of Object.entries(extraFields)) {
+      if (!config.included) continue;
+      const rawValue = (fieldValues as Record<string, any>)[key];
+      let displayValue = rawValue !== null && rawValue !== undefined && rawValue !== '' ? String(rawValue) : '—';
+
+      // Format dates
+      if (key.includes('date') && displayValue !== '—') {
+        try {
+          const d = new Date(displayValue);
+          if (!isNaN(d.getTime())) {
+            displayValue = d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+          }
+        } catch {}
+      }
+
+      // Format currency-like numbers
+      if (['premium', 'deductible', 'out_of_pocket', 'credit', 'payment', 'value'].includes(key) && displayValue !== '—') {
+        const num = parseFloat(displayValue);
+        if (!isNaN(num)) {
+          displayValue = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+      }
+
+      rows.push({ label: config.label, value: displayValue });
+    }
+    return rows;
+  };
+
+  // Helper to get agent names
+  const getAgentByType = (policy: Policy, type: string): string => {
+    const agent = policy.agents?.find(a => a.agent_type === type && a.is_active);
+    if (agent?.agent) {
+      return agent.agent.name || `${agent.agent.first_name || ''} ${agent.agent.last_name || ''}`.trim() || '—';
+    }
+    return '—';
+  };
 
   const handleAddPolicy = (policy: any) => {
     if (onUpdatePolicies) {
@@ -422,115 +503,106 @@ export const CustomerPoliciesTab = ({
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {filteredPolicies.map((policy) => (
-            <Card key={policy.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      {policy.policy_number}
-                      <Badge className={getStatusColor(policy.status)}>
-                        {policy.status}
-                      </Badge>
-                    </CardTitle>
-                    <p className="text-sm text-gray-600">
-                      {policy.plan?.name || "Unknown Plan"}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant="outline">
-                      <Currency
-                        value={getPremiumValue(policy)}
-                        showZero={true}
-                        placeholder="0"
-                      />
-                    </Badge>
-                    <p className="text-sm text-gray-500 capitalize">
-                      {policy.premium_frequency}
-                    </p>
-                  </div>
-                </div>
-              </CardHeader>
+        <div className="space-y-6">
+          {Object.entries(groupedPolicies).map(([status, statusPolicies]) => (
+            <div key={status}>
+              {/* Status Group Header */}
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b">
+                <Badge className={`${getStatusColor(status)} text-sm px-3 py-1`}>
+                  {status} Polices ({statusPolicies.length})
+                </Badge>
+              </div>
 
-              <CardContent className="space-y-4">
-                {/* Policy Details Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-500">Start Date</p>
-                    <p className="font-medium">
-                      {new Date(policy.start_date).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">End Date</p>
-                    <p className="font-medium">
-                      {policy.end_date
-                        ? new Date(policy.end_date).toLocaleDateString()
-                        : "Ongoing"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Outstanding</p>
-                    <p
-                      className={`font-medium ${policy.outstanding_premium > 0 ? "text-red-600" : "text-green-600"}`}
-                    >
-                      ${policy.outstanding_premium.toLocaleString()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Auto Renew</p>
-                    <p className="font-medium">
-                      {policy.auto_renew ? "Yes" : "No"}
-                    </p>
-                  </div>
-                </div>
+              <div className="space-y-4">
+                {statusPolicies.map((policy) => {
+                  const planType = policy.plan?.planType || policy.plan?.plan_type;
+                  const companyName = policy.plan?.company?.name || policy.plan?.company_name || '—';
+                  const typeName = planType?.name || '—';
+                  const planName = policy.plan?.name || '—';
+                  const fieldDetails = getFieldDetails(policy);
+                  const aorAgent = getAgentByType(policy, 'AOR');
+                  const writingAgent = getAgentByType(policy, 'Writing Agent');
 
-                {/* Next Renewal Date */}
-                {policy.next_renewal_date && (
-                  <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
-                    <Calendar className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm text-blue-800">
-                      Next renewal:{" "}
-                      {new Date(policy.next_renewal_date).toLocaleDateString()}
-                    </span>
-                  </div>
-                )}
+                  // Build the info rows in groups of 3 columns
+                  const infoRows: { label: string; value: string }[][] = [];
 
-                {/* Outstanding Premium Alert */}
-                {policy.outstanding_premium > 0 && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 rounded-lg">
-                    <AlertTriangle className="h-4 w-4 text-red-600" />
-                    <span className="text-sm text-red-800">
-                      Outstanding premium: $
-                      {policy.outstanding_premium.toLocaleString()}
-                    </span>
-                  </div>
-                )}
+                  // Row 1: Company, Type, Plan
+                  infoRows.push([
+                    { label: 'Company', value: companyName },
+                    { label: 'Type', value: typeName },
+                    { label: 'Plan', value: planName },
+                  ]);
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-2 pt-2 border-t">
-                  <Button
-                    onClick={() => handleViewDetails(policy.id)}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-1"
-                  >
-                    <Eye className="h-4 w-4" />
-                    View Details
-                  </Button>
-                  <PolicyActionButtons
-                    policy={policy}
-                    onViewDetails={handleViewDetails}
-                    onReinstate={handleReinstate}
-                    onCancel={handleCancel}
-                    onRenew={handleRenew}
-                    onSendReminder={handleSendReminder}
-                    compact={true}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+                  // Row 2: Policy #, Agent of Record, Writing Agent
+                  infoRows.push([
+                    { label: 'Policy #', value: policy.policy_number },
+                    { label: 'Agent of Record', value: aorAgent },
+                    { label: 'Writing Agent', value: writingAgent },
+                  ]);
+
+                  // Group field_values into rows of 3
+                  for (let i = 0; i < fieldDetails.length; i += 3) {
+                    const row = fieldDetails.slice(i, i + 3);
+                    // Pad to 3 columns
+                    while (row.length < 3) {
+                      row.push({ label: '', value: '' });
+                    }
+                    infoRows.push(row);
+                  }
+
+                  return (
+                    <Card key={policy.id} className="hover:shadow-md transition-shadow overflow-hidden">
+                      {/* Policy Header */}
+                      <CardHeader className="pb-2 pt-3 px-4">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-muted-foreground font-medium">{typeName}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {/* Action Buttons */}
+                            <PolicyActionButtons
+                              policy={policy}
+                              onViewDetails={handleViewDetails}
+                              onReinstate={handleReinstate}
+                              onCancel={handleCancel}
+                              onRenew={handleRenew}
+                              onSendReminder={handleSendReminder}
+                              compact={true}
+                            />
+                          </div>
+                        </div>
+                      </CardHeader>
+
+                      <CardContent className="px-0 pb-0 pt-0">
+                        {/* Table-style Details */}
+                        <div className="divide-y divide-gray-200">
+                          {infoRows.map((row, rowIdx) => (
+                            <div key={rowIdx}>
+                              {/* Labels Row */}
+                              <div className="grid grid-cols-3 bg-gray-50">
+                                {row.map((cell, cellIdx) => (
+                                  <div key={cellIdx} className="px-4 py-1.5 text-sm font-semibold text-gray-700 border-r last:border-r-0 border-gray-200">
+                                    {cell.label}
+                                  </div>
+                                ))}
+                              </div>
+                              {/* Values Row */}
+                              <div className="grid grid-cols-3">
+                                {row.map((cell, cellIdx) => (
+                                  <div key={cellIdx} className="px-4 py-1.5 text-sm text-gray-900 border-r last:border-r-0 border-gray-200">
+                                    {cell.value || '—'}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
           ))}
         </div>
       )}

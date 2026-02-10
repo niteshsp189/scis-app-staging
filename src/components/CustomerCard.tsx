@@ -25,6 +25,7 @@ import { CustomerData } from "@/types/customer";
 import { MaskedDisplay } from "@/utils/dataMasking";
 import { usePermissions } from "@/contexts/PermissionContext";
 import { usePhoneSelection } from "@/hooks/usePhoneSelection";
+import { useMapSelection } from "@/hooks/useMapSelection";
 import { useState } from "react";
 import { Policy } from "@/types/policy";
 import { EditCustomerDialog } from "@/components/dialogs/EditCustomerDialog";
@@ -79,6 +80,7 @@ export const CustomerCard = ({ customer, isAdmin }: CustomerCardProps) => {
   const { hasPermission } = usePermissions();
   const canViewSensitive = hasPermission && hasPermission("view_sensitive_data");
   const { handleCall, PhoneSelectionDialog, hasPhoneNumbers } = usePhoneSelection();
+  const { handleMapClick, MapSelectionDialog } = useMapSelection();
   
   // State for edit dialog
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -165,9 +167,13 @@ export const CustomerCard = ({ customer, isAdmin }: CustomerCardProps) => {
               </CardTitle>
               <div className="text-sm text-gray-600 flex items-start gap-1 min-w-0 mt-1" title={customer.email || "No Email"}>
                 <Mail className="h-3 w-3 shrink-0 mt-0.5" />
-                <span className="text-xs leading-tight">
-                  {customer.email || "No Email"}
-                </span>
+                {customer.email ? (
+                  <a href={`mailto:${customer.email}`} className="text-xs leading-tight hover:underline text-blue-700 truncate">
+                    {customer.email}
+                  </a>
+                ) : (
+                  <span className="text-xs leading-tight">No Email</span>
+                )}
               </div>
             </div>
           </div>
@@ -216,15 +222,13 @@ export const CustomerCard = ({ customer, isAdmin }: CustomerCardProps) => {
          
           <div className="flex items-center gap-2 text-gray-600">
             <MapPin className="h-4 w-4 text-blue-500 shrink-0" />
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formatLocation(customer))}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="truncate hover:underline text-blue-700"
+            <span
+              className="truncate hover:underline text-blue-700 cursor-pointer"
               title={formatLocation(customer)}
+              onClick={() => handleMapClick(formatLocation(customer))}
             >
               {formatLocation(customer)}
-            </a>
+            </span>
           </div>
           <div className="flex items-center gap-2 text-gray-600">
             <Calendar className="h-4 w-4 text-blue-500 shrink-0" />
@@ -299,6 +303,7 @@ export const CustomerCard = ({ customer, isAdmin }: CustomerCardProps) => {
       </CardContent>
 
       <PhoneSelectionDialog />
+      <MapSelectionDialog />
       
       {customer.status === "Prospect" && (
         <EditCustomerDialog
