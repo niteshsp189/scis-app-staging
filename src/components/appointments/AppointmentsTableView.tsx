@@ -37,6 +37,8 @@ import {
 } from "@/components/ui/select";
 import { DateInput } from "@/components/ui/date-input";
 import appointmentService, { Appointment } from "@/services/appointmentService";
+import userService from "@/services/userService";
+import { officeLocationService } from "@/services/officeLocationService";
 import { toast } from "@/components/ui/use-toast";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { formatTimeUTC, formatDateUTC, formatDateTimeUTC } from "@/utils/dateFormatters";
@@ -210,17 +212,9 @@ export const AppointmentsTableView = forwardRef(
     useEffect(() => {
       const loadUsers = async () => {
         try {
-          const response = await fetch('/api/users', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-              'Content-Type': 'application/json',
-            },
-          });
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success && Array.isArray(data.data)) {
-              setUsers(data.data);
-            }
+          const fetchedUsers = await userService.getUsers({ active: true });
+          if (Array.isArray(fetchedUsers) && fetchedUsers.length > 0) {
+            setUsers(fetchedUsers);
           }
         } catch (error) {
           console.error('Failed to load users:', error);
@@ -229,17 +223,9 @@ export const AppointmentsTableView = forwardRef(
 
       const loadOfficeLocations = async () => {
         try {
-          const response = await fetch('/api/office-locations/options', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-              'Content-Type': 'application/json',
-            },
-          });
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success && Array.isArray(data.data)) {
-              setOfficeLocations(data.data);
-            }
+          const fetchedLocations = await officeLocationService.getLocationOptions();
+          if (Array.isArray(fetchedLocations) && fetchedLocations.length > 0) {
+            setOfficeLocations(fetchedLocations);
           }
         } catch (error) {
           console.error('Failed to load office locations:', error);

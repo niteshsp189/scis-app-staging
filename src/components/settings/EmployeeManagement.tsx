@@ -453,14 +453,23 @@ export function EmployeeManagement() {
                               {employee.position}
                             </p>
                           )}
-                          {employee.location && (
+                          {employee.office_locations && employee.office_locations.length > 0 ? (
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <MapPin className="h-3 w-3 text-blue-500" />
+                              {employee.office_locations.map((loc) => (
+                                <Badge key={loc.id} variant="outline" className="text-xs py-0 px-1.5">
+                                  {loc.name}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : employee.location ? (
                             <div className="flex items-center gap-1">
                               <MapPin className="h-3 w-3 text-blue-500" />
                               <span className="text-xs text-blue-600">
                                 {employee.location}
                               </span>
                             </div>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                     </div>

@@ -20,19 +20,28 @@ interface EmployeePreviewProps {
     position: string;
     company: string;
     location: string;
+    office_location_ids?: string[];
     roles: number[];
     is_active: boolean;
     is_agent?: boolean;
   };
   roles?: Role[];
+  officeLocations?: { id: string; display: string }[];
 }
 
-export function EmployeePreview({ formData, roles = [] }: EmployeePreviewProps) {
+export function EmployeePreview({ formData, roles = [], officeLocations = [] }: EmployeePreviewProps) {
   const getSelectedRoles = () => {
     return roles.filter(role => formData.roles.includes(role.id));
   };
 
   const selectedRoles = getSelectedRoles();
+
+  const getSelectedLocations = () => {
+    if (!formData.office_location_ids || formData.office_location_ids.length === 0) return [];
+    return officeLocations.filter(loc => formData.office_location_ids!.includes(loc.id));
+  };
+
+  const selectedLocations = getSelectedLocations();
 
   return (
     <div className="space-y-6">
@@ -106,9 +115,19 @@ export function EmployeePreview({ formData, roles = [] }: EmployeePreviewProps) 
           <div className="md:col-span-2">
             <p className="text-sm font-medium text-gray-500 flex items-center gap-1">
               <MapPin className="h-4 w-4" />
-              Location
+              Office Locations
             </p>
-            <p className="text-base">{formData.location || 'Not specified'}</p>
+            {selectedLocations.length > 0 ? (
+              <div className="flex flex-wrap gap-2 mt-1">
+                {selectedLocations.map((loc) => (
+                  <Badge key={loc.id} variant="outline" className="text-sm">
+                    {loc.display}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-base text-gray-500 italic">No locations assigned</p>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -30,6 +30,7 @@ import appointmentService, {
 } from "@/services/appointmentService";
 import userService from "@/services/userService";
 import timezoneService from "@/services/timezoneService";
+import { officeLocationService, OfficeLocationOption } from "@/services/officeLocationService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEventDispatcher } from "@/hooks/useEventListener";
 
@@ -111,6 +112,8 @@ export const EditAppointmentDialog = ({
   const [submitting, setSubmitting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [officeLocations, setOfficeLocations] = useState<OfficeLocationOption[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [availabilityCheck, setAvailabilityCheck] = useState<{
     available: boolean;
@@ -168,6 +171,7 @@ export const EditAppointmentDialog = ({
   useEffect(() => {
     if (open) {
       loadUsers();
+      loadOfficeLocations();
     }
 
     // Initialize all form values directly from appointment
@@ -282,6 +286,23 @@ export const EditAppointmentDialog = ({
       setUsers(fallbackUsers);
     } finally {
       setUsersLoading(false);
+    }
+  };
+
+  const loadOfficeLocations = async () => {
+    setLocationsLoading(true);
+    try {
+      const response = await officeLocationService.getLocationOptions();
+      if (response && Array.isArray(response)) {
+        setOfficeLocations(response);
+      } else {
+        setOfficeLocations([]);
+      }
+    } catch (error) {
+      console.error('Failed to load office locations:', error);
+      setOfficeLocations([]);
+    } finally {
+      setLocationsLoading(false);
     }
   };
 
@@ -708,10 +729,21 @@ export const EditAppointmentDialog = ({
                   <SelectValue placeholder="Select office location" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="main-office">Main Office</SelectItem>
-                  <SelectItem value="branch-office">Branch Office</SelectItem>
-                  <SelectItem value="remote">Remote</SelectItem>
-                  <SelectItem value="client-location">Client Location</SelectItem>
+                  {locationsLoading ? (
+                    <SelectItem value="loading" disabled>
+                      Loading locations...
+                    </SelectItem>
+                  ) : officeLocations.length === 0 ? (
+                    <SelectItem value="no-locations" disabled>
+                      No office locations available
+                    </SelectItem>
+                  ) : (
+                    officeLocations.map((loc) => (
+                      <SelectItem key={loc.id} value={loc.name}>
+                        {loc.display}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               {errors.location && (

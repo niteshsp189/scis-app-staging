@@ -2,6 +2,14 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+export interface OfficeLocationRef {
+  id: string;
+  name: string;
+  pivot?: {
+    is_primary: boolean;
+  };
+}
+
 export interface TeamMember {
   id: string;
   first_name: string;
@@ -12,9 +20,11 @@ export interface TeamMember {
   company?: string;
   location?: string;
   is_active: boolean;
+  is_agent?: boolean;
   created_at: string;
   updated_at: string;
   roles: Role[];
+  office_locations?: OfficeLocationRef[];
   organization?: Organization;
   full_name?: string;
 }
@@ -55,7 +65,9 @@ export interface TeamMemberCreateRequest {
   company?: string;
   location?: string;
   roles: number[];
+  office_location_ids?: string[];
   is_active?: boolean;
+  is_agent?: boolean;
 }
 
 export interface TeamMemberUpdateRequest {
@@ -67,7 +79,9 @@ export interface TeamMemberUpdateRequest {
   company?: string;
   location?: string;
   roles: number[];
+  office_location_ids?: string[];
   is_active?: boolean;
+  is_agent?: boolean;
 }
 
 export interface TeamMemberFilters {

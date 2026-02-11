@@ -28,6 +28,7 @@ import appointmentService, {
 } from "@/services/appointmentService";
 import userService from "@/services/userService";
 import timezoneService from "@/services/timezoneService";
+import { officeLocationService } from "@/services/officeLocationService";
 import { User } from "@/services/authService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEventDispatcher } from "@/hooks/useEventListener";
@@ -260,28 +261,15 @@ export const ScheduleMeetingDialog = ({
     const loadOfficeLocations = async () => {
     setLocationsLoading(true);
     try {
-      const response = await fetch('/api/office-locations/options', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && Array.isArray(data.data)) {
-          setOfficeLocations(data.data);
-        }
+      const response = await officeLocationService.getLocationOptions();
+      if (response && Array.isArray(response)) {
+        setOfficeLocations(response);
+      } else {
+        setOfficeLocations([]);
       }
     } catch (error) {
       console.error("Failed to load office locations:", error);
-      // Fallback to mock data
-      const fallbackLocations: OfficeLocation[] = [
-        { id: 'main-office', name: 'Main Office', display: 'Main Office', address: '123 Main St' },
-        { id: 'branch-office', name: 'Branch Office', display: 'Branch Office', address: '456 Branch Ave' },
-        { id: 'remote', name: 'Remote', display: 'Remote', address: 'Remote Location' },
-        { id: 'client-location', name: 'Client Location', display: 'Client Location', address: 'Client Site' },
-      ];
-      setOfficeLocations(fallbackLocations);
+      setOfficeLocations([]);
     } finally {
       setLocationsLoading(false);
     }
@@ -906,7 +894,7 @@ export const ScheduleMeetingDialog = ({
                   style={{ paddingLeft: '4px', paddingRight: '4px' }}
                 >
                   <SelectValue placeholder="Select office location">
-                    {location ? officeLocations.find(loc => loc.id === location)?.display || location : "Select office location"}
+                    {location ? officeLocations.find(loc => loc.name === location)?.display || location : "Select office location"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -920,8 +908,8 @@ export const ScheduleMeetingDialog = ({
                     </SelectItem>
                   ) : (
                     officeLocations.map((loc) => (
-                      <SelectItem key={loc.id} value={loc.id}>
-                        {loc.display} 
+                      <SelectItem key={loc.id} value={loc.name}>
+                        {loc.display}
                       </SelectItem>
                     ))
                   )}

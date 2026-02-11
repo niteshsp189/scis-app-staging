@@ -19,7 +19,7 @@ export interface OfficeLocation {
 }
 
 export interface OfficeLocationOption {
-  id: number;
+  id: string;
   name: string;
   display: string;
   address?: string;

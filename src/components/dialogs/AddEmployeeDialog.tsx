@@ -10,13 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
@@ -62,6 +55,7 @@ export const AddEmployeeDialog = ({
     position: "",
     company: "",
     location: "",
+    office_location_ids: [] as string[],
     roles: [] as number[],
     is_active: true,
     is_agent: false,
@@ -238,6 +232,7 @@ export const AddEmployeeDialog = ({
       position: "",
       company: "",
       location: "",
+      office_location_ids: [],
       roles: [],
       is_active: true,
       is_agent: false,
@@ -343,6 +338,7 @@ export const AddEmployeeDialog = ({
         position: "",
         company: "",
         location: "",
+        office_location_ids: [],
         roles: [],
         is_active: true,
         is_agent: false,
@@ -571,28 +567,37 @@ export const AddEmployeeDialog = ({
                   validationHint="Company or organization name"
                 />
                 <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Select
-                    value={formData.location}
-                    onValueChange={(value) => handleInputChange('location', value)}
-                    disabled={isLoadingLocations}
-                  >
-                    <SelectTrigger className={getFieldError('location') ? 'border-red-500' : ''}>
-                      <SelectValue placeholder={isLoadingLocations ? "Loading locations..." : "Select work location"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem key="no-location" value="no-location">No Location</SelectItem>
+                  <Label>Office Locations</Label>
+                  {isLoadingLocations ? (
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading locations...
+                    </div>
+                  ) : officeLocations.length === 0 ? (
+                    <p className="text-sm text-gray-500">No office locations available</p>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-2 mt-1">
                       {officeLocations.map((location) => (
-                        <SelectItem key={location.id} value={location.display}>
-                          {location.display}
-                        </SelectItem>
+                        <div key={location.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`add-location-${location.id}`}
+                            checked={formData.office_location_ids.includes(location.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                handleInputChange('office_location_ids', [...formData.office_location_ids, location.id]);
+                              } else {
+                                handleInputChange('office_location_ids', formData.office_location_ids.filter((id: string) => id !== location.id));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={`add-location-${location.id}`} className="text-sm cursor-pointer">
+                            {location.display}
+                          </Label>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
-                  {getFieldError('location') && (
-                    <p className="text-sm text-red-500">{getFieldError('location')}</p>
+                    </div>
                   )}
-                  <p className="text-xs text-gray-500">Primary work location</p>
+                  <p className="text-xs text-gray-500">Select all office locations this employee works at</p>
                 </div>
               </div>
 
@@ -689,7 +694,7 @@ export const AddEmployeeDialog = ({
           <>
             {/* Preview content */}
             <div className="pt-4">
-              <EmployeePreview formData={formData} roles={roles} />
+              <EmployeePreview formData={formData} roles={roles} officeLocations={officeLocations} />
             </div>
             
             <div className="flex justify-between pt-4">
