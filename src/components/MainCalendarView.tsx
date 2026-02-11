@@ -2,6 +2,7 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { officeLocationService } from "@/services/officeLocationService";
 import {
   Select,
   SelectContent,
@@ -375,17 +376,9 @@ export const MainCalendarView = forwardRef<{
 
   const loadOfficeLocations = async () => {
     try {
-      const response = await fetch("/api/office-locations/options", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && Array.isArray(data.data)) {
-          setOfficeLocations(data.data);
-        }
+      const fetchedLocations = await officeLocationService.getLocationOptions();
+      if (Array.isArray(fetchedLocations) && fetchedLocations.length > 0) {
+        setOfficeLocations(fetchedLocations);
       }
     } catch (error) {
       console.error("Failed to load office locations:", error);
