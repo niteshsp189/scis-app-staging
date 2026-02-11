@@ -155,7 +155,7 @@ export const AppointmentsTableView = forwardRef(
         }
 
         if (locationFilter && locationFilter !== "all") {
-          filters.location = locationFilter;
+          filters.office_location_id = locationFilter;
         }
 
         if (startDate) {
@@ -552,7 +552,7 @@ export const AppointmentsTableView = forwardRef(
                     if (typeFilter && typeFilter !== 'all') params.set('type', typeFilter);
                     if (assigneeFilter && assigneeFilter !== 'all') params.set('assigned_to', assigneeFilter);
                     if (createdByFilter && createdByFilter !== 'all') params.set('created_by', createdByFilter);
-                    if (locationFilter && locationFilter !== 'all') params.set('location', locationFilter);
+                    if (locationFilter && locationFilter !== 'all') params.set('office_location_id', locationFilter);
                     
                     const url = `/appointments/print${params.toString() ? '?' + params.toString() : ''}`;
                     window.open(url, '_blank');

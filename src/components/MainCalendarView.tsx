@@ -309,7 +309,7 @@ export const MainCalendarView = forwardRef<{
       }
 
       if (filterOfficeLocation !== "all") {
-        filters.location = filterOfficeLocation;
+        filters.office_location_id = filterOfficeLocation;
       }
 
       const response = await appointmentService.getAppointments(filters);

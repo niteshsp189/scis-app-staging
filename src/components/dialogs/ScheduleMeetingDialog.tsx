@@ -665,7 +665,8 @@ export const ScheduleMeetingDialog = ({
           description,
           start_datetime: startDatetimeISO,
           end_datetime: endDatetimeISO,
-          location,
+          location: officeLocations.find(loc => loc.id === location)?.name || location,
+          office_location_id: location || undefined,
           appointment_type: meetingType.join(','), // Join multiple types with comma
           priority: priority,
           customer_id: customerId,
@@ -894,7 +895,7 @@ export const ScheduleMeetingDialog = ({
                   style={{ paddingLeft: '4px', paddingRight: '4px' }}
                 >
                   <SelectValue placeholder="Select office location">
-                    {location ? officeLocations.find(loc => loc.name === location)?.display || location : "Select office location"}
+                    {location ? officeLocations.find(loc => loc.id === location)?.display || location : "Select office location"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -908,7 +909,7 @@ export const ScheduleMeetingDialog = ({
                     </SelectItem>
                   ) : (
                     officeLocations.map((loc) => (
-                      <SelectItem key={loc.id} value={loc.name}>
+                      <SelectItem key={loc.id} value={loc.id}>
                         {loc.display}
                       </SelectItem>
                     ))

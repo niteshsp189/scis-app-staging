@@ -102,7 +102,7 @@ export const EditAppointmentDialog = ({
   const [priority, setPriority] = useState<
     "low" | "medium" | "high" | "urgent"
   >(appointment.priority as "low" | "medium" | "high" | "urgent");
-  const [location, setLocation] = useState(appointment.location || "");
+  const [location, setLocation] = useState(appointment.office_location_id || "");
   const [status, setStatus] = useState(appointment.status || "scheduled");
   const [cancellationNotes, setCancellationNotes] = useState(appointment.cancellation_notes || "");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(
@@ -194,7 +194,7 @@ export const EditAppointmentDialog = ({
     
     setPriority(priorityValue as "low" | "medium" | "high" | "urgent");
 
-    setLocation(appointment.location || "");
+    setLocation(appointment.office_location_id || "");
     setStatus(appointment.status || "scheduled");
     setCancellationNotes(appointment.cancellation_notes || "");
     setSelectedEmployeeId(appointment.assigned_to || "any");
@@ -206,7 +206,7 @@ export const EditAppointmentDialog = ({
       date: appointmentDate,
       time: startTimeFormatted,
       endTime: endTimeFormatted,
-      location: appointment.location || "",
+      location: appointment.office_location_id || "",
       meetingType: appointment.appointment_type ? appointment.appointment_type.split(',') : ['review'],
       priority: (appointment.priority as 'low' | 'medium' | 'high' | 'urgent') || 'medium',
       selectedEmployeeId: appointment.assigned_to || "any",
@@ -553,7 +553,8 @@ export const EditAppointmentDialog = ({
         description,
         start_datetime: startDatetimeISO,
         end_datetime: endDatetimeISO,
-        location,
+        location: officeLocations.find(loc => loc.id === location)?.name || location,
+        office_location_id: location || undefined,
         appointment_type: meetingType.join(','), // Join multiple types with comma
         priority: priority,
         assigned_to: selectedEmployeeId === 'any' ? null : selectedEmployeeId,
@@ -739,7 +740,7 @@ export const EditAppointmentDialog = ({
                     </SelectItem>
                   ) : (
                     officeLocations.map((loc) => (
-                      <SelectItem key={loc.id} value={loc.name}>
+                      <SelectItem key={loc.id} value={loc.id}>
                         {loc.display}
                       </SelectItem>
                     ))

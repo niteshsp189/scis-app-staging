@@ -76,6 +76,7 @@ export interface AppointmentFilters {
   assigned_to?: string;
   created_by?: string;
   location?: string;
+  office_location_id?: string;
   customer_id?: number;
   search?: string;
   per_page?: number;
@@ -88,6 +89,7 @@ export interface CreateAppointmentData {
   start_datetime: string;
   end_datetime: string;
   location?: string;
+  office_location_id?: string;
   appointment_type: 'new_client' | 'supplement' | 'part_d' | 'rate_increase' | 'under_65' | 'dental_vision' | 'review' | 'customer_service' | 'field_time' | 'life_insurance' | 'meeting' | 'call' | 'presentation' | 'follow_up' | 'consultation' | 'quote' | 'other';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   customer_id?: number;
