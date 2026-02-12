@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, Clock, MapPin, User, Phone, Mail, Edit } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { api } from "@/services/api";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 
 interface Appointment {
   id: string;
@@ -256,7 +257,7 @@ const AppointmentDetails = () => {
             <div className="pt-4 border-t">
               <Button 
                 variant="outline" 
-                onClick={() => navigate(`/clients/view/${appointment.customer.id}`)}
+                onClick={() => navigate(getCustomerViewUrl(appointment.customer.id, (appointment.customer as any).status))}
                 className="w-full"
               >
                 View Customer Profile

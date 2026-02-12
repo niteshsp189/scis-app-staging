@@ -8,6 +8,7 @@ import { FamilyMember } from "@/types/customer";
 interface DependentApiResponse {
   id: number;
   customer_id: number;
+  related_customer_id?: number;
   family_id: string;
   first_name: string;
   middle_name?: string;
@@ -43,7 +44,15 @@ interface DependentApiResponse {
   company?: string;
   referral?: string;
   notes?: string;
+  status?: string;
   policies?: any[]; // Policies associated with this dependent
+  related_customer?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    status?: string;
+    customer_type?: string;
+  };
 }
 
 // Type alias for backward compatibility
@@ -93,8 +102,11 @@ const transformDependentResponse = (
     mailingZipCode: apiDependent.mailing_zip_code || "",
     mailingCountry: apiDependent.mailing_country || "",
     referral: apiDependent.referral || "",
+    status: apiDependent.status || "",
     policies: apiDependent.policies?.map(p => p.policy_number) || [],
     notes: apiDependent.notes || "",
+    relatedCustomerId: apiDependent.related_customer_id || undefined,
+    relatedCustomerStatus: apiDependent.related_customer?.status || apiDependent.related_customer?.customer_type || undefined,
   };
   
   return result;

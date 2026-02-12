@@ -30,6 +30,7 @@ import userService from "@/services/userService";
 import timezoneService from "@/services/timezoneService";
 import { officeLocationService } from "@/services/officeLocationService";
 import { User } from "@/services/authService";
+import { EmployeeCombobox } from "@/components/ui/employee-combobox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEventDispatcher } from "@/hooks/useEventListener";
 
@@ -823,7 +824,7 @@ export const ScheduleMeetingDialog = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[840px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Schedule Meeting</DialogTitle>
           <DialogDescription>
@@ -851,40 +852,16 @@ export const ScheduleMeetingDialog = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <label className="text-sm font-medium">Assign to Employee <span className="text-red-500">*</span></label>
-              {usersLoading ? (
-                <Skeleton className="h-10 w-full" />
-              ) : (
-                <>
-                  <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId} required>
-                    <SelectTrigger className={errors.selectedEmployeeId ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Select an employee">
-                        {selectedEmployeeId === 'any' ? 'Any' : selectedEmployeeId ? users.find(user => user.id === selectedEmployeeId)?.first_name + ' ' + users.find(user => user.id === selectedEmployeeId)?.last_name || selectedEmployeeId : "Select an employee"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any" className="font-medium text-primary">
-                        Any
-                      </SelectItem>
-                      {Array.isArray(users) && users.length > 0 ? (
-                        users.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.first_name} {user.last_name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no-employees" disabled>
-                          No employees available
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  {errors.selectedEmployeeId && (
-                    <p className="text-sm text-red-500">
-                      {errors.selectedEmployeeId}
-                    </p>
-                  )}
-                </>
-              )}
+              <EmployeeCombobox
+                users={users}
+                value={selectedEmployeeId}
+                onChange={setSelectedEmployeeId}
+                loading={usersLoading}
+                error={errors.selectedEmployeeId}
+                showAnyOption={true}
+                placeholder="Select an employee..."
+                required
+              />
             </div>
             
             <div className="grid gap-2">

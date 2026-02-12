@@ -3,11 +3,13 @@ import { Button } from "@/components/ui/button";
 import { User, Users, Edit, Trash2 } from "lucide-react";
 import { FamilyMemberForm } from "./FamilyMemberForm";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { CustomerData, FamilyMember } from "@/types/customer";
 import { dependentService } from "@/services/dependentService";
 import { PolicyService } from "@/services/policyService";
 import { ConfirmationDialog } from "@/components/dialogs/ConfirmationDialog";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 
 interface CustomerFamilyTabProps {
   customerData: CustomerData;
@@ -18,6 +20,7 @@ export const CustomerFamilyTab = ({
   customerData,
   onUpdateFamilyMembers,
 }: CustomerFamilyTabProps) => {
+  const navigate = useNavigate();
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [memberPolicies, setMemberPolicies] = useState<Record<number, any[]>>({});
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
@@ -327,9 +330,22 @@ export const CustomerFamilyTab = ({
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h5 className="font-medium">
-                        {member.firstName} {member.lastName}
-                      </h5>
+                      {member.relatedCustomerId ? (
+                        <button
+                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                          onClick={() => {
+                            const url = getCustomerViewUrl(member.relatedCustomerId!, member.relatedCustomerStatus || member.status || 'Client');
+                            navigate(url);
+                          }}
+                          title={`View ${member.firstName} ${member.lastName}`}
+                        >
+                          {member.firstName} {member.lastName}
+                        </button>
+                      ) : (
+                        <h5 className="font-medium">
+                          {member.firstName} {member.lastName}
+                        </h5>
+                      )}
                       {member.dateOfBirth && calculateAge(member.dateOfBirth) && (
                         <Badge variant="secondary">
                           Age {calculateAge(member.dateOfBirth)}

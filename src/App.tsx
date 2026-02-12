@@ -43,6 +43,7 @@ import CurrencySystemTest from "./CurrencySystemTest";
 import AuditDashboard from "./pages/AuditDashboard";
 import GlobalBook from "./pages/GlobalBook";
 import GlobalCalls from "./pages/GlobalCallsNew";
+import ConvertDependants from "./pages/ConvertDependants";
 import {
   CustomerPrintPage,
   CustomerCallsPrintPage,
@@ -633,6 +634,18 @@ function App() {
                 <Route
                   path="/calendar/callback/microsoft"
                   element={<CalendarCallback />}
+                />
+
+                {/* Admin: Convert Dependants to Customers */}
+                <Route
+                  path="/admin/convert-dependants"
+                  element={
+                    <ProtectedRoute>
+                      <MobileLayout>
+                        <ConvertDependants />
+                      </MobileLayout>
+                    </ProtectedRoute>
+                  }
                 />
 
                 <Route path="*" element={<NotFound />} />

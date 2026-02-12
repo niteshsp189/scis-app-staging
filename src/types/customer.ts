@@ -121,9 +121,13 @@ export interface FamilyMember {
   // Relationship and additional details
   relationship: string;
   referral?: string;
-  status?: "Client" | "Former" | "Deceased";
+  status?: "Client" | "Former" | "Deceased" | "Prospect" | string;
   policies: string[];
   notes?: string;
+
+  // Related customer link (if dependent is also a customer)
+  relatedCustomerId?: number;
+  relatedCustomerStatus?: string;
 }
 
 export interface CustomerData {

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { Search, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   customerRelationshipService,
   relationshipUtils,
@@ -259,9 +260,25 @@ export const RelationshipForm = ({
                         .join("")}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">
-                        {customer.name}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-gray-900 truncate">
+                          {customer.name}
+                        </p>
+                        {customer.status && (
+                          <Badge
+                            variant="outline"
+                            className={`text-xs px-1.5 py-0 ${
+                              customer.status === 'Client' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              customer.status === 'Prospect' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                              customer.status === 'Former' ? 'bg-gray-50 text-gray-700 border-gray-200' :
+                              customer.status === 'Deceased' ? 'bg-red-50 text-red-700 border-red-200' :
+                              'bg-gray-50 text-gray-600 border-gray-200'
+                            }`}
+                          >
+                            {customer.status}
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-500 truncate">
                         {customer.email}
                         {customer.phone && ` • ${customer.phone}`}
@@ -282,9 +299,25 @@ export const RelationshipForm = ({
                     .join("")}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">
-                    {selectedCustomer.name}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-gray-900 truncate">
+                      {selectedCustomer.name}
+                    </p>
+                    {selectedCustomer.status && (
+                      <Badge
+                        variant="outline"
+                        className={`text-xs px-1.5 py-0 ${
+                          selectedCustomer.status === 'Client' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                          selectedCustomer.status === 'Prospect' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                          selectedCustomer.status === 'Former' ? 'bg-gray-50 text-gray-700 border-gray-200' :
+                          selectedCustomer.status === 'Deceased' ? 'bg-red-50 text-red-700 border-red-200' :
+                          'bg-gray-50 text-gray-600 border-gray-200'
+                        }`}
+                      >
+                        {selectedCustomer.status}
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-600 truncate">
                     {selectedCustomer.email}
                     {selectedCustomer.phone && ` • ${selectedCustomer.phone}`}

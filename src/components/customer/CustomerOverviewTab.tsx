@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatPermissionError, isPermissionError, getErrorData } from "@/utils/permissionErrorHandler";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 
 interface CustomerRelationship {
   id: number;
@@ -1015,7 +1016,7 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 addedDate: rel.created_at,
                 isEditable: true,
                 isDeletable: true,
-                navigateTo: rel.related_customer?.id ? `/customers/${rel.related_customer.id}` : null,
+                navigateTo: rel.related_customer?.id ? getCustomerViewUrl(rel.related_customer.id, rel.related_customer.status || rel.related_customer.customer_type) : null,
               })),
               // Dependents from dependentService
               ...(dependents || []).map((dependent) => ({
@@ -1028,7 +1029,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 isEditable: false,
                 isDeletable: false,
                 policies: (dependentsPolicies[dependent.id] || []).map((policy: any) => policy.policy_number),
-                navigateTo: 'tab:dependencies' as string | null,
+                navigateTo: dependent.relatedCustomerId
+                  ? getCustomerViewUrl(dependent.relatedCustomerId, dependent.relatedCustomerStatus || dependent.status || 'Client')
+                  : null as string | null,
               })),
             ];
 

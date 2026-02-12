@@ -84,7 +84,7 @@ export function CustomerAppointmentsTab({ customerId, customerName }: CustomerAp
     try {
       const response = await appointmentService.getAppointments({
         customer_id: customerId,
-        per_page: 50
+        per_page: 1000
       });
 
       if (response.success) {
@@ -214,7 +214,7 @@ export function CustomerAppointmentsTab({ customerId, customerName }: CustomerAp
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {pastAppointments.slice(0, 10).map((appointment) => (
+                  {pastAppointments.map((appointment) => (
                     <AppointmentCard
                       key={appointment.id}
                       appointment={appointment}

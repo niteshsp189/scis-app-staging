@@ -49,8 +49,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AppointmentDetailsDialog } from "@/components/dialogs/AppointmentDetailsDialog";
+import { EmployeeCombobox } from "@/components/ui/employee-combobox";
 import { usePreferences } from "@/contexts/PreferenceContext";
 import { stripHtml } from "@/lib/htmlUtils";
+import { useNavigate } from "react-router-dom";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 
 interface AppointmentsTableViewProps {
   permissions?: {
@@ -85,6 +88,7 @@ export const AppointmentsTableView = forwardRef(
     const [showAppointmentDetails, setShowAppointmentDetails] = useState(false);
     
     const { getFilterExpanded, setFilterExpanded } = usePreferences();
+    const navigate = useNavigate();
     
     // Grab scroll functionality
     const tableContainerRef = React.useRef<HTMLDivElement>(null);
@@ -397,37 +401,29 @@ export const AppointmentsTableView = forwardRef(
               {/* Assignee Filter */}
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">Assignee</label>
-                <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by Assignee" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Employees</SelectItem>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.first_name} {user.last_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <EmployeeCombobox
+                  users={users}
+                  value={assigneeFilter}
+                  onChange={setAssigneeFilter}
+                  showAnyOption={false}
+                  showAllOption={true}
+                  allLabel="All Employees"
+                  placeholder="Filter by Assignee"
+                />
               </div>
 
               {/* Created By Filter */}
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">Created By</label>
-                <Select value={createdByFilter} onValueChange={setCreatedByFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by Created By" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Employees</SelectItem>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.first_name} {user.last_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <EmployeeCombobox
+                  users={users}
+                  value={createdByFilter}
+                  onChange={setCreatedByFilter}
+                  showAnyOption={false}
+                  showAllOption={true}
+                  allLabel="All Employees"
+                  placeholder="Filter by Created By"
+                />
               </div>
 
               {/* Office Location Filter */}
@@ -627,7 +623,15 @@ export const AppointmentsTableView = forwardRef(
                             {appointment.customer ? (
                               <div>
                                 <div className="text-sm font-medium">
-                                  {appointment.customer.first_name} {appointment.customer.last_name}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(getCustomerViewUrl(appointment.customer!.id, appointment.customer!.status || appointment.customer!.customer_type));
+                                    }}
+                                    className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                  >
+                                    {appointment.customer.first_name} {appointment.customer.last_name}
+                                  </button>
                                 </div>
                                 {appointment.customer.email && (
                                   <div className="text-xs text-gray-500 flex items-center gap-1">

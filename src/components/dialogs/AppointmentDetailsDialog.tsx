@@ -31,6 +31,8 @@ import { EditAppointmentDialog } from "./EditAppointmentDialog";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { renderHtmlContent } from "@/lib/htmlUtils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 
 interface AppointmentDetailsDialogProps {
   appointment: Appointment | null;
@@ -55,6 +57,7 @@ export const AppointmentDetailsDialog = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [cancellationNotes, setCancellationNotes] = useState("");
   const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
 
   if (!appointment) return null;
 
@@ -269,7 +272,17 @@ export const AppointmentDetailsDialog = ({
                       <div>
                         <div className="text-sm font-medium">Customer</div>
                         <div className="text-sm text-gray-600">
-                          {appointment.customer ? `${appointment.customer.first_name} ${appointment.customer.last_name}` : 'N/A'}
+                          {appointment.customer ? (
+                            <button
+                              onClick={() => {
+                                onOpenChange(false);
+                                navigate(getCustomerViewUrl(appointment.customer!.id, appointment.customer!.status || appointment.customer!.customer_type));
+                              }}
+                              className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium"
+                            >
+                              {appointment.customer.first_name} {appointment.customer.last_name}
+                            </button>
+                          ) : 'N/A'}
                         </div>
                         {appointment.customer?.email && (
                           <div className="text-xs text-gray-500">{appointment.customer.email}</div>

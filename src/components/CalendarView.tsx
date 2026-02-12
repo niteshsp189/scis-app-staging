@@ -23,9 +23,12 @@ import { AppointmentDetailsDialog } from "@/components/dialogs/AppointmentDetail
 import { authService } from "@/services/authService";
 import { useEventListener } from "@/hooks/useEventListener";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 
 export const CalendarView = forwardRef<{ refreshAppointments: () => Promise<void> }>((props, ref) => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date(),
   );
@@ -91,11 +94,13 @@ export const CalendarView = forwardRef<{ refreshAppointments: () => Promise<void
       const filters: any = {
         start_date: `${year}-${(month + 1).toString().padStart(2, '0')}-01T00:00:00`,
         end_date: `${year}-${(month + 1).toString().padStart(2, '0')}-${new Date(year, month + 1, 0).getDate().toString().padStart(2, '0')}T23:59:59`,
+        per_page: 1000,
       };
       
-      // Filter by current user's assignments only (My Appointments view)
+      // Filter by current user's assignments and created appointments (My Appointments view)
       if (currentUserId) {
         filters.assigned_to = currentUserId;
+        filters.include_created = true;
       }
 
       const response = await appointmentService.getAppointments(filters);
@@ -434,10 +439,13 @@ export const CalendarView = forwardRef<{ refreshAppointments: () => Promise<void
                     {appointment.customer && (
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        <span>
+                        <button
+                          onClick={() => navigate(getCustomerViewUrl(appointment.customer!.id, appointment.customer!.status || appointment.customer!.customer_type))}
+                          className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                        >
                           {appointment.customer.first_name}{" "}
                           {appointment.customer.last_name}
-                        </span>
+                        </button>
                         {appointment.customer.cell_phone && (
                           <a
                             href={`tel:${appointment.customer.cell_phone}`}
@@ -488,8 +496,12 @@ export const CalendarView = forwardRef<{ refreshAppointments: () => Promise<void
                   {appointment.notes && (
                     <div className="mt-3 pt-3 border-t">
                       <p className="text-sm text-gray-600">
-                        <strong>Notes:</strong> {appointment.notes}
+                        <strong>Notes:</strong>
                       </p>
+                      <div
+                        className="text-sm text-gray-600 prose prose-sm max-w-none mt-1"
+                        dangerouslySetInnerHTML={{ __html: appointment.notes }}
+                      />
                     </div>
                   )}
 

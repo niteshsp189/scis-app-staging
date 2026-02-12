@@ -28,6 +28,8 @@ export interface CustomerSearchResult {
   name: string;
   email: string;
   phone?: string;
+  status?: string;
+  customer_type?: string;
 }
 
 export interface RelationshipStats {

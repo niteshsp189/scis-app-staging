@@ -54,6 +54,7 @@ import { usePreferences } from "@/contexts/PreferenceContext";
 import { DateInput } from "@/components/ui/date-input";
 import { api } from "@/lib/axios";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { EmployeeCombobox } from "@/components/ui/employee-combobox";
 import {
   getAppointmentColorClasses,
   getLeaveColorClasses,
@@ -1886,22 +1887,15 @@ export const MainCalendarView = forwardRef<{
                 <label className="text-sm font-medium mb-2 block">
                   Filter by Assignee
                 </label>
-                <Select
+                <EmployeeCombobox
+                  users={users}
                   value={filterEmployee}
-                  onValueChange={setFilterEmployee}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Employees" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Employees</SelectItem>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.first_name} {user.last_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={setFilterEmployee}
+                  showAnyOption={false}
+                  showAllOption={true}
+                  allLabel="All Employees"
+                  placeholder="All Employees"
+                />
               </div>
 
               {/* Created By Employee Filter */}
@@ -1909,22 +1903,15 @@ export const MainCalendarView = forwardRef<{
                 <label className="text-sm font-medium mb-2 block">
                   Filter by Created By
                 </label>
-                <Select
+                <EmployeeCombobox
+                  users={users}
                   value={filterCreatedBy}
-                  onValueChange={setFilterCreatedBy}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Employees" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Employees</SelectItem>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.first_name} {user.last_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={setFilterCreatedBy}
+                  showAnyOption={false}
+                  showAllOption={true}
+                  allLabel="All Employees"
+                  placeholder="All Employees"
+                />
               </div>
 
               {/* Office Location Filter */}

@@ -35,6 +35,8 @@ export interface Appointment {
     cell_phone?: string;
     home_phone?: string;
     work_phone?: string;
+    status?: string;
+    customer_type?: string;
   };
   lead?: {
     id: number;
