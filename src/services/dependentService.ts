@@ -52,6 +52,7 @@ interface DependentApiResponse {
     last_name: string;
     status?: string;
     customer_type?: string;
+    legacy_client_id?: number;
   };
 }
 
@@ -107,6 +108,7 @@ const transformDependentResponse = (
     notes: apiDependent.notes || "",
     relatedCustomerId: apiDependent.related_customer_id || undefined,
     relatedCustomerStatus: apiDependent.related_customer?.status || apiDependent.related_customer?.customer_type || undefined,
+    relatedCustomerLegacyId: apiDependent.related_customer?.legacy_client_id || undefined,
   };
   
   return result;

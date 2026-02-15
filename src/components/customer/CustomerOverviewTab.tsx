@@ -38,6 +38,7 @@ interface CustomerRelationship {
     id: number;
     first_name: string;
     last_name: string;
+    legacy_client_id?: number | null;
   };
   related_customer_name?: string;
   relationship_type: string;
@@ -1004,21 +1005,34 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
               <p className="text-sm text-muted-foreground mt-2">Loading relationships...</p>
             </div>
           ) : (() => {
+            // Get IDs of converted dependents (to avoid duplication)
+            const convertedDependentIds = new Set(
+              (dependents || [])
+                .filter(d => d.relatedCustomerId)
+                .map(d => d.relatedCustomerId)
+            );
+
             // Combine relationships and dependents
             const allRelatedPeople = [
-              // Manual relationships
-              ...(relationships || []).map(rel => ({
-                ...rel,
-                type: 'relationship' as const,
-                displayName: rel.related_customer_name || `${rel.related_customer?.first_name} ${rel.related_customer?.last_name}`,
-                badgeText: rel.relationship_type,
-                badgeColor: relationshipUtils.getRelationshipTypeColor(rel.relationship_type),
-                addedDate: rel.created_at,
-                isEditable: true,
-                isDeletable: true,
-                navigateTo: rel.related_customer?.id ? getCustomerViewUrl(rel.related_customer.id, rel.related_customer.status || rel.related_customer.customer_type) : null,
-              })),
-              // Dependents from dependentService
+              // Manual relationships (exclude those that are converted dependents)
+              ...(relationships || [])
+                .filter(rel => !convertedDependentIds.has(rel.related_customer?.id))
+                .map(rel => ({
+                  ...rel,
+                  type: 'relationship' as const,
+                  displayName: rel.related_customer_name || `${rel.related_customer?.first_name} ${rel.related_customer?.last_name}`,
+                  badgeText: rel.relationship_type,
+                  badgeColor: relationshipUtils.getRelationshipTypeColor(rel.relationship_type),
+                  addedDate: rel.created_at,
+                  isEditable: true,
+                  isDeletable: true,
+                  navigateTo: rel.related_customer?.id ? getCustomerViewUrl(
+                    rel.related_customer.id, 
+                    rel.related_customer.status || rel.related_customer.customer_type,
+                    rel.related_customer.legacy_client_id
+                  ) : null,
+                })),
+              // Dependents (use legacy_client_id for converted ones)
               ...(dependents || []).map((dependent) => ({
                 id: `dependent-${dependent.id}`,
                 type: 'dependent' as const,
@@ -1030,7 +1044,11 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 isDeletable: false,
                 policies: (dependentsPolicies[dependent.id] || []).map((policy: any) => policy.policy_number),
                 navigateTo: dependent.relatedCustomerId
-                  ? getCustomerViewUrl(dependent.relatedCustomerId, dependent.relatedCustomerStatus || dependent.status || 'Client')
+                  ? getCustomerViewUrl(
+                      dependent.relatedCustomerId,
+                      dependent.relatedCustomerStatus || dependent.status || 'Client',
+                      dependent.relatedCustomerLegacyId
+                    )
                   : null as string | null,
               })),
             ];

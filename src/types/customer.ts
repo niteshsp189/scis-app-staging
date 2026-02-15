@@ -128,6 +128,7 @@ export interface FamilyMember {
   // Related customer link (if dependent is also a customer)
   relatedCustomerId?: number;
   relatedCustomerStatus?: string;
+  relatedCustomerLegacyId?: number;
 }
 
 export interface CustomerData {
