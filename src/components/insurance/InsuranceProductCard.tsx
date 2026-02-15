@@ -114,7 +114,7 @@ export function InsuranceProductCard({ product, onEdit, onDelete }: InsurancePro
         <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center justify-between'} pt-4 border-t border-slate-200`}>
           <div className={`flex items-center gap-2 ${isMobile ? 'text-xs' : 'text-xs'} text-slate-500`}>
             <Calendar className="h-3 w-3" />
-            <span>Updated {new Date(product.updatedAt).toLocaleDateString()}</span>
+            <span>Updated {new Date(product.updatedAt).toLocaleDateString('en-US', { timeZone: 'UTC' })}</span>
           </div>
           
           <div className={`flex gap-2 ${isMobile ? 'justify-center' : ''}`}>

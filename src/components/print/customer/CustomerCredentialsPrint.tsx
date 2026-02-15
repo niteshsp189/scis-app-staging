@@ -3,8 +3,6 @@
  * Displays medicare info, banking details, and medications
  */
 
-import { maskSSN } from '@/utils/printUtils';
-
 interface Medication {
   name: string;
   dosage: string;

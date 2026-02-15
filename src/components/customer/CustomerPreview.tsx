@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { User, Phone, MapPin, Heart, UserCheck } from "lucide-react";
+import { formatDisplayDate } from "@/utils/dateFormatters";
 
 interface CustomerFormData {
   firstName: string;
@@ -69,7 +70,7 @@ export function CustomerPreview({ formData, ssnDisplayValue }: CustomerPreviewPr
           {formData.dateOfBirth && (
             <div>
               <Label className="text-sm font-medium text-gray-600">Date of Birth</Label>
-              <p className="text-sm">{new Date(formData.dateOfBirth).toLocaleDateString()}</p>
+              <p className="text-sm">{formatDisplayDate(formData.dateOfBirth)}</p>
             </div>
           )}
           {ssnDisplayValue && (

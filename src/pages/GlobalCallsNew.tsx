@@ -22,6 +22,8 @@ import {
   ExternalLink,
   Edit,
   Printer,
+  Check,
+  ChevronsUpDown,
 } from "lucide-react";
 import {
   Select,
@@ -30,6 +32,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import { CallDetailsDialog } from "@/components/dialogs/CallDetailsDialog";
 import { DateInput } from "@/components/ui/date-input";
 import {
@@ -106,6 +122,8 @@ export default function GlobalCalls() {
   const [calledForUserId, setCalledForUserId] = useState<string>("");
   const [forwardedToUserId, setForwardedToUserId] = useState<string>("");
   const [users, setUsers] = useState<any[]>([]);
+  const [calledForSearchOpen, setCalledForSearchOpen] = useState(false);
+  const [forwardedToSearchOpen, setForwardedToSearchOpen] = useState(false);
   
   // Edit Dialog State
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -116,9 +134,17 @@ export default function GlobalCalls() {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const response = await api.get('/users');
+        const response = await api.get('/users', { params: { active: true } });
         if (response.data.success) {
-          setUsers(response.data.data);
+          // Filter active non-agent users and sort alphabetically
+          const activeUsers = response.data.data
+            .filter((user: any) => user.is_active === true && user.is_agent !== true)
+            .sort((a: any, b: any) => {
+              const nameA = `${a.first_name || ''} ${a.last_name || ''}`.trim();
+              const nameB = `${b.first_name || ''} ${b.last_name || ''}`.trim();
+              return nameA.localeCompare(nameB);
+            });
+          setUsers(activeUsers);
         }
       } catch (err) {
         console.error("Error loading users:", err);
@@ -591,35 +617,65 @@ export default function GlobalCalls() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Called For</Label>
-                  <Select value={calledForUserId || "none"} onValueChange={(val) => setCalledForUserId(val === "none" ? "" : val)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select user" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {users.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.first_name} {user.last_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={calledForSearchOpen} onOpenChange={setCalledForSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" aria-expanded={calledForSearchOpen} className="w-full justify-between">
+                        {calledForUserId ? users.find((user) => user.id === calledForUserId) ? `${users.find((user) => user.id === calledForUserId)?.first_name} ${users.find((user) => user.id === calledForUserId)?.last_name}` : "Select user" : "None"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Search users..." />
+                        <CommandList>
+                          <CommandEmpty>No user found.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem value="none" onSelect={() => { setCalledForUserId(""); setCalledForSearchOpen(false); }}>
+                              <Check className={cn("mr-2 h-4 w-4", !calledForUserId ? "opacity-100" : "opacity-0")} />
+                              None
+                            </CommandItem>
+                            {users.map((user) => (
+                              <CommandItem key={user.id} value={`${user.id}-${user.first_name} ${user.last_name}`} keywords={[user.first_name || '', user.last_name || '', user.email || '']} onSelect={() => { setCalledForUserId(user.id); setCalledForSearchOpen(false); }}>
+                                <Check className={cn("mr-2 h-4 w-4", calledForUserId === user.id ? "opacity-100" : "opacity-0")} />
+                                {user.first_name} {user.last_name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div>
                   <Label>Forwarded To</Label>
-                  <Select value={forwardedToUserId || "none"} onValueChange={(val) => setForwardedToUserId(val === "none" ? "" : val)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select user" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {users.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.first_name} {user.last_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={forwardedToSearchOpen} onOpenChange={setForwardedToSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" aria-expanded={forwardedToSearchOpen} className="w-full justify-between">
+                        {forwardedToUserId ? users.find((user) => user.id === forwardedToUserId) ? `${users.find((user) => user.id === forwardedToUserId)?.first_name} ${users.find((user) => user.id === forwardedToUserId)?.last_name}` : "Select user" : "None"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Search users..." />
+                        <CommandList>
+                          <CommandEmpty>No user found.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem value="none" onSelect={() => { setForwardedToUserId(""); setForwardedToSearchOpen(false); }}>
+                              <Check className={cn("mr-2 h-4 w-4", !forwardedToUserId ? "opacity-100" : "opacity-0")} />
+                              None
+                            </CommandItem>
+                            {users.map((user) => (
+                              <CommandItem key={user.id} value={`${user.id}-${user.first_name} ${user.last_name}`} keywords={[user.first_name || '', user.last_name || '', user.email || '']} onSelect={() => { setForwardedToUserId(user.id); setForwardedToSearchOpen(false); }}>
+                                <Check className={cn("mr-2 h-4 w-4", forwardedToUserId === user.id ? "opacity-100" : "opacity-0")} />
+                                {user.first_name} {user.last_name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 
@@ -721,35 +777,65 @@ export default function GlobalCalls() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Called For</Label>
-                  <Select value={calledForUserId || "none"} onValueChange={(val) => setCalledForUserId(val === "none" ? "" : val)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select user" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {users.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.first_name} {user.last_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={calledForSearchOpen} onOpenChange={setCalledForSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" aria-expanded={calledForSearchOpen} className="w-full justify-between">
+                        {calledForUserId ? users.find((user) => user.id === calledForUserId) ? `${users.find((user) => user.id === calledForUserId)?.first_name} ${users.find((user) => user.id === calledForUserId)?.last_name}` : "Select user" : "None"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Search users..." />
+                        <CommandList>
+                          <CommandEmpty>No user found.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem value="none" onSelect={() => { setCalledForUserId(""); setCalledForSearchOpen(false); }}>
+                              <Check className={cn("mr-2 h-4 w-4", !calledForUserId ? "opacity-100" : "opacity-0")} />
+                              None
+                            </CommandItem>
+                            {users.map((user) => (
+                              <CommandItem key={user.id} value={`${user.id}-${user.first_name} ${user.last_name}`} keywords={[user.first_name || '', user.last_name || '', user.email || '']} onSelect={() => { setCalledForUserId(user.id); setCalledForSearchOpen(false); }}>
+                                <Check className={cn("mr-2 h-4 w-4", calledForUserId === user.id ? "opacity-100" : "opacity-0")} />
+                                {user.first_name} {user.last_name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div>
                   <Label>Forwarded To</Label>
-                  <Select value={forwardedToUserId || "none"} onValueChange={(val) => setForwardedToUserId(val === "none" ? "" : val)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select user" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {users.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.first_name} {user.last_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={forwardedToSearchOpen} onOpenChange={setForwardedToSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" aria-expanded={forwardedToSearchOpen} className="w-full justify-between">
+                        {forwardedToUserId ? users.find((user) => user.id === forwardedToUserId) ? `${users.find((user) => user.id === forwardedToUserId)?.first_name} ${users.find((user) => user.id === forwardedToUserId)?.last_name}` : "Select user" : "None"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Search users..." />
+                        <CommandList>
+                          <CommandEmpty>No user found.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem value="none" onSelect={() => { setForwardedToUserId(""); setForwardedToSearchOpen(false); }}>
+                              <Check className={cn("mr-2 h-4 w-4", !forwardedToUserId ? "opacity-100" : "opacity-0")} />
+                              None
+                            </CommandItem>
+                            {users.map((user) => (
+                              <CommandItem key={user.id} value={`${user.id}-${user.first_name} ${user.last_name}`} keywords={[user.first_name || '', user.last_name || '', user.email || '']} onSelect={() => { setForwardedToUserId(user.id); setForwardedToSearchOpen(false); }}>
+                                <Check className={cn("mr-2 h-4 w-4", forwardedToUserId === user.id ? "opacity-100" : "opacity-0")} />
+                                {user.first_name} {user.last_name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 
@@ -1024,7 +1110,7 @@ export default function GlobalCalls() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          <div>{new Date(call.activity_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                          <div>{new Date(call.activity_date).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' })}</div>
                           <div className="text-gray-500">{call.activity_time ? new Date(`2000-01-01T${call.activity_time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '-'}</div>
                         </div>
                       </TableCell>

@@ -64,7 +64,7 @@ export const AppointmentsPrintPage = () => {
     try {
       const start = new Date(startDate);
       const end = new Date(endDate);
-      return `${format(start, 'MMM d, yyyy')} - ${format(end, 'MMM d, yyyy')}`;
+      return `${start.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' })} - ${end.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' })}`;
     } catch {
       return '';
     }

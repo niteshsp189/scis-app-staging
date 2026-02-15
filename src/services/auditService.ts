@@ -504,6 +504,7 @@ export class AuditService {
         if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
           const date = new Date(value);
           return date.toLocaleDateString("en-US", {
+            timeZone: "UTC",
             year: "numeric",
             month: "short",
             day: "numeric",
@@ -517,6 +518,7 @@ export class AuditService {
             parseInt(day),
           );
           return date.toLocaleDateString("en-US", {
+            timeZone: "UTC",
             year: "numeric",
             month: "short",
             day: "numeric",

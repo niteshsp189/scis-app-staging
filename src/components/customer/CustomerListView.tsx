@@ -191,6 +191,7 @@ export const CustomerListView = ({ customers }: CustomerListViewProps) => {
                       <span className="truncate">
                         <MaskedDisplay 
                           value={getPrimaryPhone(customer) || "N/A"} 
+                          type="phone"
                           visible={canViewSensitive}
                         />
                       </span>

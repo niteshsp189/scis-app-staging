@@ -41,7 +41,7 @@ export const ActivityLogsSection = () => {
       ${getAllLogs().map(log => `
         <div class="log-card">
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-            <h4 style="margin: 0; color: #1e40af;">${log.type} - ${new Date(log.date).toLocaleDateString()} at ${log.time}</h4>
+            <h4 style="margin: 0; color: #1e40af;">${log.type} - ${new Date(log.date).toLocaleDateString('en-US', { timeZone: 'UTC' })} at ${log.time}</h4>
             <span class="badge badge-blue">${log.type}</span>
           </div>
           <div class="detail-row">
@@ -82,7 +82,7 @@ export const ActivityLogsSection = () => {
           </div>
           ${log.followUpDate ? `
             <div style="margin-top: 8px;">
-              <span class="badge badge-yellow">Follow-up: ${new Date(log.followUpDate).toLocaleDateString()}</span>
+              <span class="badge badge-yellow">Follow-up: ${new Date(log.followUpDate).toLocaleDateString('en-US', { timeZone: 'UTC' })}</span>
             </div>
           ` : ''}
         </div>

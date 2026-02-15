@@ -258,13 +258,13 @@ export const PolicyAgentManager = ({ policyId, policyNumber, agentAssignment, on
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-gray-500" />
-                    <span>Assigned: {new Date(agentAssignment.aor.assignedDate).toLocaleDateString()}</span>
+                    <span>Assigned: {new Date(agentAssignment.aor.assignedDate).toLocaleDateString('en-US', { timeZone: 'UTC' })}</span>
                   </div>
                   
                   {agentAssignment.aor.aorLetterDate && (
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-gray-500" />
-                      <span>AOR Letter: {new Date(agentAssignment.aor.aorLetterDate).toLocaleDateString()}</span>
+                      <span>AOR Letter: {new Date(agentAssignment.aor.aorLetterDate).toLocaleDateString('en-US', { timeZone: 'UTC' })}</span>
                     </div>
                   )}
                   
@@ -327,7 +327,7 @@ export const PolicyAgentManager = ({ policyId, policyNumber, agentAssignment, on
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-gray-500" />
-                    <span>Assigned: {new Date(agentAssignment.writingAgent.assignedDate).toLocaleDateString()}</span>
+                    <span>Assigned: {new Date(agentAssignment.writingAgent.assignedDate).toLocaleDateString('en-US', { timeZone: 'UTC' })}</span>
                   </div>
                   
                   {agentAssignment.writingAgent.commissionRate > 0 && (

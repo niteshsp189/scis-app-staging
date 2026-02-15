@@ -280,11 +280,11 @@ const AppointmentDetails = () => {
             </div>
             <div>
               <label className="font-medium text-gray-500">Created Date</label>
-              <p className="text-gray-900">{new Date(appointment.created_at).toLocaleDateString()}</p>
+              <p className="text-gray-900">{new Date(appointment.created_at).toLocaleDateString('en-US', { timeZone: 'UTC' })}</p>
             </div>
             <div>
               <label className="font-medium text-gray-500">Last Updated</label>
-              <p className="text-gray-900">{new Date(appointment.updated_at).toLocaleDateString()}</p>
+              <p className="text-gray-900">{new Date(appointment.updated_at).toLocaleDateString('en-US', { timeZone: 'UTC' })}</p>
             </div>
             <div>
               <label className="font-medium text-gray-500">Appointment ID</label>

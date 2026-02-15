@@ -72,6 +72,7 @@ export function EmployeeManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalEmployees, setTotalEmployees] = useState(0);
+  const [perPage, setPerPage] = useState(10);
   const [employeeToDelete, setEmployeeToDelete] = useState<string | null>(null);
   const [isDeletingEmployee, setIsDeletingEmployee] = useState(false);
 
@@ -80,7 +81,7 @@ export function EmployeeManagement() {
       setLoading(true);
       const response = await teamMembersApi.getAll({
         page: currentPage,
-        per_page: 10,
+        per_page: perPage,
         search: searchTerm,
         role: selectedRole === "all" ? "" : selectedRole,
         status: selectedStatus === "all" ? "" : selectedStatus,
@@ -125,7 +126,16 @@ export function EmployeeManagement() {
   useEffect(() => {
     fetchEmployees();
     fetchRoles();
-  }, [currentPage, searchTerm, selectedRole, selectedStatus]);
+  }, [currentPage, perPage]);
+
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      fetchEmployees();
+    }
+  }, [searchTerm, selectedRole, selectedStatus]);
 
   const handleAddEmployee = async (
     newEmployee: any,
@@ -535,10 +545,26 @@ export function EmployeeManagement() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-6">
-                <div className="text-sm text-gray-500">
-                  Showing {(currentPage - 1) * 10 + 1} to{" "}
-                  {Math.min(currentPage * 10, totalEmployees)} of{" "}
-                  {totalEmployees} team members
+                <div className="flex items-center gap-4">
+                  <div className="text-sm text-gray-500">
+                    Showing {(currentPage - 1) * perPage + 1} to{" "}
+                    {Math.min(currentPage * perPage, totalEmployees)} of{" "}
+                    {totalEmployees} team members
+                  </div>
+                  <Select value={perPage.toString()} onValueChange={(value) => {
+                    setPerPage(Number(value));
+                    setCurrentPage(1);
+                  }}>
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10 / page</SelectItem>
+                      <SelectItem value="25">25 / page</SelectItem>
+                      <SelectItem value="50">50 / page</SelectItem>
+                      <SelectItem value="100">100 / page</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex gap-2">
                   <Button

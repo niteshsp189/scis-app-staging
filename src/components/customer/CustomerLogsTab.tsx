@@ -44,6 +44,7 @@ import {
   CustomerActivity,
 } from "@/services/customerActivitiesService";
 import { toast } from "@/components/ui/use-toast";
+import { formatDisplayDate } from "@/utils/dateFormatters";
 
 interface CustomerLogsTabProps {
   customerId: number;
@@ -528,7 +529,7 @@ export const CustomerLogsTab = ({
                       <Clock className="h-3 w-3" />
                       <span>
                         Follow-up scheduled for{" "}
-                        {new Date(activity.follow_up_date).toLocaleDateString()}
+                        {formatDisplayDate(activity.follow_up_date)}
                       </span>
                     </div>
                   )}

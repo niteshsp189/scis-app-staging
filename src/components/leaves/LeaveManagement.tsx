@@ -1258,6 +1258,7 @@ const createFormSchema = (user: any) => {
                     {new Date(selectedRequest.start_date).toLocaleDateString(
                       "en-US",
                       {
+                        timeZone: "UTC",
                         year: "numeric",
                         month: "long",
                         day: "numeric",
@@ -1274,6 +1275,7 @@ const createFormSchema = (user: any) => {
                       ? new Date(selectedRequest.end_date).toLocaleDateString(
                           "en-US",
                           {
+                            timeZone: "UTC",
                             year: "numeric",
                             month: "long",
                             day: "numeric",
@@ -1344,6 +1346,7 @@ const createFormSchema = (user: any) => {
                     {new Date(selectedRequest.created_at).toLocaleDateString(
                       "en-US",
                       {
+                        timeZone: "UTC",
                         weekday: "short",
                         year: "numeric",
                         month: "long",
@@ -1483,6 +1486,7 @@ const createFormSchema = (user: any) => {
                           ? `${new Date(request.start_date).toLocaleDateString(
                               "en-US",
                               {
+                                timeZone: "UTC",
                                 year: "numeric",
                                 month: "long",
                                 day: "numeric",
@@ -1491,6 +1495,7 @@ const createFormSchema = (user: any) => {
                           : `${new Date(request.start_date).toLocaleDateString(
                               "en-US",
                               {
+                                timeZone: "UTC",
                                 year: "numeric",
                                 month: "long",
                                 day: "numeric",
@@ -1498,6 +1503,7 @@ const createFormSchema = (user: any) => {
                             )} - ${new Date(
                               request.end_date,
                             ).toLocaleDateString("en-US", {
+                              timeZone: "UTC",
                               year: "numeric",
                               month: "long",
                               day: "numeric",

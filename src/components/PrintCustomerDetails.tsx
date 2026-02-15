@@ -104,8 +104,8 @@ export function PrintCustomerDetails({ customer }: PrintCustomerDetailsProps) {
               <div><strong>Location:</strong> ${customer.location}</div>
               <div><strong>Customer Type:</strong> ${customer.customerType || "Client"}</div>
               <div><strong>Status:</strong> ${customer.status}</div>
-              <div><strong>Customer Since:</strong> ${new Date(customer.joinDate).toLocaleDateString()}</div>
-              <div><strong>Last Contact:</strong> ${new Date(customer.lastContact).toLocaleDateString()}</div>
+              <div><strong>Customer Since:</strong> ${new Date(customer.joinDate).toLocaleDateString('en-US', { timeZone: 'UTC' })}</div>
+              <div><strong>Last Contact:</strong> ${new Date(customer.lastContact).toLocaleDateString('en-US', { timeZone: 'UTC' })}</div>
               <div><strong>Total Policies:</strong> ${customer.totalPolicies}</div>
               <div><strong>Annual Premium:</strong> $${customer.totalPremium.toLocaleString()}</div>
             </div>

@@ -115,3 +115,42 @@ export const getUTCDate = (dateString: string): Date => {
   return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(),
     d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds());
 };
+
+/**
+ * Safely format a date string for display, preventing timezone off-by-one bugs.
+ * Date-only strings like "2026-02-14" are parsed as UTC midnight by JS.
+ * Without timeZone: 'UTC', toLocaleDateString() converts to local time,
+ * which can shift the date back by 1 day in timezones behind UTC.
+ *
+ * This is the drop-in replacement for: new Date(x).toLocaleDateString()
+ * Example output: "2/14/2026"
+ */
+export const formatDisplayDate = (
+  dateString: string | null | undefined,
+  options?: Intl.DateTimeFormatOptions
+): string => {
+  if (!dateString) return 'N/A';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'N/A';
+    return date.toLocaleDateString('en-US', {
+      timeZone: UTC_TIMEZONE,
+      ...options,
+    });
+  } catch {
+    return dateString || 'N/A';
+  }
+};
+
+/**
+ * Parse a date-only string safely for comparisons.
+ * Appends T00:00:00 to date-only strings to force local-time parsing
+ * instead of UTC parsing, avoiding off-by-one issues in date comparisons.
+ */
+export const parseDateSafe = (dateString: string): Date => {
+  // If it's a date-only string (YYYY-MM-DD), append time to avoid UTC parsing
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return new Date(dateString + 'T00:00:00');
+  }
+  return new Date(dateString);
+};

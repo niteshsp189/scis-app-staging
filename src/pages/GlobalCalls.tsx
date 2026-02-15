@@ -96,9 +96,17 @@ export default function GlobalCalls() {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const response = await api.get('/users');
+        const response = await api.get('/users', { params: { active: true } });
         if (response.data.success) {
-          setUsers(response.data.data);
+          // Filter active users and sort alphabetically
+          const activeUsers = response.data.data
+            .filter((user: any) => user.status === 'active')
+            .sort((a: any, b: any) => {
+              const nameA = `${a.first_name || ''} ${a.last_name || ''}`.trim();
+              const nameB = `${b.first_name || ''} ${b.last_name || ''}`.trim();
+              return nameA.localeCompare(nameB);
+            });
+          setUsers(activeUsers);
         }
       } catch (err) {
         console.error("Error loading users:", err);

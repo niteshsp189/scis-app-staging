@@ -37,7 +37,7 @@ export const DocumentsSection = ({ documents }: DocumentsSectionProps) => {
           </div>
           <div class="detail-row">
             <span class="detail-label">Uploaded:</span>
-            <span>${new Date(document.uploadDate).toLocaleDateString()} by ${document.uploadedBy}</span>
+            <span>${new Date(document.uploadDate).toLocaleDateString('en-US', { timeZone: 'UTC' })} by ${document.uploadedBy}</span>
           </div>
         </div>
       `).join('')}

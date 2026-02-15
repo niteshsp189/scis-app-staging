@@ -46,17 +46,28 @@ export const EnhancedCustomerDeletionDialog = ({
     queryFn: () => CustomerDeletionService.analyzeDeletionImpact(customer.id),
     enabled: false, // Only run when explicitly triggered
     retry: 1,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   // Handle analysis success/error
   const handleAnalysisComplete = async () => {
     try {
-      const result = await analyzeImpact();
+      // Set a timeout for the analysis
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Analysis timed out. Please try again.')), 30000); // 30 second timeout
+      });
+
+      const analysisPromise = analyzeImpact();
+      
+      const result = await Promise.race([analysisPromise, timeoutPromise]);
+      
       if (result.data) {
         setCurrentStep('review');
       }
     } catch (error: any) {
-      setError(error.message);
+      console.error('Analysis error:', error);
+      setError(error.message || 'Failed to analyze deletion impact');
       setCurrentStep('error');
     }
   };

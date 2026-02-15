@@ -78,6 +78,7 @@ export const CallDetailsDialog = ({
   }, [call.id, customerId, call.parent_activity_id]);
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
+      timeZone: "UTC",
       year: "numeric",
       month: "long",
       day: "numeric",

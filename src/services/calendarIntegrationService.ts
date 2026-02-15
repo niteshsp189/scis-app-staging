@@ -260,7 +260,7 @@ class CalendarIntegrationService {
     if (diffHours < 24) return `${diffHours} hours ago`;
     if (diffDays < 7) return `${diffDays} days ago`;
 
-    return date.toLocaleDateString();
+    return date.toLocaleDateString('en-US', { timeZone: 'UTC' });
   }
 
   /**

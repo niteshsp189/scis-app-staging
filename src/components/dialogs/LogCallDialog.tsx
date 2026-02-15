@@ -98,18 +98,21 @@ export const LogCallDialog = ({
     const loadUsers = async () => {
       try {
         setLoadingUsers(true);
-        const usersData = await userService.getUsers();
+        const usersData = await userService.getUsers({ active: true });
         if (usersData) {
-          const userList = usersData.map((user: any) => {
-            const firstName = user.first_name || '';
-            const lastName = user.last_name || '';
-            const fullName = `${firstName} ${lastName}`.trim();
-            return {
-              id: user.id,
-              name: fullName || user.email || `User ${user.id}`,
-              email: user.email || '',
-            };
-          });
+          const userList = usersData
+            .filter((user: any) => user.is_active === true && user.is_agent !== true) // Filter only active non-agent users
+            .map((user: any) => {
+              const firstName = user.first_name || '';
+              const lastName = user.last_name || '';
+              const fullName = `${firstName} ${lastName}`.trim();
+              return {
+                id: user.id,
+                name: fullName || user.email || `User ${user.id}`,
+                email: user.email || '',
+              };
+            })
+            .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically by name
           setUsers(userList);
         }
       } catch (error) {
@@ -259,7 +262,8 @@ export const LogCallDialog = ({
                       {users.map((user) => (
                         <CommandItem
                           key={user.id}
-                          value={user.name}
+                          value={`${user.id}-${user.name}`}
+                          keywords={[user.name, user.email]}
                           onSelect={() => {
                             setFormData((prev) => ({
                               ...prev,
@@ -315,7 +319,8 @@ export const LogCallDialog = ({
                         {users.map((user) => (
                           <CommandItem
                             key={user.id}
-                            value={user.name}
+                            value={`${user.id}-${user.name}`}
+                            keywords={[user.name, user.email]}
                             onSelect={() => {
                               setFormData((prev) => ({
                                 ...prev,

@@ -29,6 +29,7 @@ import { useMapSelection } from "@/hooks/useMapSelection";
 import { useState } from "react";
 import { Policy } from "@/types/policy";
 import { EditCustomerDialog } from "@/components/dialogs/EditCustomerDialog";
+import { formatDisplayDate } from "@/utils/dateFormatters";
 
 interface CustomerCardProps {
   customer: CustomerData;
@@ -215,6 +216,7 @@ export const CustomerCard = ({ customer, isAdmin }: CustomerCardProps) => {
             <span className="truncate">
               <MaskedDisplay 
                 value={getPrimaryPhone(customer) || "N/A"} 
+                type="phone"
                 visible={canViewSensitive}
               />
             </span>
@@ -236,9 +238,9 @@ export const CustomerCard = ({ customer, isAdmin }: CustomerCardProps) => {
               {customer.dateOfBirth
                 ? (() => {
                     const dob = new Date(customer.dateOfBirth);
-                    const day = dob.getDate();
-                    const month = dob.toLocaleString('default', { month: 'long' });
-                    const year = dob.getFullYear();
+                    const day = dob.getUTCDate();
+                    const month = dob.toLocaleString('default', { month: 'long', timeZone: 'UTC' });
+                    const year = dob.getUTCFullYear();
                     const age = customer.age !== undefined ? customer.age : '';
                     return `${day} ${month}, ${year}${age ? ` (${age} years)` : ''}`;
                   })()

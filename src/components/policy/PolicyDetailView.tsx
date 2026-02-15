@@ -590,6 +590,7 @@ export const PolicyDetailView: React.FC<PolicyDetailViewProps> = ({
                                     {new Date(
                                       currentPolicy.cancellation_date,
                                     ).toLocaleDateString("en-GB", {
+                                      timeZone: "UTC",
                                       day: "numeric",
                                       month: "short",
                                       year: "numeric",
@@ -760,7 +761,7 @@ export const PolicyDetailView: React.FC<PolicyDetailViewProps> = ({
                                   <p className="text-sm text-gray-600">
                                     {typeof value === "string" &&
                                     key.includes("date")
-                                      ? new Date(value).toLocaleDateString()
+                                      ? new Date(value).toLocaleDateString('en-US', { timeZone: 'UTC' })
                                       : String(value)}
                                   </p>
                                 </div>
@@ -806,21 +807,21 @@ export const PolicyDetailView: React.FC<PolicyDetailViewProps> = ({
                       Effective Date
                     </Label>
                     <p className="text-sm text-gray-600">
-                      {new Date(currentPolicy.start_date).toLocaleDateString()}
+                      {new Date(currentPolicy.start_date).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                     </p>
                   </div>
                   {currentPolicy.end_date && (
                     <div>
                       <Label className="text-sm font-medium">End Date</Label>
                       <p className="text-sm text-gray-600">
-                        {new Date(currentPolicy.end_date).toLocaleDateString()}
+                        {new Date(currentPolicy.end_date).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                       </p>
                     </div>
                   )}
                   <div>
                     <Label className="text-sm font-medium">Created</Label>
                     <p className="text-sm text-gray-600">
-                      {new Date(currentPolicy.created_at).toLocaleDateString()}
+                      {new Date(currentPolicy.created_at).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                     </p>
                   </div>
                 </CardContent>

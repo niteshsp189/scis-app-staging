@@ -321,7 +321,7 @@ export const CustomerPrintPage = () => {
       showFooter={true}
     >
       {sections.includes('info') && (
-        <CustomerInfoPrint customer={normalizedCustomer} canViewSensitive={false} />
+        <CustomerInfoPrint customer={normalizedCustomer} canViewSensitive={true} />
       )}
 
       {sections.includes('policies') && (
@@ -354,7 +354,7 @@ export const CustomerPrintPage = () => {
       )}
 
       {sections.includes('credentials') && (
-        <CustomerCredentialsPrint credentials={credentials} canViewSensitive={false} />
+        <CustomerCredentialsPrint credentials={credentials} canViewSensitive={true} />
       )}
 
       {sections.includes('history') && <CustomerHistoryPrint historyLogs={history} />}

@@ -723,14 +723,14 @@ const Policies = () => {
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-500">Start Date:</span>
                             <span>
-                              {new Date(policy.start_date).toLocaleDateString()}
+                              {new Date(policy.start_date).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                             </span>
                           </div>
                           {policy.end_date && (
                             <div className="flex justify-between text-sm">
                               <span className="text-gray-500">End Date:</span>
                               <span>
-                                {new Date(policy.end_date).toLocaleDateString()}
+                                {new Date(policy.end_date).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                               </span>
                             </div>
                           )}

@@ -393,7 +393,7 @@ export const PolicyActionButtons: React.FC<PolicyActionButtonsProps> = ({
               <RefreshCw className="h-3 w-3" />
               <span>
                 Renewal due:{" "}
-                {new Date(policy.next_renewal_date!).toLocaleDateString()}
+                {new Date(policy.next_renewal_date!).toLocaleDateString('en-US', { timeZone: 'UTC' })}
               </span>
             </div>
           )}

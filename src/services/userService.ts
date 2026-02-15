@@ -36,13 +36,25 @@ class UserService {
           title: "Access Denied",
           description: "You don't have permission to view user data.",
         });
-        
-        // Return empty array instead of throwing for permission errors
-        // This allows the component to continue functioning with fallback data
-        return [];
+      } else if (error.status === 500 || error.response?.status === 500) {
+        // Server error - log and show toast
+        console.error('Server error fetching users:', error.response?.data);
+        toast({
+          variant: "destructive",
+          title: "Server Error",
+          description: "Failed to load users. Please try again later.",
+        });
+      } else {
+        // Other errors
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load users. Please try again.",
+        });
       }
       
-      throw error;
+      // Return empty array for all errors to prevent UI crashes
+      return [];
     }
   }
 

@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formatPermissionError, isPermissionError, getErrorData } from "@/utils/permissionErrorHandler";
 import { getCustomerViewUrl } from "@/utils/customerRoutes";
+import { formatDisplayDate } from "@/utils/dateFormatters";
 
 interface CustomerRelationship {
   id: number;
@@ -572,7 +573,7 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                     <span className="text-xs text-muted-foreground font-medium">Date of Birth</span>
                   </div>
                   <span className="text-sm font-semibold text-foreground">
-                    {new Date(customer.dateOfBirth).toLocaleDateString()}
+                    {formatDisplayDate(customer.dateOfBirth)}
                   </span>
                 </div>
               )}
@@ -1116,7 +1117,7 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {person.type === 'relationship' ? (
-                            `Added on ${new Date(person.addedDate).toLocaleDateString()}`
+                            `Added on ${formatDisplayDate(person.addedDate)}`
                           ) : person.policies && person.policies.length > 0 ? (
                             `Policies: ${person.policies.join(', ')}`
                           ) : (

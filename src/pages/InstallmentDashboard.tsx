@@ -387,10 +387,10 @@ const InstallmentDashboard = () => {
                         </div>
                         <div className="text-sm text-gray-500 mt-1">
                           Customer: {installment.policy?.customer?.name} | 
-                          Due: {new Date(installment.due_date).toLocaleDateString()}
+                          Due: {new Date(installment.due_date).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                           {installment.paid_date && (
                             <span className="ml-2">
-                              | Paid: {new Date(installment.paid_date).toLocaleDateString()}
+                              | Paid: {new Date(installment.paid_date).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                             </span>
                           )}
                         </div>
@@ -474,7 +474,7 @@ const InstallmentDashboard = () => {
                         </div>
                         <div className="text-sm text-red-700 mt-1">
                           Customer: {installment.policy?.customer?.name} | 
-                          Due: {new Date(installment.due_date).toLocaleDateString()}
+                          Due: {new Date(installment.due_date).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                         </div>
                       </div>
                       <div className="text-right mr-4">

@@ -227,7 +227,7 @@ export const CustomerPoliciesTab = ({
         try {
           const d = new Date(displayValue);
           if (!isNaN(d.getTime())) {
-            displayValue = d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+            displayValue = d.toLocaleDateString('en-US', { timeZone: 'UTC', month: '2-digit', day: '2-digit', year: 'numeric' });
           }
         } catch {}
       }

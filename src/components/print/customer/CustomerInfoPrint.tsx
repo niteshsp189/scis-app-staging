@@ -8,8 +8,7 @@ import {
   formatPrintPhone,
   formatPrintAddress,
   formatFullName,
-  maskSSN,
-  maskPhone,
+  formatSSN,
   calculateAge,
   formatPrintHeight,
   formatPrintWeight,
@@ -104,7 +103,7 @@ export const CustomerInfoPrint = ({ customer, canViewSensitive = false }: Custom
           <div className="print-info-row">
             <span className="print-info-label">SSN:</span>
             <span className="print-info-value highlight">
-              {canViewSensitive ? customer.ssn || 'N/A' : maskSSN(customer.ssn)}
+              {formatSSN(customer.ssn)}
             </span>
           </div>
           <div className="print-info-row">
@@ -123,24 +122,22 @@ export const CustomerInfoPrint = ({ customer, canViewSensitive = false }: Custom
             <span className="print-info-value">{customer.email || 'N/A'}</span>
           </div>
           <div className="print-info-row">
-            <span className="print-info-label">Home:</span>
+            <span className="print-info-label">Cell:</span>
             <span className="print-info-value highlight">
-              {canViewSensitive 
-                ? formatPrintPhone(customer.homePhone) 
-                : customer.homePhone ? maskPhone(customer.homePhone) : 'N/A'}
+              {formatPrintPhone(customer.cellPhone)}
             </span>
           </div>
           <div className="print-info-row">
-            <span className="print-info-label">Cell:</span>
-            <span className="print-info-value">
-              {canViewSensitive 
-                ? formatPrintPhone(customer.cellPhone) 
-                : customer.cellPhone ? maskPhone(customer.cellPhone) : 'N/A'}
+            <span className="print-info-label">Home:</span>
+            <span className="print-info-value highlight">
+              {formatPrintPhone(customer.homePhone)}
             </span>
           </div>
           <div className="print-info-row">
             <span className="print-info-label">Work:</span>
-            <span className="print-info-value">{formatPrintPhone(customer.workPhone)}</span>
+            <span className="print-info-value highlight">
+              {formatPrintPhone(customer.workPhone)}
+            </span>
           </div>
           <div className="print-info-row">
             <span className="print-info-label">Fax:</span>

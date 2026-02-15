@@ -179,7 +179,7 @@ export default function GlobalBook() {
       customer.status || "",
       customer.totalPoliciesCount || 0,
       customer.activePoliciesCount || 0,
-      customer.createdAt ? format(new Date(customer.createdAt), "MMM d, yyyy") : ""
+      customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' }) : ""
     ]);
 
     const csvContent = [
@@ -353,7 +353,7 @@ export default function GlobalBook() {
                       <div className="flex items-center gap-1 text-sm text-gray-600">
                         <Calendar className="h-3 w-3 text-gray-400" />
                         {customer.createdAt 
-                          ? format(new Date(customer.createdAt), "MMM d, yyyy")
+                          ? new Date(customer.createdAt).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' })
                           : "—"
                         }
                       </div>

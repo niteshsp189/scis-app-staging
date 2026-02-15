@@ -58,7 +58,7 @@ export function PlanCard({ plan, onEdit, onDelete }: PlanCardProps) {
 
         <div className="flex items-center justify-between pt-3 border-t">
           <span className="text-xs text-gray-500">
-            Updated: {new Date(plan.updatedAt).toLocaleDateString()}
+            Updated: {new Date(plan.updatedAt).toLocaleDateString('en-US', { timeZone: 'UTC' })}
           </span>
         </div>
 

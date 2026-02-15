@@ -79,25 +79,36 @@ export const formatPrintPhone = (phone: string | null | undefined): string => {
   // Remove all non-digits
   const digits = phone.replace(/\D/g, '');
   
+  // Handle different digit lengths
   if (digits.length === 10) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    // Standard 10-digit US number: (xxx)xxx-xxxx
+    return `(${digits.slice(0, 3)})${digits.slice(3, 6)}-${digits.slice(6)}`;
   } else if (digits.length === 11 && digits[0] === '1') {
-    return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+    // 11 digits starting with 1 (country code): (xxx)xxx-xxxx
+    return `(${digits.slice(1, 4)})${digits.slice(4, 7)}-${digits.slice(7)}`;
+  } else if (digits.length >= 12) {
+    // 12+ digits - use last 10 digits: (xxx)xxx-xxxx
+    const last10 = digits.slice(-10);
+    return `(${last10.slice(0, 3)})${last10.slice(3, 6)}-${last10.slice(6)}`;
+  } else if (digits.length > 10) {
+    // More than 10 but less than 12 - use last 10
+    const last10 = digits.slice(-10);
+    return `(${last10.slice(0, 3)})${last10.slice(3, 6)}-${last10.slice(6)}`;
   }
   
   return phone;
 };
 
 /**
- * Mask SSN for print display (shows last 4 digits)
+ * Format SSN for print display (xxx-xx-xxxx)
  */
-export const maskSSN = (ssn: string | null | undefined): string => {
+export const formatSSN = (ssn: string | null | undefined): string => {
   if (!ssn) return 'N/A';
   const digits = ssn.replace(/\D/g, '');
-  if (digits.length >= 4) {
-    return `***-**-${digits.slice(-4)}`;
+  if (digits.length === 9) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
   }
-  return '***-**-****';
+  return ssn;
 };
 
 /**
@@ -119,14 +130,15 @@ export const calculateAge = (dateOfBirth: string | null | undefined): number | n
   if (!dateOfBirth) return null;
   
   const today = new Date();
+  // Use UTC methods to avoid timezone-related off-by-one day issues
   const birthDate = new Date(dateOfBirth);
   
   if (isNaN(birthDate.getTime())) return null;
   
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
+  let age = today.getFullYear() - birthDate.getUTCFullYear();
+  const monthDiff = today.getMonth() - birthDate.getUTCMonth();
   
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getUTCDate())) {
     age--;
   }
   

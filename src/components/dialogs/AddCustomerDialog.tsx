@@ -857,7 +857,7 @@ export function AddCustomerDialog({
                                   </div>
                                 </div>
                                 <div className="text-xs text-gray-500 mt-1">
-                                  Status: {customer.status} • Created: {new Date(customer.created_at).toLocaleDateString()}
+                                  Status: {customer.status} • Created: {new Date(customer.created_at).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                                 </div>
                               </div>
                               <Button

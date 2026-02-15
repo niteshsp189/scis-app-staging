@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Users, DollarSign, FileText, Calendar } from "lucide-react";
 import { CustomerData } from "@/types/customer";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatDisplayDate } from "@/utils/dateFormatters";
 
 interface CustomerQuickStatsProps {
   customerData: CustomerData;
@@ -32,11 +33,11 @@ export const CustomerQuickStats = ({
     // Try to get the next renewal date from the customer data
     // This should ideally come from the earliest active policy renewal date
     if (customerData.nextRenewal && customerData.nextRenewal !== "No Active Policy") {
-      return new Date(customerData.nextRenewal).toLocaleDateString();
+      return formatDisplayDate(customerData.nextRenewal);
     }
     
     // Fallback to a default date
-    return new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString();
+    return formatDisplayDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString());
   };
 
   const stats = [

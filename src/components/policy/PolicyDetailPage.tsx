@@ -359,7 +359,7 @@ export const PolicyDetailPage: React.FC<PolicyDetailPageProps> = ({
                               <p className="text-sm text-gray-600">
                                 {typeof value === "string" &&
                                 key.includes("date")
-                                  ? new Date(value).toLocaleDateString()
+                                  ? new Date(value).toLocaleDateString('en-US', { timeZone: 'UTC' })
                                   : String(value)}
                               </p>
                             </div>
@@ -405,21 +405,21 @@ export const PolicyDetailPage: React.FC<PolicyDetailPageProps> = ({
                   Effective Date
                 </Label>
                 <p className="text-sm text-gray-600">
-                  {new Date(policy.start_date).toLocaleDateString()}
+                  {new Date(policy.start_date).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                 </p>
               </div>
               {policy.end_date && (
                 <div>
                   <Label className="text-sm font-medium">End Date</Label>
                   <p className="text-sm text-gray-600">
-                    {new Date(policy.end_date).toLocaleDateString()}
+                    {new Date(policy.end_date).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                   </p>
                 </div>
               )}
               <div>
                 <Label className="text-sm font-medium">Created</Label>
                 <p className="text-sm text-gray-600">
-                  {new Date(policy.created_at).toLocaleDateString()}
+                  {new Date(policy.created_at).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                 </p>
               </div>
             </CardContent>

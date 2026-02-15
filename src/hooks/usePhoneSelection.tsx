@@ -108,6 +108,7 @@ export const usePhoneSelection = () => {
                     <div className="text-sm text-gray-600">
                       <MaskedDisplay 
                         value={option.value} 
+                        type="phone"
                         visible={canViewSensitive}
                       />
                     </div>

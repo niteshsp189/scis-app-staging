@@ -241,7 +241,7 @@ interface GracePeriodPolicy extends Policy {
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
-                  Grace ends: {new Date(policy.gracePeriod.grace_period_end).toLocaleDateString()}
+                  Grace ends: {new Date(policy.gracePeriod.grace_period_end).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                 </div>
               </div>
             </div>
@@ -434,13 +434,13 @@ interface GracePeriodPolicy extends Policy {
                 <div>
                   <span className="font-medium">Grace Period Started:</span>
                   <p className="text-gray-600">
-                    {new Date(selectedPolicy.gracePeriod.grace_period_start).toLocaleDateString()}
+                    {new Date(selectedPolicy.gracePeriod.grace_period_start).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                   </p>
                 </div>
                 <div>
                   <span className="font-medium">Grace Period Ends:</span>
                   <p className="text-gray-600">
-                    {new Date(selectedPolicy.gracePeriod.grace_period_end).toLocaleDateString()}
+                    {new Date(selectedPolicy.gracePeriod.grace_period_end).toLocaleDateString('en-US', { timeZone: 'UTC' })}
                   </p>
                 </div>
               </div>

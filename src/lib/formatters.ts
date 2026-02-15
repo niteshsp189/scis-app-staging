@@ -58,7 +58,7 @@ export const formatDate = (
   }
 ): string => {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', options).format(date);
+  return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', ...options }).format(date);
 };
 
 /**

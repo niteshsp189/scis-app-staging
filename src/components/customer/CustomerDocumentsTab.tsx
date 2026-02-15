@@ -26,6 +26,7 @@ import customerDocumentsService, {
   DocumentListFilters,
 } from "@/services/customerDocumentsService";
 import { ConfirmationDialog } from "@/components/dialogs/ConfirmationDialog";
+import { formatDisplayDate } from "@/utils/dateFormatters";
 
 interface CustomerDocumentsTabProps {
   customerId: number;
@@ -464,7 +465,7 @@ export const CustomerDocumentsTab = ({
                       {/* Date */}
                       <div className="overflow-hidden">
                         <p className="text-sm text-gray-600 truncate">
-                          {new Date(document.created_at).toLocaleDateString()}
+                          {formatDisplayDate(document.created_at)}
                         </p>
                       </div>
                     </div>

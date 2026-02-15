@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Building, MapPin, Calendar } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatDisplayDate } from "@/utils/dateFormatters";
 
 interface ProfileOverviewProps {
   user: {
@@ -43,7 +44,7 @@ export function ProfileOverview({ user }: ProfileOverviewProps) {
         </div>
         <div className={`flex items-center gap-3 ${isMobile ? 'text-xs' : 'text-sm'}`}>
           <Calendar className="h-4 w-4 text-gray-500" />
-          <span>Joined {new Date(user.joinDate).toLocaleDateString()}</span>
+          <span>Joined {formatDisplayDate(user.joinDate)}</span>
         </div>
       </CardContent>
     </Card>

@@ -132,8 +132,8 @@ export const createColumns = (handlers: ActionHandlers): ColumnDef<Policy>[] => 
       const date = new Date(row.getValue("start_date"));
       return (
         <div>
-          <div>{date.toLocaleDateString()}</div>
-          <div className="text-sm text-gray-500">{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+          <div>{date.toLocaleDateString('en-US', { timeZone: 'UTC' })}</div>
+          <div className="text-sm text-gray-500">{date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })}</div>
         </div>
       );
     }
@@ -153,9 +153,9 @@ export const createColumns = (handlers: ActionHandlers): ColumnDef<Policy>[] => 
       return (
         <div>
           <div className={isExpiringSoon ? "text-orange-600 font-medium" : ""}>
-            {date.toLocaleDateString()}
+            {date.toLocaleDateString('en-US', { timeZone: 'UTC' })}
           </div>
-          <div className="text-sm text-gray-500">{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+          <div className="text-sm text-gray-500">{date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })}</div>
         </div>
       );
     }
@@ -172,7 +172,7 @@ export const createColumns = (handlers: ActionHandlers): ColumnDef<Policy>[] => 
       
       return (
         <div>
-          <div>{date.toLocaleDateString()}</div>
+          <div>{date.toLocaleDateString('en-US', { timeZone: 'UTC' })}</div>
           <div className="text-sm text-gray-500">
             {diffDays === 0 ? 'Today' : `${diffDays} days ago`}
           </div>

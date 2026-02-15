@@ -78,7 +78,7 @@ export const FamilyProfileSection = ({ familyMembers, dependents }: FamilyProfil
             ${member.dateOfBirth ? `
               <div class="detail-row">
                 <span class="detail-label">Date of Birth:</span>
-                <span>${new Date(member.dateOfBirth).toLocaleDateString()}${calculateAge(member.dateOfBirth) ? ` (Age: ${calculateAge(member.dateOfBirth)})` : ''}</span>
+                <span>${new Date(member.dateOfBirth).toLocaleDateString('en-US', { timeZone: 'UTC' })}${calculateAge(member.dateOfBirth) ? ` (Age: ${calculateAge(member.dateOfBirth)})` : ''}</span>
               </div>
             ` : ''}
             ${member.ssn ? `
