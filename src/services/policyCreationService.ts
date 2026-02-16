@@ -415,11 +415,11 @@ class PolicyCreationService {
     }
   }
 
-  async searchCustomers(query: string): Promise<Customer[]> {
+  async searchCustomers(query: string, page: number = 1): Promise<Customer[]> {
     try {
       // Only search customers with 'Client' status for policy creation
       const response = await axios.get<{ data: Customer[] } | Customer[]>(
-        `${API_BASE_URL}/customers/search?q=${encodeURIComponent(query)}&status=Client`,
+        `${API_BASE_URL}/customers/search?q=${encodeURIComponent(query)}&status=Client&page=${page}&per_page=20`,
         { headers: this.getAuthHeaders() },
       );
       if ("data" in response.data && Array.isArray(response.data.data)) {

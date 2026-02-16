@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,8 @@ import { ArrowLeft, Calendar, Clock, MapPin, User, Phone, Mail, Edit } from "luc
 import { toast } from "@/components/ui/use-toast";
 import { api } from "@/services/api";
 import { getCustomerViewUrl } from "@/utils/customerRoutes";
+import { EditAppointmentDialog } from "@/components/dialogs/EditAppointmentDialog";
+import { renderHtmlContent } from "@/lib/htmlUtils";
 
 interface Appointment {
   id: string;
@@ -35,6 +37,7 @@ const AppointmentDetails = () => {
   const navigate = useNavigate();
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -150,8 +153,7 @@ const AppointmentDetails = () => {
           <Badge className={getStatusColor(appointment.status)}>
             {appointment.status}
           </Badge>
-          {/* <Button onClick={() => navigate(`/appointments/${id}/edit`)}> */}
-          <Button>
+          <Button onClick={() => setShowEditDialog(true)}>
             <Edit className="h-4 w-4 mr-2" />
             Edit
           </Button>
@@ -176,7 +178,7 @@ const AppointmentDetails = () => {
             {appointment.description && (
               <div>
                 <label className="text-sm font-medium text-gray-500">Description</label>
-                <p className="text-gray-900">{appointment.description}</p>
+                <div className="text-gray-900 prose prose-sm max-w-none" dangerouslySetInnerHTML={renderHtmlContent(appointment.description)} />
               </div>
             )}
 
@@ -223,7 +225,14 @@ const AppointmentDetails = () => {
           <CardContent className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-500">Customer Name</label>
-              <p className="text-gray-900">{appointment.customer.name}</p>
+              <p className="text-gray-900">
+                <Link 
+                  to={getCustomerViewUrl(appointment.customer.id, (appointment.customer as any).status)}
+                  className="text-blue-600 hover:underline font-medium"
+                >
+                  {appointment.customer.name}
+                </Link>
+              </p>
             </div>
 
             {appointment.customer.email && (
@@ -299,11 +308,20 @@ const AppointmentDetails = () => {
         <Button variant="outline" onClick={() => navigate('/appointments')}>
           View All Appointments
         </Button>
-        {/* <Button onClick={() => navigate(`/appointments/${id}/reschedule`)}> */}
-        <Button>
+        <Button onClick={() => setShowEditDialog(true)}>
           Reschedule Appointment
         </Button>
       </div>
+
+      {/* Edit Appointment Dialog */}
+      {appointment && (
+        <EditAppointmentDialog
+          appointment={appointment}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          onAppointmentUpdated={loadAppointment}
+        />
+      )}
     </div>
   );
 };

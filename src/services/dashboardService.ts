@@ -47,6 +47,7 @@ export interface DashboardAppointment {
   type: 'in_person' | 'phone' | 'video' | 'other';
   location?: string;
   notes?: string;
+  description?: string;
   status: 'scheduled' | 'confirmed' | 'cancelled' | 'completed';
   priority: 'low' | 'medium' | 'high';
 }

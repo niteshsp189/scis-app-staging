@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ export const CustomerCallsTab = ({
   customerId,
   customerName,
 }: CustomerCallsTabProps) => {
+  const [searchParams] = useSearchParams();
   const [calls, setCalls] = useState<CustomerActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [silentRefresh, setSilentRefresh] = useState(false);
@@ -51,8 +53,20 @@ export const CustomerCallsTab = ({
   const [endDate, setEndDate] = useState<string>("");
   const [editingCall, setEditingCall] = useState<CustomerActivity | null>(null);
   const [deletingCall, setDeletingCall] = useState<CustomerActivity | null>(null);
+  
+  // Get the callsTab parameter from URL, default to 'incoming'
+  const callsTabFromUrl = searchParams.get('callsTab') || 'incoming';
+  const [activeCallsTab, setActiveCallsTab] = useState<string>(callsTabFromUrl);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  // Update active tab when URL parameter changes
+  useEffect(() => {
+    const urlCallsTab = searchParams.get('callsTab');
+    if (urlCallsTab && (urlCallsTab === 'incoming' || urlCallsTab === 'outgoing')) {
+      setActiveCallsTab(urlCallsTab);
+    }
+  }, [searchParams]);
 
   const loadCalls = async (silent = false) => {
     try {
@@ -504,7 +518,7 @@ export const CustomerCallsTab = ({
           </CardContent>
         </Card>
       ) : (
-        <Tabs defaultValue="incoming" className="w-full">
+        <Tabs value={activeCallsTab} onValueChange={setActiveCallsTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger
                 value="incoming"

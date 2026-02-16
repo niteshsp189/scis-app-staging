@@ -29,6 +29,7 @@ import {
   BarChart3,
   UserMinus,
   Ban,
+  Phone,
   ArrowRightLeft,
   FileSearch,
   ClipboardList,
@@ -36,6 +37,7 @@ import {
   Cake,
   Clock,
   CalendarDays,
+  CalendarClock,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -88,15 +90,22 @@ const allNavigationItems = [
     ]
   },
   { title: "Policies", url: "/policies", icon: FileText, permission: "view_policies" },
-  { title: "Appointments", url: "/appointments", icon: Calendar, permission: "view_appointments" },
-  { title: "Reminders", url: "/reminders", icon: Bell, permission: "view_reminders" },
+  {
+    title: "Schedule",
+    icon: CalendarClock,
+    permission: null,
+    submenu: [
+      { title: "Appointments", url: "/appointments", icon: Calendar, permission: "view_appointments" },
+      { title: "Reminders", url: "/reminders", icon: Bell, permission: "view_reminders" },
+      { title: "Calls", url: "/calls", icon: Phone, permission: null },
+    ]
+  },
   {
     title: "Lookup Service",
     icon: Search,
     permission: null,
     submenu: [
       { title: "Global Search", url: "/lookup", icon: Search, permission: "view_global_search" },
-      { title: "Global Book", url: "/global-book", icon: BookOpen, permission: "view_customers" },
     ]
   },
   {
@@ -104,6 +113,7 @@ const allNavigationItems = [
     icon: BarChart3,
     permission: "view_reports",
     submenu: [
+      { title: "Client Book", url: "/global-book", icon: BookOpen, permission: "view_customers" },
       { title: "Lost Clients", url: "/reports/lost-clients", icon: UserMinus, permission: "view_reports" },
       { title: "Cancelled Customers", url: "/reports/cancelled-customers", icon: Ban, permission: "view_reports" },
       { title: "Transfers Report", url: "/reports/transfers", icon: ArrowRightLeft, permission: "view_reports" },

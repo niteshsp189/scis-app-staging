@@ -2,7 +2,7 @@
 import { toast } from "@/components/ui/use-toast";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { DashboardReminders } from "@/components/dashboard/DashboardReminders";
-import { DashboardCustomerNotes } from "@/components/dashboard/DashboardCustomerNotes";
+import { DashboardCalls } from "@/components/dashboard/DashboardCalls";
 import { DashboardAppointments } from "@/components/dashboard/DashboardAppointments";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -145,9 +146,30 @@ const Dashboard = () => {
         }}
       />
       
-      <DashboardCustomerNotes 
-        customerNotes={data?.customerNotes} 
+      <DashboardCalls 
+        calls={data?.calls} 
+        upcomingCount={data?.upcomingCalls}
         loading={loading}
+        onViewCall={(callId) => {
+          // Find the call to get customer_id and status
+          const call = data?.calls?.find(c => c.id === callId);
+          if (call) {
+            // Navigate to customer detail page with calls tab active
+            const customerUrl = call.customer_status 
+              ? getCustomerViewUrl(call.customer_id, call.customer_status)
+              : `/clients/view/${call.customer_id}`;
+            
+            // Determine which calls sub-tab to open based on call type
+            let callsSubTab = 'incoming'; // default
+            if (call.type === 'follow_up') {
+              callsSubTab = 'outgoing';
+            } else if (call.type === 'scheduled') {
+              callsSubTab = 'incoming';
+            }
+            
+            navigate(`${customerUrl}?tab=calls&callsTab=${callsSubTab}`);
+          }
+        }}
       />
     </div>
   );

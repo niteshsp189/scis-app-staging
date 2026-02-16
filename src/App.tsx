@@ -31,6 +31,7 @@ import Appointments from "./pages/Appointments";
 import AppointmentDetails from "./pages/AppointmentDetails";
 import NotFound from "./pages/NotFound";
 import Reminders from "./pages/Reminders";
+import ReminderDetails from "./pages/ReminderDetails";
 import Lookup from "./pages/Lookup";
 import Architecture from "./pages/Architecture";
 import BusinessRequirementsDocument from "./pages/BusinessRequirementsDocument";
@@ -456,6 +457,16 @@ function AppContent() {
             <ProtectedRoute>
               <MobileLayout>
                 <Reminders />
+              </MobileLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reminders/:id"
+          element={
+            <ProtectedRoute>
+              <MobileLayout>
+                <ReminderDetails />
               </MobileLayout>
             </ProtectedRoute>
           }

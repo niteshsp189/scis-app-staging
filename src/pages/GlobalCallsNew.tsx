@@ -24,6 +24,7 @@ import {
   Printer,
   Check,
   ChevronsUpDown,
+  ChevronDown,
 } from "lucide-react";
 import {
   Select,
@@ -55,6 +56,7 @@ import {
 import { toast } from "@/components/ui/use-toast";
 import { api } from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Dialog,
   DialogContent,
@@ -84,6 +86,7 @@ interface ActivityWithCustomer extends CustomerActivity {
 
 export default function GlobalCalls() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [calls, setCalls] = useState<ActivityWithCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -124,6 +127,7 @@ export default function GlobalCalls() {
   const [users, setUsers] = useState<any[]>([]);
   const [calledForSearchOpen, setCalledForSearchOpen] = useState(false);
   const [forwardedToSearchOpen, setForwardedToSearchOpen] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   
   // Edit Dialog State
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -474,13 +478,13 @@ export default function GlobalCalls() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="container mx-auto py-3 md:py-6 px-3 md:px-4 space-y-4 md:space-y-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Global Call Logs</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Global Call Logs</h1>
           <p className="text-gray-500 mt-1">View call logs across all customers</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <Button variant="outline" onClick={handleManualRefresh} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -522,7 +526,7 @@ export default function GlobalCalls() {
                 Create Call Log
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[95vh]' : 'max-w-2xl max-h-[90vh]'} overflow-y-auto`}>
             <DialogHeader>
               <DialogTitle>Create Call Log</DialogTitle>
             </DialogHeader>
@@ -691,7 +695,7 @@ export default function GlobalCalls() {
               </div>
 
               {/* Date and Time */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
                 <div>
                   <Label>Date *</Label>
                   <DateInput
@@ -726,7 +730,7 @@ export default function GlobalCalls() {
 
         {/* Edit Call Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[95vh]' : 'max-w-2xl max-h-[90vh]'} overflow-y-auto`}>
             <DialogHeader>
               <DialogTitle>Edit Call Log</DialogTitle>
             </DialogHeader>
@@ -851,7 +855,7 @@ export default function GlobalCalls() {
               </div>
 
               {/* Date and Time */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
                 <div>
                   <Label>Date *</Label>
                   <DateInput
@@ -889,8 +893,21 @@ export default function GlobalCalls() {
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
+        {isMobile && (
+          <div className="p-3 border-b">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="w-full justify-between"
+            >
+              <span>Filters {(startDate || endDate || customerType !== "all" || performedByFilter !== "all" || calledForFilter !== "all" || selectedCustomerFilter) ? '(Active)' : ''}</span>
+              <span>{showMobileFilters ? '−' : '+'}</span>
+            </Button>
+          </div>
+        )}
+        <CardContent className={`p-3 md:p-4 ${isMobile && !showMobileFilters ? 'hidden' : ''}`}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 items-end">
             <div>
               <Label>Customer</Label>
               {!selectedCustomerFilter ? (
@@ -1006,7 +1023,7 @@ export default function GlobalCalls() {
             </div>
           </div>
           {(startDate || endDate || customerType !== "all" || performedByFilter !== "all" || calledForFilter !== "all" || selectedCustomerFilter) && (
-            <div className="flex gap-2 mt-4">
+            <div className="flex flex-col sm:flex-row gap-2 mt-4">
               <Button variant="outline" size="sm" onClick={() => {
                 setStartDate("");
                 setEndDate("");
@@ -1049,17 +1066,18 @@ export default function GlobalCalls() {
             </div>
           ) : (
             <>
-              <Table>
-                <TableHeader>
+              <div className="overflow-x-auto">
+                <Table className="min-w-[800px]">
+                  <TableHeader>
                   <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Customer Type</TableHead>
-                    <TableHead>Date & Time</TableHead>
-                    <TableHead>Performed By</TableHead>
-                    <TableHead>Called For</TableHead>
-                    <TableHead>Answer Status</TableHead>
-                    <TableHead className="w-[150px]">Actions</TableHead>
+                    <TableHead className="w-[100px]">Type</TableHead>
+                    <TableHead className="min-w-[180px]">Customer</TableHead>
+                    <TableHead className="hidden md:table-cell w-[120px]">Customer Type</TableHead>
+                    <TableHead className="w-[140px]">Date & Time</TableHead>
+                    <TableHead className="hidden lg:table-cell w-[130px]">Performed By</TableHead>
+                    <TableHead className="hidden lg:table-cell w-[120px]">Called For</TableHead>
+                    <TableHead className="hidden md:table-cell w-[100px]">Status</TableHead>
+                    <TableHead className="w-[120px] md:w-[150px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1079,19 +1097,19 @@ export default function GlobalCalls() {
                       </TableCell>
                       <TableCell>
                         {call.customer ? (
-                          <div>
+                          <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <div>
-                                <p className="font-medium text-sm">
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-sm truncate">
                                   {call.customer.first_name} {call.customer.last_name}
                                 </p>
-                                <p className="text-xs text-gray-500">{call.customer.email}</p>
+                                <p className="text-xs text-gray-500 truncate">{call.customer.email}</p>
                               </div>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => navigate(getCustomerViewUrl(call.customer!.id, call.customer!.status) + '?tab=calls')}
-                                className="h-7 w-7 p-0"
+                                className="h-7 w-7 p-0 flex-shrink-0"
                               >
                                 <ExternalLink className="h-4 w-4" />
                               </Button>
@@ -1101,7 +1119,7 @@ export default function GlobalCalls() {
                           <span className="text-gray-400">N/A</span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {call.customer ? (
                           <Badge variant="outline" className="text-xs">{call.customer.status}</Badge>
                         ) : (
@@ -1111,13 +1129,13 @@ export default function GlobalCalls() {
                       <TableCell>
                         <div className="text-sm">
                           <div>{new Date(call.activity_date).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                          <div className="text-gray-500">{call.activity_time ? new Date(`2000-01-01T${call.activity_time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '-'}</div>
+                          <div className="text-gray-500 text-xs">{call.activity_time ? new Date(`2000-01-01T${call.activity_time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '-'}</div>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {customerActivitiesService.getFullName(call.performer) || "Unknown"}
+                      <TableCell className="hidden lg:table-cell">
+                        <span className="text-sm">{customerActivitiesService.getFullName(call.performer) || "Unknown"}</span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         {(call.calledForUser || call.called_for_user) ? (
                           <span className="text-sm">
                             {(call.calledForUser || call.called_for_user)!.first_name}{" "}
@@ -1127,7 +1145,7 @@ export default function GlobalCalls() {
                           <span className="text-gray-400">-</span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {(call as any).child_activities && (call as any).child_activities.length > 0 ? (
                           <Badge variant="default" className="bg-green-600">Yes</Badge>
                         ) : (
@@ -1135,7 +1153,7 @@ export default function GlobalCalls() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1">
                           {call.customer && (
                             <>
                               <CallDetailsDialog
@@ -1169,7 +1187,7 @@ export default function GlobalCalls() {
                                     setCallType(call.activity_type);
                                     setIsCreateDialogOpen(true);
                                   }}
-                                  className="h-8 px-2 text-xs"
+                                  className="h-8 px-2 text-xs hidden sm:inline-flex"
                                 >
                                   Answer
                                 </Button>
@@ -1181,12 +1199,13 @@ export default function GlobalCalls() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+                </Table>
+              </div>
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between p-4 border-t">
-                  <p className="text-sm text-gray-500">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 md:p-4 border-t">
+                  <p className="text-xs md:text-sm text-gray-500 text-center sm:text-left">
                     Showing {(currentPage - 1) * 20 + 1} to {Math.min(currentPage * 20, totalRecords)} of {totalRecords} call logs
                   </p>
                   <div className="flex items-center gap-2">

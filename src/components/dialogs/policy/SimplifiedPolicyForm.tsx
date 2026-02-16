@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -137,44 +137,31 @@ const CustomerSearchDropdown = ({
   const debouncedSearchValue = useDebounce(searchValue, 500);
   const [displayedCustomers, setDisplayedCustomers] = useState<Customer[]>([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (Array.isArray(customers) && customers.length > 0) {
-      const validCustomers = customers.filter(
-        (customer) =>
-          customer &&
-          typeof customer === "object" &&
-          customer.id &&
-          (customer.first_name || customer.last_name || customer.name) &&
-          customer.status &&
-          customer.status.toLowerCase() === 'client' // Only include clients
-      );
-      setDisplayedCustomers(validCustomers.slice(0, 10));
-    } else {
+    // Don't show any customers initially - only show when user types
+    if (!searchValue.trim()) {
       setDisplayedCustomers([]);
+      setPage(1);
+      setHasMore(true);
     }
   }, [customers]);
 
   useEffect(() => {
     const performSearch = async () => {
       if (!debouncedSearchValue.trim()) {
-        if (Array.isArray(customers)) {
-          const validCustomers = customers.filter(
-            (customer) =>
-              customer &&
-              typeof customer === "object" &&
-              customer.id &&
-              (customer.first_name || customer.last_name || customer.name) &&
-              customer.status &&
-              customer.status.toLowerCase() === 'client' // Only include clients
-          );
-          setDisplayedCustomers(validCustomers.slice(0, 10));
-        } else {
-          setDisplayedCustomers([]);
-        }
+        // Clear results when search is empty
+        setDisplayedCustomers([]);
+        setPage(1);
+        setHasMore(true);
         return;
       }
       setLoadingSearch(true);
+      setPage(1);
       try {
         const results =
           await policyCreationService.searchCustomers(debouncedSearchValue);
@@ -185,14 +172,59 @@ const CustomerSearchDropdown = ({
             customer.status.toLowerCase() === 'client' // Only include clients
         );
         setDisplayedCustomers(validResults);
+        // Show "Load More" if we have any results (let user try to load more)
+        setHasMore(validResults.length > 0);
       } catch (error) {
         setDisplayedCustomers([]);
+        setHasMore(false);
       } finally {
         setLoadingSearch(false);
       }
     };
     performSearch();
-  }, [debouncedSearchValue, customers]);
+  }, [debouncedSearchValue]);
+
+  const loadMoreResults = async () => {
+    if (loadingMore || !hasMore || !debouncedSearchValue.trim()) return;
+
+    setLoadingMore(true);
+    try {
+      const results = await policyCreationService.searchCustomers(
+        debouncedSearchValue,
+        page + 1
+      );
+      const validResults = results.filter(
+        (customer) =>
+          (customer.first_name && customer.last_name) || customer.name &&
+          customer.status &&
+          customer.status.toLowerCase() === 'client'
+      );
+      
+      if (validResults.length === 0) {
+        // No more results available
+        setHasMore(false);
+      } else {
+        setDisplayedCustomers(prev => [...prev, ...validResults]);
+        setPage(prev => prev + 1);
+        // Keep showing button as long as we're getting results
+      }
+    } catch (error) {
+      console.error('Error loading more customers:', error);
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const scrollPercentage = (target.scrollTop + target.clientHeight) / target.scrollHeight;
+    
+    // Load more when scrolled 80% down
+    if (scrollPercentage > 0.8 && hasMore && !loadingMore && !loadingSearch) {
+      loadMoreResults();
+    }
+  };
 
   if (!Array.isArray(customers)) {
     return (
@@ -215,7 +247,12 @@ const CustomerSearchDropdown = ({
         />
       </div>
 
-      <div className="max-h-64 overflow-y-auto" onWheel={(e) => e.stopPropagation()}>
+      <div 
+        ref={scrollContainerRef}
+        className="max-h-64 overflow-y-auto" 
+        onWheel={(e) => e.stopPropagation()}
+        onScroll={handleScroll}
+      >
         {loadingSearch ? (
           <div className="p-6 text-center text-sm text-gray-500">
             Searching...
@@ -228,6 +265,23 @@ const CustomerSearchDropdown = ({
               "Unnamed Customer";
             const displayEmail = customer.email || "";
             const displayPhone = customer.phone || "";
+            const customerStatus = customer.status || "Unknown";
+            
+            // Get badge color based on status
+            const getBadgeColor = (status: string) => {
+              switch (status.toLowerCase()) {
+                case 'client':
+                  return 'bg-green-100 text-green-800 border-green-200';
+                case 'prospect':
+                  return 'bg-blue-100 text-blue-800 border-blue-200';
+                case 'former':
+                  return 'bg-gray-100 text-gray-800 border-gray-200';
+                case 'deceased':
+                  return 'bg-red-100 text-red-800 border-red-200';
+                default:
+                  return 'bg-gray-100 text-gray-800 border-gray-200';
+              }
+            };
 
             return (
               <div
@@ -250,9 +304,22 @@ const CustomerSearchDropdown = ({
                     )}
                   />
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900">
-                      {displayName} {displayEmail && `(${displayEmail})`}
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="font-medium text-gray-900">
+                        {displayName}
+                      </div>
+                      <span className={cn(
+                        "px-2 py-0.5 text-xs font-medium rounded-md border",
+                        getBadgeColor(customerStatus)
+                      )}>
+                        {customerStatus}
+                      </span>
                     </div>
+                    {displayEmail && (
+                      <div className="text-sm text-gray-600">
+                        {displayEmail}
+                      </div>
+                    )}
                     {displayPhone && (
                       <div className="text-sm text-gray-500">
                         {displayPhone}
@@ -275,17 +342,46 @@ const CustomerSearchDropdown = ({
                 </div>
               </div>
             ) : (
-              "No customers available"
+              <div>
+                <div className="mb-2 text-gray-600 font-medium">
+                  Start typing to search for customers
+                </div>
+                <div className="text-xs text-gray-500">
+                  Search by name, email, or phone number
+                </div>
+              </div>
             )}
+          </div>
+        )}
+        
+        {loadingMore && (
+          <div className="p-4 text-center text-sm text-gray-500 border-t">
+            <Loader2 className="h-4 w-4 animate-spin inline-block mr-2" />
+            Loading more...
           </div>
         )}
       </div>
 
       {displayedCustomers.length > 0 && (
-        <div className="px-3 py-2 bg-gray-50 border-t text-xs text-gray-500">
-          Showing {displayedCustomers.length} customer
-          {displayedCustomers.length !== 1 ? "s" : ""}
-          {searchValue && " matching your search"}
+        <div className="px-3 py-2 bg-gray-50 border-t">
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span>
+              Showing {displayedCustomers.length} customer
+              {displayedCustomers.length !== 1 ? "s" : ""}
+              {searchValue && " matching your search"}
+            </span>
+            {hasMore && !loadingMore && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={loadMoreResults}
+                className="h-7 text-xs"
+              >
+                Load More
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>

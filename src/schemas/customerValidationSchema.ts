@@ -63,7 +63,9 @@ const baseCustomerSchema = z.object({
     .string()
     .optional()
     .refine((val) => {
-      if (!val) return true; // Optional field
+      if (!val || val === "" || val === "'\"" || val === "0'0\"") {
+        return true; // Allow empty, just quotes, or zero values
+      }
       
       // Check if height follows the format "X'Y\"" (feet'inches")
       const heightRegex = /^(\d+)'(\d+)"$/;
@@ -82,7 +84,7 @@ const baseCustomerSchema = z.object({
       if (feet < 1 || feet > 8) return false;
       if (inches < 0 || inches > 11) return false;
       
-      // Prevent both feet and inches being invalid combinations (like 0'0")
+      // Prevent both feet and inches being invalid combinations (like 1'0")
       if (feet === 1 && inches === 0) return false; // Too short for a human
       
       // Convert to total inches and check against max (300 inches = 25 feet, which is reasonable)

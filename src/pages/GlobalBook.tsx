@@ -461,7 +461,7 @@ export default function GlobalBook() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Global Book</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Client Book</h1>
             <p className="text-gray-600 mt-1">
               Manage your client book and don't call list
             </p>

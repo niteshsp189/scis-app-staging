@@ -122,9 +122,31 @@ export const ScheduleMeetingDialog = ({
       const minutes = defaultDate.getMinutes().toString().padStart(2, '0');
       return `${hours}:${minutes}`;
     }
-    return "";
+    // Auto-fill to next hour from current time
+    const now = new Date();
+    const nextHour = now.getHours() + 1;
+    return `${nextHour.toString().padStart(2, '0')}:00`;
   });
-  const [endTime, setEndTime] = useState("");
+  const [endTime, setEndTime] = useState(() => {
+    // Auto-calculate end time as start time + 55 minutes
+    let startTime;
+    if (defaultDate && (defaultDate.getHours() !== 0 || defaultDate.getMinutes() !== 0)) {
+      const hours = defaultDate.getHours().toString().padStart(2, '0');
+      const minutes = defaultDate.getMinutes().toString().padStart(2, '0');
+      startTime = `${hours}:${minutes}`;
+    } else {
+      const now = new Date();
+      const nextHour = now.getHours() + 1;
+      startTime = `${nextHour.toString().padStart(2, '0')}:00`;
+    }
+    
+    // Add 55 minutes to start time
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const totalMinutes = startHours * 60 + startMinutes + 55;
+    const endHours = Math.floor(totalMinutes / 60);
+    const endMins = totalMinutes % 60;
+    return `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+  });
   const [meetingType, setMeetingType] = useState<string[]>(['review']);
   const [priority, setPriority] = useState<
     "low" | "medium" | "high" | "urgent"

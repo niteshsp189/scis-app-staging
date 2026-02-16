@@ -9,10 +9,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, Cake, FileText, AlertTriangle, Calendar, Check, Clock, ChevronDown } from "lucide-react";
+import { Bell, Cake, FileText, AlertTriangle, Calendar, Check, Clock, ChevronDown, Eye } from "lucide-react";
 import { DashboardReminder } from "@/services/dashboardService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardRemindersProps {
   reminders?: DashboardReminder[];
@@ -53,6 +54,8 @@ export const DashboardReminders = ({
   onComplete, 
   onSnooze 
 }: DashboardRemindersProps) => {
+  const navigate = useNavigate();
+  
   if (loading) {
     return (
       <Card className="professional-card">
@@ -102,10 +105,15 @@ export const DashboardReminders = ({
   return (
     <Card className="professional-card">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-3 text-slate-900">
-          <Bell className="h-5 w-5 text-amber-500" />
-          Today's Reminders
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-3 text-slate-900">
+            <Bell className="h-5 w-5 text-amber-500" />
+            Today's Reminders
+          </CardTitle>
+          <Button variant="outline" size="sm" onClick={() => navigate('/reminders')}>
+            View All
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -130,8 +138,17 @@ export const DashboardReminders = ({
                   <Badge variant={reminder.priority === "high" ? "destructive" : "secondary"} className="text-xs">
                     {reminder.priority}
                   </Badge>
-                  {onComplete && (
-                    <div className="flex gap-1">
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-6 w-6 p-0"
+                      onClick={() => navigate(`/reminders/${reminder.id}`)}
+                      title="View details"
+                    >
+                      <Eye className="h-3 w-3" />
+                    </Button>
+                    {onComplete && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -141,37 +158,37 @@ export const DashboardReminders = ({
                       >
                         <Check className="h-3 w-3" />
                       </Button>
-                      {onSnooze && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-6 px-1 py-0 flex items-center gap-1"
-                              title="Snooze reminder"
-                            >
-                              <Clock className="h-3 w-3" />
-                              <ChevronDown className="h-2 w-2" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-32">
-                            {snoozeOptions.map((option, index) => (
-                              <div key={option.minutes}>
-                                <DropdownMenuItem
-                                  onClick={() => onSnooze(reminder.id, option.minutes)}
-                                  className="text-xs cursor-pointer"
-                                >
-                                  <Clock className="h-3 w-3 mr-2" />
-                                  {option.label}
-                                </DropdownMenuItem>
-                                {index === 2 && <DropdownMenuSeparator />}
-                              </div>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
-                  )}
+                    )}
+                    {onSnooze && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-6 px-1 py-0 flex items-center gap-1"
+                            title="Snooze reminder"
+                          >
+                            <Clock className="h-3 w-3" />
+                            <ChevronDown className="h-2 w-2" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-32">
+                          {snoozeOptions.map((option, index) => (
+                            <div key={option.minutes}>
+                              <DropdownMenuItem
+                                onClick={() => onSnooze(reminder.id, option.minutes)}
+                                className="text-xs cursor-pointer"
+                              >
+                                <Clock className="h-3 w-3 mr-2" />
+                                {option.label}
+                              </DropdownMenuItem>
+                              {index === 2 && <DropdownMenuSeparator />}
+                            </div>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
                 </div>
               </div>
             );

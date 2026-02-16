@@ -81,7 +81,13 @@ export function EditCustomerDialog({ isOpen, onClose, customer, onCustomerUpdate
 
     // Validate the field using Zod schema
     // Use strict validation (client rules) when converting prospect or editing client
-    const error = validateField(field as keyof CustomerFormData, value, !useStrictValidation);
+    // Clean the value for height validation
+    let validationValue = value;
+    if (field === 'height' && value) {
+      const cleanedData = cleanFormDataForValidation({ ...formData, [field]: value });
+      validationValue = cleanedData.height || "";
+    }
+    const error = validateField(field as keyof CustomerFormData, validationValue, !useStrictValidation);
     const newErrors = { ...validationErrors };
 
     if (error) {
@@ -200,32 +206,52 @@ export function EditCustomerDialog({ isOpen, onClose, customer, onCustomerUpdate
 
   const { feet, inches } = parseHeight(formData.height);
 
-  const handleHeightChange = (newFeet: string, newInches: string) => {
-    // Validate feet and inches ranges
-    const feetNum = parseInt(newFeet) || 0;
-    const inchesNum = parseInt(newInches) || 0;
+  // Helper function to clean form data for validation
+  const cleanFormDataForValidation = (data: CustomerFormData) => {
+    const cleaned = { ...data };
+    
+    // Clean height - if it contains zeros or is malformed, make it empty for validation
+    if (cleaned.height) {
+      // Check for common invalid patterns including just "0"
+      if (cleaned.height === "0" || cleaned.height === "0'0\"" || cleaned.height === "'\"" || cleaned.height === "0'" || cleaned.height === "'0\"") {
+        cleaned.height = "";
+      } else {
+        const heightMatch = cleaned.height.match(/^(\d+)'(\d+)"$/);
+        if (heightMatch) {
+          const feet = parseInt(heightMatch[1]);
+          const inches = parseInt(heightMatch[2]);
+          // If feet is 0 or both are 0, treat as empty
+          if (feet === 0) {
+            cleaned.height = "";
+          }
+        }
+      }
+    }
+    
+    return cleaned;
+  };
 
+  const handleHeightChange = (newFeet: string, newInches: string) => {
     // Clear previous height errors
     const newErrors = { ...validationErrors };
     delete newErrors.height;
-
-    // Validate ranges
-    if (newFeet && (feetNum < 1 || feetNum > 8)) {
-      newErrors.height = "Height must be between 1-8 feet";
-    } else if (newInches && (inchesNum < 0 || inchesNum > 11)) {
-      newErrors.height = "Inches must be between 0-11";
-    } else if (feetNum === 1 && inchesNum === 0 && newFeet && newInches) {
-      newErrors.height = "Height too short - minimum 1'1\"";
-    }
-
     setValidationErrors(newErrors);
 
-    // Create the height string in the expected format - only include values that are actually provided
+    // Create the height string in the expected format - but only if we have valid values
     let heightString = "";
-    if (newFeet || newInches) {
-      const feetPart = newFeet || "";
-      const inchesPart = newInches || "";
-      heightString = feetPart + "'" + inchesPart + '"';
+    const feetNum = parseInt(newFeet) || 0;
+    const inchesNum = parseInt(newInches) || 0;
+    
+    // Only create a height string if we have meaningful values (not just zeros)
+    if ((newFeet && newFeet !== "0" && feetNum > 0) || (newInches && newInches !== "0" && inchesNum > 0)) {
+      // If feet is provided and valid, use it; otherwise use empty string
+      const feetPart = (newFeet && newFeet !== "0" && feetNum > 0) ? newFeet : "";
+      // If inches is provided, use it; if feet is provided but inches isn't, default to 0
+      const inchesPart = (feetPart && !newInches) ? "0" : (newInches || "");
+      
+      if (feetPart || inchesPart) {
+        heightString = feetPart + "'" + inchesPart + '"';
+      }
     }
 
     setFormData({ ...formData, height: heightString });
@@ -235,7 +261,7 @@ export function EditCustomerDialog({ isOpen, onClose, customer, onCustomerUpdate
     e.preventDefault();
 
     // Validate all fields using Zod schema - use prospect validation only if NOT using strict validation
-    const errors = validateForm({
+    const cleanedData = cleanFormDataForValidation({
       firstName: formData.firstName,
       lastName: formData.lastName,
       middleName: formData.middleName,
@@ -247,10 +273,10 @@ export function EditCustomerDialog({ isOpen, onClose, customer, onCustomerUpdate
       height: formData.height,
       weight: formData.weight,
       smoker: formData.smoker as "Yes" | "No" | "",
-      homePhone: formData.homePhone,
-      cellPhone: formData.cellPhone,
-      workPhone: formData.workPhone,
-      fax: formData.fax,
+      homePhone: formData.homePhone || '',
+      cellPhone: formData.cellPhone || '',
+      workPhone: formData.workPhone || '',
+      fax: formData.fax || '',
       address: formData.address,
       apartment: formData.apartment,
       apartmentType: formData.apartmentType as "Apt" | "Unit" | "Suite" | "",
@@ -269,7 +295,8 @@ export function EditCustomerDialog({ isOpen, onClose, customer, onCustomerUpdate
       referral: formData.referral,
       status: formData.status as "Client" | "Former" | "Deceased",
       customerType: formData.status as "Client" | "Former" | "Deceased",
-    }, !useStrictValidation); // Use prospect validation only when NOT enforcing strict validation
+    } as CustomerFormData);
+    const errors = validateForm(cleanedData, !useStrictValidation); // Use prospect validation only when NOT enforcing strict validation
 
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
@@ -384,7 +411,8 @@ export function EditCustomerDialog({ isOpen, onClose, customer, onCustomerUpdate
     e.preventDefault();
 
     // Validate form before moving to preview
-    const errors = validateForm(formData, !useStrictValidation);
+    const cleanedData = cleanFormDataForValidation(formData);
+    const errors = validateForm(cleanedData, !useStrictValidation);
 
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);

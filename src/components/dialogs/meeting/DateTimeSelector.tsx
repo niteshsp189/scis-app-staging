@@ -67,6 +67,16 @@ export const DateTimeSelector = ({
     const time24 = to24Hour(time12);
     setTime(time24);
     
+    // Auto-calculate end time as start time + 55 minutes
+    if (time24) {
+      const [startHours, startMinutes] = time24.split(":").map(Number);
+      const totalMinutes = startHours * 60 + startMinutes + 55; // Add 55 minutes
+      const endHours = Math.floor(totalMinutes / 60) % 24; // Handle overflow to next day
+      const endMins = totalMinutes % 60;
+      const calculatedEndTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+      setEndTime(calculatedEndTime);
+    }
+    
     // Revalidate end time when start time changes
     if (endTime && endTime.trim() !== "" && time24) {
       const [startHours, startMinutes] = time24.split(":").map(Number);
@@ -194,7 +204,7 @@ export const DateTimeSelector = ({
             className={errors?.endTime ? "border-red-500" : ""}
           />
           <p className="text-xs text-gray-500">
-            Default: 1 hour (can be overridden)
+            Default: 55 minutes (can be overridden)
           </p>
           {errors?.endTime && (
             <p className="text-sm text-red-500">{errors.endTime}</p>
@@ -261,7 +271,7 @@ export const DateTimeSelector = ({
         
         <div className="flex items-end">
           <p className="text-sm text-gray-500">
-            Default duration: 1 hour (can be overridden)
+            Default duration: 55 minutes (can be overridden)
           </p>
         </div>
       </div>

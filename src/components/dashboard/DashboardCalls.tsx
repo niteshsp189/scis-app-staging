@@ -1,62 +1,44 @@
 import React from 'react';
-import { Calendar, Clock, User, MapPin, Phone, Video } from 'lucide-react';
+import { Phone, Clock, User, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { renderHtmlContent, stripHtml } from '@/lib/htmlUtils';
 import { Link } from 'react-router-dom';
 
-interface Appointment {
+interface Call {
   id: string;
-  title: string;
   customer_name: string;
   customer_id: number;
-  start_datetime: string;
-  end_datetime: string;
-  type: 'in_person' | 'phone' | 'video' | 'other';
-  location?: string;
+  customer_status?: string;
+  scheduled_at: string;
+  type: 'scheduled' | 'follow_up' | 'reminder' | 'other';
   notes?: string;
   description?: string;
-  status: 'scheduled' | 'confirmed' | 'cancelled' | 'completed';
+  status: 'pending' | 'completed' | 'missed' | 'cancelled';
   priority: 'low' | 'medium' | 'high';
 }
 
-interface DashboardAppointmentsProps {
-  appointments?: Appointment[];
+interface DashboardCallsProps {
+  calls?: Call[];
   upcomingCount?: number;
   loading?: boolean;
-  onViewAppointment?: (appointmentId: string) => void;
-  onReschedule?: (appointmentId: string) => void;
+  onViewCall?: (callId: string) => void;
 }
 
-export const DashboardAppointments: React.FC<DashboardAppointmentsProps> = ({
-  appointments = [],
+export const DashboardCalls: React.FC<DashboardCallsProps> = ({
+  calls = [],
   upcomingCount = 0,
   loading = false,
-  onViewAppointment,
-  onReschedule,
+  onViewCall,
 }) => {
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'phone':
-        return <Phone className="h-4 w-4" />;
-      case 'video':
-        return <Video className="h-4 w-4" />;
-      case 'in_person':
-        return <MapPin className="h-4 w-4" />;
-      default:
-        return <Calendar className="h-4 w-4" />;
-    }
-  };
-
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'phone':
-        return 'bg-green-100 text-green-800';
-      case 'video':
-        return 'bg-purple-100 text-purple-800';
-      case 'in_person':
+      case 'scheduled':
         return 'bg-blue-100 text-blue-800';
+      case 'follow_up':
+        return 'bg-green-100 text-green-800';
+      case 'reminder':
+        return 'bg-purple-100 text-purple-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -88,7 +70,6 @@ export const DashboardAppointments: React.FC<DashboardAppointmentsProps> = ({
       hour12: true,
     });
 
-    // Compare dates in UTC to avoid timezone shift issues
     const dateUTC = date.toLocaleDateString('en-US', { timeZone: 'UTC' });
     const todayUTC = today.toLocaleDateString('en-US', { timeZone: 'UTC' });
     const tomorrowUTC = tomorrow.toLocaleDateString('en-US', { timeZone: 'UTC' });
@@ -112,8 +93,8 @@ export const DashboardAppointments: React.FC<DashboardAppointmentsProps> = ({
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <Calendar className="h-5 w-5 text-indigo-600" />
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Phone className="h-5 w-5 text-green-600" />
               </div>
               <Skeleton className="h-6 w-48" />
             </div>
@@ -138,22 +119,20 @@ export const DashboardAppointments: React.FC<DashboardAppointmentsProps> = ({
       <div className="p-6 border-b border-slate-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <Calendar className="h-5 w-5 text-indigo-600" />
+            <div className="p-2 bg-green-100 rounded-lg">
+              <Phone className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <Link to="/appointments" className="hover:underline">
-                <h3 className="text-lg font-semibold text-slate-900">
-                  My Upcoming Appointments
-                </h3>
-              </Link>
+              <h3 className="text-lg font-semibold text-slate-900">
+                Calls
+              </h3>
               <p className="text-sm text-slate-600">
-                {upcomingCount} appointment{upcomingCount !== 1 ? 's' : ''} scheduled
+                {upcomingCount} upcoming call{upcomingCount !== 1 ? 's' : ''}
               </p>
             </div>
           </div>
           {upcomingCount > 0 && (
-            <Link to="/appointments">
+            <Link to="/calls">
               <Button variant="outline" size="sm">
                 View All
               </Button>
@@ -163,75 +142,64 @@ export const DashboardAppointments: React.FC<DashboardAppointmentsProps> = ({
       </div>
 
       <div className="p-6">
-        {appointments.length === 0 ? (
+        {calls.length === 0 ? (
           <div className="text-center py-8">
-            <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-500 text-sm">No upcoming appointments</p>
+            <Phone className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 text-sm">No upcoming calls</p>
             <p className="text-slate-400 text-xs mt-1">
-              Schedule appointments to see them here
+              Schedule calls to see them here
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {appointments.map((appointment) => (
+            {calls.map((call) => (
               <div
-                key={appointment.id}
+                key={call.id}
                 className={`border rounded-lg p-4 transition-all hover:shadow-md ${getPriorityColor(
-                  appointment.priority
+                  call.priority
                 )}`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
-                      <h4 className="font-medium text-slate-900">
-                        {appointment.title}
-                      </h4>
                       <Badge
                         variant="secondary"
-                        className={`text-xs ${getTypeColor(appointment.type)}`}
+                        className={`text-xs ${getTypeColor(call.type)}`}
                       >
-                        <span className="flex items-center space-x-1">
-                          {getTypeIcon(appointment.type)}
-                          <span className="capitalize">{appointment.type.replace('_', ' ')}</span>
-                        </span>
+                        <span className="capitalize">{call.type.replace('_', ' ')}</span>
                       </Badge>
                     </div>
 
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-slate-600 mb-2">
                       <div className="flex items-center space-x-1">
                         <User className="h-4 w-4" />
-                        <span>{appointment.customer_name}</span>
+                        <span className="font-medium">{call.customer_name}</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <Clock className="h-4 w-4" />
-                        <span>{formatDateTime(appointment.start_datetime)}</span>
+                        <span>{formatDateTime(call.scheduled_at)}</span>
                       </div>
                     </div>
 
-                    {appointment.location && (
-                      <div className="flex items-center space-x-1 text-sm text-slate-600 mb-2">
-                        <MapPin className="h-4 w-4" />
-                        <span>{appointment.location}</span>
+                    {call.notes && (
+                      <div className="flex items-start space-x-1 text-sm text-slate-600 bg-slate-50 rounded p-2 mt-2">
+                        <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <span>{call.notes}</span>
                       </div>
-                    )}
-
-                    {appointment.notes && (
-                      <div className="text-sm text-slate-600 bg-slate-50 rounded p-2 mt-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={renderHtmlContent(appointment.notes)} />
                     )}
                   </div>
 
                   <div className="flex items-center space-x-2 sm:ml-4">
-                    {onViewAppointment && (
+                    {onViewCall && (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => onViewAppointment(appointment.id)}
+                        onClick={() => onViewCall(call.id)}
                         className="border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                       >
                         View
                       </Button>
                     )}
-
                   </div>
                 </div>
               </div>

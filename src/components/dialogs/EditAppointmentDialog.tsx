@@ -97,9 +97,31 @@ export const EditAppointmentDialog = ({
     const d = new Date(appointment.end_datetime || appointment.start_datetime);
     return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}`;
   });
-  const [meetingType, setMeetingType] = useState<string[]>(
-    appointment.appointment_type ? appointment.appointment_type.split(',').map(t => t.trim()) : ['review']
-  );
+  
+  // Map old appointment types to valid ones and filter out invalid types
+  const [meetingType, setMeetingType] = useState<string[]>(() => {
+    const validTypes = ['new_client', 'supplement', 'part_d', 'rate_increase', 'under_65', 'dental_vision', 'review', 'customer_service', 'field_time', 'life_insurance'];
+    const typeMapping: Record<string, string> = {
+      'in_person': 'review',
+      'phone': 'review',
+      'video': 'review',
+      'other': 'review'
+    };
+    
+    if (!appointment.appointment_type) return ['review'];
+    
+    const types = appointment.appointment_type.split(',').map(t => {
+      const trimmed = t.trim();
+      // Map old types to new ones
+      if (typeMapping[trimmed]) return typeMapping[trimmed];
+      // Return if valid, otherwise return 'review'
+      return validTypes.includes(trimmed) ? trimmed : 'review';
+    });
+    
+    // Remove duplicates
+    return [...new Set(types)];
+  });
+  
   const [priority, setPriority] = useState<
     "low" | "medium" | "high" | "urgent"
   >(appointment.priority as "low" | "medium" | "high" | "urgent");
