@@ -311,7 +311,7 @@ const Policies = () => {
     const newFilters: PolicyFilters = {};
 
     if (searchTerm) {
-      newFilters.customer_name = searchTerm;
+      newFilters.search = searchTerm;
     }
 
     if (statusFilter === "expiring_soon") {

@@ -555,6 +555,7 @@ export interface PolicyFilters {
   customer_id?: number;
   customer_name?: string;
   policy_number?: string;
+  search?: string;
   premium_min?: number;
   premium_max?: number;
   start_date_from?: string;
