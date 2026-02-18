@@ -9,6 +9,10 @@ export interface SearchResult {
   relevance_score: number;
   url: string;
   details: any;
+  // Customer-specific identifiers (for disambiguation when names are duplicated)
+  ssn?: string;
+  phone?: string;
+  address?: string;
 }
 
 export interface SearchFilters {
@@ -109,7 +113,7 @@ class GlobalSearchService {
 
     try {
       const response = await api.get<SearchResponse>(`/search/global?${params.toString()}`);
-      
+
       // Handle both direct response and wrapped response
       if (response.data) {
         return response as SearchResponse;
@@ -133,7 +137,7 @@ class GlobalSearchService {
 
     try {
       const response = await api.get<SuggestionsResponse>(`/search/suggestions?${params.toString()}`);
-      
+
       // Handle both direct response and wrapped response
       if (response.data) {
         return response as SuggestionsResponse;
@@ -425,7 +429,7 @@ class GlobalSearchService {
    */
   getResultCounts(results: SearchResult[]): Record<string, number> {
     const counts: Record<string, number> = {};
-    
+
     results.forEach(result => {
       counts[result.type] = (counts[result.type] || 0) + 1;
     });
@@ -466,9 +470,9 @@ class GlobalSearchService {
    */
   async searchZipCodes(query: string): Promise<Array<{ zip_code: string; city: string; state_abbr: string }>> {
     try {
-      const response = await api.get<{ 
-        success: boolean; 
-        data: Array<{ zip_code: string; city: string; state_abbr: string }> 
+      const response = await api.get<{
+        success: boolean;
+        data: Array<{ zip_code: string; city: string; state_abbr: string }>
       }>(`/zip-lookup/search/by-zip?zip=${query}`);
       return response.data.data;
     } catch (error: any) {

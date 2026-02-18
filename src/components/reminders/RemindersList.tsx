@@ -41,6 +41,13 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { reminderService, type Reminder } from "@/services/reminderService";
 import { format } from "date-fns";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const snoozeOptions = [
   { label: "1 hour", minutes: 60 },
@@ -66,6 +73,7 @@ interface RemindersListProps {
   onSnooze?: (id: string, minutes: number) => void;
   onEdit?: (reminder: Reminder) => void;
   onPageChange: (page: number) => void;
+  onPerPageChange?: (perPage: number) => void;
 }
 
 export function RemindersList({
@@ -77,6 +85,7 @@ export function RemindersList({
   onSnooze,
   onEdit,
   onPageChange,
+  onPerPageChange,
 }: RemindersListProps) {
   const isMobile = useIsMobile();
 
@@ -115,6 +124,27 @@ export function RemindersList({
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="flex justify-end mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500">Rows per page:</span>
+              <Select
+                value={pagination.per_page.toString()}
+                onValueChange={(val) => onPerPageChange?.(Number(val))}
+              >
+                <SelectTrigger className="w-[70px] h-8">
+                  <SelectValue placeholder={pagination.per_page.toString()} />
+                </SelectTrigger>
+                <SelectContent>
+                  {[10, 25, 50, 100].map((size) => (
+                    <SelectItem key={size} value={size.toString()}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           {reminders.length === 0 ? (
             <div className="text-center py-8">
               <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -124,7 +154,7 @@ export function RemindersList({
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
               {reminders.map((reminder) => {
                 const isOverdue = reminderService.isOverdue(reminder);
                 const isDueToday = reminderService.isDueToday(reminder);
@@ -135,25 +165,23 @@ export function RemindersList({
                 return (
                   <div
                     key={reminder.id}
-                    className={`border rounded-lg transition-all shadow-sm overflow-hidden ${
-                      reminder.status === "completed"
+                    className={`border rounded-lg transition-all shadow-sm overflow-hidden ${reminder.status === "completed"
                         ? "bg-gray-50 opacity-75"
                         : isOverdue
                           ? "bg-red-50 border-red-200"
                           : isDueToday
                             ? "bg-yellow-50 border-yellow-200"
                             : "bg-white hover:bg-gray-50 hover:shadow-md"
-                    }`}
+                      }`}
                   >
                     {/* Main content area */}
                     <div className="p-4 space-y-3">
                       {/* Title - Clean and prominent */}
                       <h3
-                        className={`font-semibold text-lg leading-tight ${
-                          reminder.status === "completed"
+                        className={`font-semibold text-lg leading-tight ${reminder.status === "completed"
                             ? "line-through text-gray-500"
                             : "text-gray-900"
-                        }`}
+                          }`}
                       >
                         {reminder.title}
                       </h3>

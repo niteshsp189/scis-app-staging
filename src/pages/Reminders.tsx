@@ -22,8 +22,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, RefreshCw, ChevronDown, ChevronUp, Printer } from "lucide-react";
+import { Search, Filter, RefreshCw, ChevronDown, ChevronUp, Printer, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { usePreferences } from "@/contexts/PreferenceContext";
 
@@ -52,6 +58,24 @@ const to24Hour = (time: string): string => {
   return `${h.toString().padStart(2, "0")}:${minutes}`;
 };
 
+interface ReminderFormData {
+  title: string;
+  description: string;
+  dueDate: Date | undefined;
+  dueTime: string;
+  selectedCustomer: number | undefined;
+  selectedAgent: string | undefined;
+}
+
+const initialFormState: ReminderFormData = {
+  title: "",
+  description: "",
+  dueDate: undefined,
+  dueTime: "",
+  selectedCustomer: undefined,
+  selectedAgent: undefined,
+};
+
 export default function Reminders() {
   const isMobile = useIsMobile();
   const { getFilterExpanded, setFilterExpanded } = usePreferences();
@@ -61,30 +85,25 @@ export default function Reminders() {
   const [refreshing, setRefreshing] = useState(false);
   const [pagination, setPagination] = useState({
     current_page: 1,
-    per_page: 15,
+    per_page: 10,
     total: 0,
     last_page: 1,
   });
 
   // Form states
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
-  const [dueTime, setDueTime] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState<
-    number | undefined
-  >();
-  const [selectedAgent, setSelectedAgent] = useState<string | undefined>();
+  const [createForm, setCreateForm] = useState<ReminderFormData>(initialFormState);
+  const [editForm, setEditForm] = useState<ReminderFormData>(initialFormState);
 
   // Edit mode state
   const [editingReminderId, setEditingReminderId] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
   // Filter states
   const [filters, setFilters] = useState<ReminderFilters>({
     sort_by: "reminder_datetime",
-    sort_order: "asc",
-    per_page: 15,
+    sort_order: "desc",
+    per_page: 10,
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -293,9 +312,9 @@ export default function Reminders() {
     loadReminders(newFilters);
   };
 
-  // Handle form submission (create or update)
-  const handleSubmit = async () => {
-    if (!title || !dueDate || !dueTime) {
+  // Handle form submission (create)
+  const handleCreate = async () => {
+    if (!createForm.title || !createForm.dueDate || !createForm.dueTime) {
       toast({
         title: "Error",
         description: "Please fill in all required fields.",
@@ -307,12 +326,12 @@ export default function Reminders() {
     setSubmitting(true);
     try {
       // Combine date and time
-      const reminderDateTime = new Date(dueDate);
-      const time24Hour = to24Hour(dueTime);
+      const reminderDateTime = new Date(createForm.dueDate);
+      const time24Hour = to24Hour(createForm.dueTime);
       const [hours, minutes] = time24Hour.split(":").map(Number);
       reminderDateTime.setHours(hours, minutes, 0, 0);
 
-      if (!editingReminderId && reminderDateTime <= new Date()) {
+      if (reminderDateTime <= new Date()) {
         toast({
           title: "Error",
           description: "Please select a future date and time for the reminder.",
@@ -322,48 +341,26 @@ export default function Reminders() {
         return;
       }
 
-      if (editingReminderId) {
-        // Update existing reminder
-        await reminderService.updateReminder(editingReminderId, {
-          title,
-          description: description || undefined,
-          reminder_datetime: reminderDateTime.toISOString(),
-          customer_id: selectedCustomer,
-          agent_id: selectedAgent,
-        });
+      // Create new reminder
+      const reminderData: CreateReminderData = {
+        title: createForm.title,
+        description: createForm.description || undefined,
+        reminder_datetime: reminderDateTime.toISOString(),
+        reminder_type: "custom",
+        customer_id: createForm.selectedCustomer,
+        agent_id: createForm.selectedAgent,
+        notification_methods: ["email"],
+      };
 
-        toast({
-          title: "Success",
-          description: "Reminder updated successfully.",
-        });
-      } else {
-        // Create new reminder
-        const reminderData: CreateReminderData = {
-          title,
-          description: description || undefined,
-          reminder_datetime: reminderDateTime.toISOString(),
-          reminder_type: "custom",
-          customer_id: selectedCustomer,
-          agent_id: selectedAgent,
-          notification_methods: ["email"],
-        };
+      await reminderService.createReminder(reminderData);
 
-        await reminderService.createReminder(reminderData);
+      toast({
+        title: "Success",
+        description: "Reminder created successfully.",
+      });
 
-        toast({
-          title: "Success",
-          description: "Reminder created successfully.",
-        });
-      }
-
-      // Reset form
-      setTitle("");
-      setDescription("");
-      setDueDate(undefined);
-      setDueTime("");
-      setSelectedCustomer(undefined);
-      setSelectedAgent(undefined);
-      setEditingReminderId(null);
+      // Reset create form
+      setCreateForm(initialFormState);
 
       // Reload reminders
       await loadReminders();
@@ -371,6 +368,67 @@ export default function Reminders() {
       console.error("Failed to create reminder:", error);
       let errorMessage =
         error.response?.data?.message || "Failed to create reminder";
+      if (error.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        const fieldErrors = Object.values(errors).flat().join(", ");
+        errorMessage = fieldErrors || errorMessage;
+      }
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Handle form submission (update)
+  const handleUpdate = async () => {
+    if (!editForm.title || !editForm.dueDate || !editForm.dueTime) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Combine date and time
+      const reminderDateTime = new Date(editForm.dueDate);
+      const time24Hour = to24Hour(editForm.dueTime);
+      const [hours, minutes] = time24Hour.split(":").map(Number);
+      reminderDateTime.setHours(hours, minutes, 0, 0);
+
+      if (editingReminderId) {
+        // Update existing reminder
+        await reminderService.updateReminder(editingReminderId, {
+          title: editForm.title,
+          description: editForm.description || undefined,
+          reminder_datetime: reminderDateTime.toISOString(),
+          customer_id: editForm.selectedCustomer,
+          agent_id: editForm.selectedAgent,
+        });
+
+        toast({
+          title: "Success",
+          description: "Reminder updated successfully.",
+        });
+
+        // Close dialog and reset
+        setIsDialogOpen(false);
+        setEditingReminderId(null);
+        setEditForm(initialFormState);
+
+        // Reload reminders
+        await loadReminders();
+      }
+    } catch (error: any) {
+      console.error("Failed to update reminder:", error);
+      let errorMessage =
+        error.response?.data?.message || "Failed to update reminder";
       if (error.response?.data?.errors) {
         const errors = error.response.data.errors;
         const fieldErrors = Object.values(errors).flat().join(", ");
@@ -466,45 +524,41 @@ export default function Reminders() {
   // Handle edit reminder - populate form with existing values
   const handleEdit = (reminder: Reminder) => {
     setEditingReminderId(reminder.id);
-    setTitle(reminder.title);
-    setDescription(reminder.description || "");
-    
+
     // Parse reminder datetime
     const reminderDate = new Date(reminder.reminder_datetime);
-    setDueDate(reminderDate);
-    
+
     // Format time as 12-hour for TimePicker (using UTC to match stored values)
     let hours = reminderDate.getUTCHours();
     const mins = reminderDate.getUTCMinutes().toString().padStart(2, "0");
     const ampm = hours >= 12 ? "PM" : "AM";
     hours = hours % 12;
     if (hours === 0) hours = 12;
-    setDueTime(`${hours}:${mins} ${ampm}`);
-    
-    setSelectedCustomer(reminder.customer_id || undefined);
-    setSelectedAgent(reminder.assigned_to || reminder.agent_id || undefined);
-    
-    // Scroll to form
-    setTimeout(() => {
-      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 100);
+    const timeString = `${hours}:${mins} ${ampm}`;
+
+    setEditForm({
+      title: reminder.title,
+      description: reminder.description || "",
+      dueDate: reminderDate,
+      dueTime: timeString,
+      selectedCustomer: reminder.customer_id || undefined,
+      selectedAgent: reminder.agent_id || reminder.assigned_to || undefined,
+    });
+
+    setIsDialogOpen(true);
   };
 
-  // Handle cancel edit - reset form to create mode
+  // Handle cancel edit - reset form
   const handleCancelEdit = () => {
     setEditingReminderId(null);
-    setTitle("");
-    setDescription("");
-    setDueDate(undefined);
-    setDueTime("");
-    setSelectedCustomer(undefined);
-    setSelectedAgent(undefined);
+    setIsDialogOpen(false);
+    setEditForm(initialFormState);
   };
 
   // Handle print reminders list
   const handlePrintReminders = () => {
     const params = new URLSearchParams();
-    
+
     if (statusFilter && statusFilter !== 'all') {
       params.set('status', statusFilter);
     }
@@ -523,10 +577,17 @@ export default function Reminders() {
     if (searchQuery) {
       params.set('search', searchQuery);
     }
-    
+
     const queryString = params.toString();
     const printUrl = `/reminders/print${queryString ? `?${queryString}` : ''}`;
     window.open(printUrl, '_blank');
+  };
+
+  // Handle per page change
+  const handlePerPageChange = (perPage: number) => {
+    const newFilters = { ...filters, per_page: perPage, page: 1 };
+    setFilters(newFilters);
+    loadReminders(newFilters);
   };
 
   return (
@@ -585,233 +646,265 @@ export default function Reminders() {
         </CardHeader>
         {filtersExpanded && (
           <CardContent>
-          {/* Search and Filters */}
-          <div className="space-y-4">
-            {/* First Row: Search with Clear and Refresh */}
-            <div className="flex gap-2">
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="search" className="text-sm font-medium">
-                  Search Reminders
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="search"
-                    placeholder="Search reminders by title, description, or customer..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="flex-1"
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                  />
-                  <Button onClick={handleSearch} size="sm">
-                    <Search className="h-4 w-4" />
+            {/* Search and Filters */}
+            <div className="space-y-4">
+              {/* First Row: Search with Clear and Refresh */}
+              <div className="flex gap-2">
+                <div className="flex-1 space-y-2">
+                  <Label htmlFor="search" className="text-sm font-medium">
+                    Search Reminders
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="search"
+                      placeholder="Search reminders by title, description, or customer..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="flex-1"
+                      onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                    />
+                    <Button onClick={handleSearch} size="sm">
+                      <Search className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex items-end gap-2">
+                  <Button
+                    onClick={handleClearFilters}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    onClick={handlePrintReminders}
+                    variant="outline"
+                    size="sm"
+                    title="Print reminders list"
+                  >
+                    <Printer className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    onClick={handleRefresh}
+                    variant="outline"
+                    size="sm"
+                    disabled={refreshing}
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                    />
                   </Button>
                 </div>
               </div>
-              <div className="flex items-end gap-2">
-                <Button
-                  onClick={handleClearFilters}
-                  variant="outline"
-                  size="sm"
-                >
-                  Clear
-                </Button>
-                <Button
-                  onClick={handlePrintReminders}
-                  variant="outline"
-                  size="sm"
-                  title="Print reminders list"
-                >
-                  <Printer className="h-4 w-4" />
-                </Button>
-                <Button
-                  onClick={handleRefresh}
-                  variant="outline"
-                  size="sm"
-                  disabled={refreshing}
-                >
-                  <RefreshCw
-                    className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+
+              {/* Second Row: All Filter Dropdowns */}
+              <div
+                className={`grid ${isMobile ? "grid-cols-1 gap-3" : "grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4"}`}
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="status" className="text-sm font-medium">
+                    Status
+                  </Label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All statuses</SelectItem>
+                      {reminderService.getStatusOptions().map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="createdBy" className="text-sm font-medium">
+                    Created By
+                  </Label>
+                  <Select
+                    value={createdByFilter}
+                    onValueChange={setCreatedByFilter}
+                  >
+                    <SelectTrigger id="createdBy">
+                      <SelectValue placeholder="All employees" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All employees</SelectItem>
+                      {employees.map((employee) => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          {employee.first_name} {employee.last_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="assignedTo" className="text-sm font-medium">
+                    Assigned To
+                  </Label>
+                  <Select
+                    value={assignedToFilter}
+                    onValueChange={setAssignedToFilter}
+                  >
+                    <SelectTrigger id="assignedTo">
+                      <SelectValue placeholder="All users" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All users</SelectItem>
+                      {agents.map((agent) => (
+                        <SelectItem key={agent.id} value={agent.id}>
+                          {agent.name ||
+                            `${agent.first_name || ""} ${agent.last_name || ""}`.trim()}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="fromDate" className="text-sm font-medium">
+                    From Date
+                  </Label>
+                  <DateInput
+                    id="fromDate"
+                    value={fromDate ? format(fromDate, "yyyy-MM-dd") : ""}
+                    onChange={(value) =>
+                      setFromDate(value ? new Date(value) : undefined)
+                    }
+                    placeholder="Select from date"
+                    modifiers={{
+                      hasReminder: (date) =>
+                        reminderService.hasReminders(date, reminderDates),
+                    }}
+                    modifiersStyles={{
+                      hasReminder: {
+                        backgroundColor: "rgb(59 130 246 / 0.1)",
+                        color: "rgb(59 130 246)",
+                        fontWeight: "bold",
+                        border: "1px solid rgb(59 130 246 / 0.3)",
+                        borderRadius: "4px",
+                      },
+                    }}
                   />
-                </Button>
-              </div>
-            </div>
+                </div>
 
-            {/* Second Row: All Filter Dropdowns */}
-            <div
-              className={`grid ${isMobile ? "grid-cols-1 gap-3" : "grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4"}`}
-            >
-              <div className="space-y-2">
-                <Label htmlFor="status" className="text-sm font-medium">
-                  Status
-                </Label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="All statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All statuses</SelectItem>
-                    {reminderService.getStatusOptions().map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="createdBy" className="text-sm font-medium">
-                  Created By
-                </Label>
-                <Select
-                  value={createdByFilter}
-                  onValueChange={setCreatedByFilter}
-                >
-                  <SelectTrigger id="createdBy">
-                    <SelectValue placeholder="All employees" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All employees</SelectItem>
-                    {employees.map((employee) => (
-                      <SelectItem key={employee.id} value={employee.id}>
-                        {employee.first_name} {employee.last_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label htmlFor="toDate" className="text-sm font-medium">
+                    To Date
+                  </Label>
+                  <DateInput
+                    id="toDate"
+                    value={toDate ? format(toDate, "yyyy-MM-dd") : ""}
+                    onChange={(value) =>
+                      setToDate(value ? new Date(value) : undefined)
+                    }
+                    placeholder="Select to date"
+                    modifiers={{
+                      hasReminder: (date) =>
+                        reminderService.hasReminders(date, reminderDates),
+                    }}
+                    modifiersStyles={{
+                      hasReminder: {
+                        backgroundColor: "rgb(59 130 246 / 0.1)",
+                        color: "rgb(59 130 246)",
+                        fontWeight: "bold",
+                        border: "1px solid rgb(59 130 246 / 0.3)",
+                        borderRadius: "4px",
+                      },
+                    }}
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="assignedTo" className="text-sm font-medium">
-                  Assigned To
-                </Label>
-                <Select
-                  value={assignedToFilter}
-                  onValueChange={setAssignedToFilter}
-                >
-                  <SelectTrigger id="assignedTo">
-                    <SelectValue placeholder="All users" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All users</SelectItem>
-                    {agents.map((agent) => (
-                      <SelectItem key={agent.id} value={agent.id}>
-                        {agent.name ||
-                          `${agent.first_name || ""} ${agent.last_name || ""}`.trim()}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="fromDate" className="text-sm font-medium">
-                  From Date
-                </Label>
-                <DateInput
-                  id="fromDate"
-                  value={fromDate ? format(fromDate, "yyyy-MM-dd") : ""}
-                  onChange={(value) =>
-                    setFromDate(value ? new Date(value) : undefined)
-                  }
-                  placeholder="Select from date"
-                  modifiers={{
-                    hasReminder: (date) =>
-                      reminderService.hasReminders(date, reminderDates),
-                  }}
-                  modifiersStyles={{
-                    hasReminder: {
+              {/* Calendar legend */}
+              <div className="flex items-center gap-2 mt-4 text-xs text-gray-500">
+                <div className="flex items-center gap-1">
+                  <div
+                    className="w-3 h-3 rounded border"
+                    style={{
                       backgroundColor: "rgb(59 130 246 / 0.1)",
-                      color: "rgb(59 130 246)",
-                      fontWeight: "bold",
                       border: "1px solid rgb(59 130 246 / 0.3)",
-                      borderRadius: "4px",
-                    },
-                  }}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="toDate" className="text-sm font-medium">
-                  To Date
-                </Label>
-                <DateInput
-                  id="toDate"
-                  value={toDate ? format(toDate, "yyyy-MM-dd") : ""}
-                  onChange={(value) =>
-                    setToDate(value ? new Date(value) : undefined)
-                  }
-                  placeholder="Select to date"
-                  modifiers={{
-                    hasReminder: (date) =>
-                      reminderService.hasReminders(date, reminderDates),
-                  }}
-                  modifiersStyles={{
-                    hasReminder: {
-                      backgroundColor: "rgb(59 130 246 / 0.1)",
-                      color: "rgb(59 130 246)",
-                      fontWeight: "bold",
-                      border: "1px solid rgb(59 130 246 / 0.3)",
-                      borderRadius: "4px",
-                    },
-                  }}
-                />
+                    }}
+                  ></div>
+                  <span>Dates with reminders</span>
+                </div>
               </div>
             </div>
-
-            {/* Calendar legend */}
-            <div className="flex items-center gap-2 mt-4 text-xs text-gray-500">
-              <div className="flex items-center gap-1">
-                <div
-                  className="w-3 h-3 rounded border"
-                  style={{
-                    backgroundColor: "rgb(59 130 246 / 0.1)",
-                    border: "1px solid rgb(59 130 246 / 0.3)",
-                  }}
-                ></div>
-                <span>Dates with reminders</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
+          </CardContent>
         )}
       </Card>
 
-      <div
-        className={`grid ${isMobile ? "grid-cols-1 gap-4" : "grid-cols-1 lg:grid-cols-2 gap-6"}`}
-      >
-        <div ref={formRef} className="scroll-mt-4">
-        <ReminderForm
-          title={title}
-          description={description}
-          dueDate={dueDate}
-          dueTime={dueTime}
-          selectedCustomer={selectedCustomer}
-          selectedAgent={selectedAgent}
-          setTitle={setTitle}
-          setDescription={setDescription}
-          setDueDate={setDueDate}
-          setDueTime={setDueTime}
-          setSelectedCustomer={setSelectedCustomer}
-          setSelectedAgent={setSelectedAgent}
-          onSubmit={handleSubmit}
-          submitting={submitting}
-          isEditing={!!editingReminderId}
-          onCancelEdit={handleCancelEdit}
-        />
+      {/* Main Content Grid: Left Form (Create) & Right List */}
+      <div className={`grid ${isMobile ? "grid-cols-1 gap-4" : "grid-cols-1 lg:grid-cols-2 gap-6"} mt-6`}>
+        {/* Left Column: Create Form */}
+        <div className="lg:col-span-1">
+          <ReminderForm
+            title={createForm.title}
+            setTitle={(val) => setCreateForm((prev) => ({ ...prev, title: val }))}
+            description={createForm.description}
+            setDescription={(val) => setCreateForm((prev) => ({ ...prev, description: val }))}
+            dueDate={createForm.dueDate}
+            setDueDate={(val) => setCreateForm((prev) => ({ ...prev, dueDate: val }))}
+            dueTime={createForm.dueTime}
+            setDueTime={(val) => setCreateForm((prev) => ({ ...prev, dueTime: val }))}
+            selectedCustomer={createForm.selectedCustomer}
+            setSelectedCustomer={(val) => setCreateForm((prev) => ({ ...prev, selectedCustomer: val }))}
+            selectedAgent={createForm.selectedAgent}
+            setSelectedAgent={(val) => setCreateForm((prev) => ({ ...prev, selectedAgent: val }))}
+            onSubmit={handleCreate}
+            submitting={submitting}
+            isEditing={false}
+          />
         </div>
 
-        <RemindersList
-          reminders={reminders}
-          loading={loading}
-          pagination={pagination}
-          onToggleComplete={handleToggleComplete}
-          onDelete={handleDelete}
-          onSnooze={handleSnooze}
-          onEdit={handleEdit}
-          onPageChange={handlePageChange}
-        />
+        {/* Right Column: Reminders List */}
+        <div className="lg:col-span-1">
+          <RemindersList
+            reminders={reminders}
+            loading={loading}
+            onToggleComplete={handleToggleComplete}
+            onDelete={handleDelete}
+            onSnooze={handleSnooze}
+            onEdit={handleEdit}
+            pagination={pagination}
+            onPageChange={handlePageChange}
+            onPerPageChange={handlePerPageChange}
+          />
+        </div>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={(open) => !open && handleCancelEdit()}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="sr-only">Edit Reminder</DialogTitle>
+          </DialogHeader>
+          <div className="mt-0">
+            <ReminderForm
+              title={editForm.title}
+              setTitle={(val) => setEditForm((prev) => ({ ...prev, title: val }))}
+              description={editForm.description}
+              setDescription={(val) => setEditForm((prev) => ({ ...prev, description: val }))}
+              dueDate={editForm.dueDate}
+              setDueDate={(val) => setEditForm((prev) => ({ ...prev, dueDate: val }))}
+              dueTime={editForm.dueTime}
+              setDueTime={(val) => setEditForm((prev) => ({ ...prev, dueTime: val }))}
+              selectedCustomer={editForm.selectedCustomer}
+              setSelectedCustomer={(val) => setEditForm((prev) => ({ ...prev, selectedCustomer: val }))}
+              selectedAgent={editForm.selectedAgent}
+              setSelectedAgent={(val) => setEditForm((prev) => ({ ...prev, selectedAgent: val }))}
+              onSubmit={handleUpdate}
+              submitting={submitting}
+              isEditing={true}
+              onCancelEdit={handleCancelEdit}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

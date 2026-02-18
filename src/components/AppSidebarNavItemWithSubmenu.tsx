@@ -57,18 +57,16 @@ export function AppSidebarNavItemWithSubmenu({
       <div>
         <button
           onClick={handleToggle}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group cursor-pointer ${
-            hasActiveSubmenu
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group cursor-pointer ${hasActiveSubmenu
               ? "text-white border border-blue-500"
               : "text-slate-300 hover:text-white hover:bg-slate-800"
-          }`}
+            }`}
         >
           <item.icon
-            className={`h-5 w-5 transition-all ${
-              hasActiveSubmenu
+            className={`h-5 w-5 transition-all ${hasActiveSubmenu
                 ? "text-white"
                 : "text-slate-400 group-hover:text-white"
-            }`}
+              }`}
           />
           <span className="truncate flex-1 text-left">{item.title}</span>
           {isOpen ? (
@@ -99,19 +97,17 @@ export function AppSidebarNavItemWithSubmenu({
                 <Link
                   key={subItem.title}
                   to={subItem.url}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200 group cursor-pointer ${
-                    location.pathname === subItem.url
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200 group cursor-pointer ${location.pathname === subItem.url
                       ? "bg-blue-500 text-white"
                       : "text-slate-400 hover:text-white hover:bg-slate-700"
-                  }`}
+                    }`}
                 >
                   {subItem.icon && (
                     <subItem.icon
-                      className={`h-4 w-4 ${
-                        location.pathname === subItem.url
+                      className={`h-4 w-4 ${location.pathname === subItem.url
                           ? "text-white"
                           : "text-slate-500 group-hover:text-white"
-                      }`}
+                        }`}
                     />
                   )}
                   <span className="truncate">{subItem.title}</span>
@@ -130,25 +126,23 @@ export function AppSidebarNavItemWithSubmenu({
       <HoverCard openDelay={100} closeDelay={100}>
         <HoverCardTrigger asChild>
           <button
-            className={`flex items-center justify-center px-0 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer w-full ${
-              hasActiveSubmenu
+            className={`flex items-center justify-center px-0 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer w-full ${hasActiveSubmenu
                 ? "text-white border border-blue-500"
                 : "text-slate-300 hover:text-white hover:bg-slate-800"
-            }`}
+              }`}
           >
             <item.icon
-              className={`h-5 w-5 transition-all ${
-                hasActiveSubmenu
+              className={`h-5 w-5 transition-all ${hasActiveSubmenu
                   ? "text-white"
                   : "text-slate-400 group-hover:text-white"
-              }`}
+                }`}
             />
           </button>
         </HoverCardTrigger>
         <HoverCardContent
           side="right"
           align="start"
-          className="ml-2 w-40 bg-slate-800 border-slate-700 shadow-lg p-3 z-[1000000]"
+          className="ml-2 w-56 bg-slate-800 border-slate-700 shadow-lg p-3 z-[1000000]"
         >
           <div className="text-sm font-medium text-white mb-2 px-2">
             {item.title}
@@ -170,11 +164,10 @@ export function AppSidebarNavItemWithSubmenu({
                 <Link
                   key={subItem.title}
                   to={subItem.url}
-                  className={`flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-all duration-200 ${
-                    location.pathname === subItem.url
+                  className={`flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-all duration-200 ${location.pathname === subItem.url
                       ? "bg-blue-500 text-white"
                       : "text-slate-300 hover:text-white hover:bg-slate-700"
-                  }`}
+                    }`}
                 >
                   {subItem.icon && <subItem.icon className="h-4 w-4" />}
                   <span>{subItem.title}</span>
@@ -189,18 +182,16 @@ export function AppSidebarNavItemWithSubmenu({
 
   // Regular menu item without submenu
   if (collapsed) {
-    const linkClass = `flex items-center justify-center gap-0 px-0 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group cursor-pointer w-full ${
-      isActive
+    const linkClass = `flex items-center justify-center gap-0 px-0 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group cursor-pointer w-full ${isActive
         ? "bg-blue-500 text-white shadow-lg"
         : "text-slate-300 hover:text-white hover:bg-slate-800"
-    }`;
+      }`;
 
     const content = (
       <>
         <item.icon
-          className={`h-5 w-5 transition-all ${
-            isActive ? "text-white" : "text-slate-400 group-hover:text-white"
-          }`}
+          className={`h-5 w-5 transition-all ${isActive ? "text-white" : "text-slate-400 group-hover:text-white"
+            }`}
         />
       </>
     );
@@ -233,19 +224,17 @@ export function AppSidebarNavItemWithSubmenu({
   const ItemContent = (
     <>
       <item.icon
-        className={`h-5 w-5 transition-all ${
-          isActive ? "text-white" : "text-slate-400 group-hover:text-white"
-        }`}
+        className={`h-5 w-5 transition-all ${isActive ? "text-white" : "text-slate-400 group-hover:text-white"
+          }`}
       />
       <span className="truncate">{item.title}</span>
     </>
   );
 
-  const linkClass = `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group cursor-pointer ${
-    isActive
+  const linkClass = `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group cursor-pointer ${isActive
       ? "bg-blue-500 text-white shadow-lg"
       : "text-slate-300 hover:text-white hover:bg-slate-800"
-  }`;
+    }`;
 
   if (item.url) {
     return (

@@ -101,7 +101,7 @@ export const LogCallDialog = ({
         const usersData = await userService.getUsers({ active: true });
         if (usersData) {
           const userList = usersData
-            .filter((user: any) => user.is_active === true && user.is_agent !== true) // Filter only active non-agent users
+            .filter((user: any) => user.is_active === true) // Filter only active users
             .map((user: any) => {
               const firstName = user.first_name || '';
               const lastName = user.last_name || '';
@@ -245,8 +245,8 @@ export const LogCallDialog = ({
                 >
                   {formData.called_for_user_id
                     ? users.find(
-                        (user) => user.id === formData.called_for_user_id
-                      )?.name
+                      (user) => user.id === formData.called_for_user_id
+                    )?.name
                     : "Select user/employee..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
@@ -302,8 +302,8 @@ export const LogCallDialog = ({
                   >
                     {formData.call_forwarded_to_user_id
                       ? users.find(
-                          (user) => user.id === formData.call_forwarded_to_user_id
-                        )?.name
+                        (user) => user.id === formData.call_forwarded_to_user_id
+                      )?.name
                       : "Select user/employee..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>

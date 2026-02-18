@@ -96,21 +96,21 @@ export default function GlobalCalls() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-  
+
   // Additional Filters
   const [performedByFilter, setPerformedByFilter] = useState<string>("all");
   const [calledForFilter, setCalledForFilter] = useState<string>("all");
   const [customerSearchFilter, setCustomerSearchFilter] = useState<string>("");
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState<Customer | null>(null);
   const [customerSearchResults, setCustomerSearchResults] = useState<Customer[]>([]);
-  
+
   // Create Call Dialog State
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [createCustomerType, setCreateCustomerType] = useState<string>("Client");
   const [createSearchTerm, setCreateSearchTerm] = useState("");
   const [createCustomers, setCreateCustomers] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  
+
   // Call Form State
   const [callType, setCallType] = useState<string>("Incoming Call");
   const [callTitle, setCallTitle] = useState("");
@@ -128,7 +128,7 @@ export default function GlobalCalls() {
   const [calledForSearchOpen, setCalledForSearchOpen] = useState(false);
   const [forwardedToSearchOpen, setForwardedToSearchOpen] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  
+
   // Edit Dialog State
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingCall, setEditingCall] = useState<ActivityWithCustomer | null>(null);
@@ -140,9 +140,9 @@ export default function GlobalCalls() {
       try {
         const response = await api.get('/users', { params: { active: true } });
         if (response.data.success) {
-          // Filter active non-agent users and sort alphabetically
+          // Filter active users and sort alphabetically
           const activeUsers = response.data.data
-            .filter((user: any) => user.is_active === true && user.is_agent !== true)
+            .filter((user: any) => user.is_active === true) // Filter only active users
             .sort((a: any, b: any) => {
               const nameA = `${a.first_name || ''} ${a.last_name || ''}`.trim();
               const nameB = `${b.first_name || ''} ${b.last_name || ''}`.trim();
@@ -172,7 +172,7 @@ export default function GlobalCalls() {
       };
 
       const response = await api.get('/customers', { params: filters });
-      
+
       // Handle paginated response structure
       if (response.data.data) {
         setCreateCustomers(response.data.data);
@@ -208,7 +208,7 @@ export default function GlobalCalls() {
       };
 
       const response = await api.get('/customers', { params: filters });
-      
+
       if (response.data.data) {
         setCustomerSearchResults(response.data.data);
       } else if (Array.isArray(response.data)) {
@@ -251,11 +251,11 @@ export default function GlobalCalls() {
       if (endDate) {
         filters.end_date = endDate;
       }
-      
+
       if (performedByFilter && performedByFilter !== "all") {
         filters.performed_by = performedByFilter;
       }
-      
+
       if (calledForFilter && calledForFilter !== "all") {
         filters.called_for_user_id = calledForFilter;
       }
@@ -352,7 +352,7 @@ export default function GlobalCalls() {
         selectedCustomer.id,
         callData,
       );
-      
+
       if (response.success) {
         toast({
           title: "Success",
@@ -361,7 +361,7 @@ export default function GlobalCalls() {
         setIsCreateDialogOpen(false);
         resetCreateForm();
         await loadCalls();
-        
+
         // Refresh notifications only if a new call was forwarded (not previously forwarded)
         if (forwardedToUserId) {
           // Add small delay to ensure backend notification is created
@@ -379,7 +379,7 @@ export default function GlobalCalls() {
       console.error("Error creating call:", err);
     }
   };
-  
+
   const handleEditCall = (call: ActivityWithCustomer) => {
     setEditingCall(call);
     setSelectedCustomer(call.customer || null);
@@ -399,7 +399,7 @@ export default function GlobalCalls() {
     setOriginalForwardedToUserId(call.call_forwarded_to_user_id || "");
     setIsEditDialogOpen(true);
   };
-  
+
   const handleUpdateCall = async () => {
     try {
       if (!editingCall || !editingCall.customer) {
@@ -440,7 +440,7 @@ export default function GlobalCalls() {
         editingCall.id,
         callData,
       );
-      
+
       if (response.success) {
         toast({
           title: "Success",
@@ -450,7 +450,7 @@ export default function GlobalCalls() {
         setEditingCall(null);
         resetCreateForm();
         await loadCalls();
-        
+
         // Refresh notifications only if forwarded user changed
         // Scenarios:
         // 1. No forwarded before, now forwarded (originalForwardedToUserId is empty, forwardedToUserId has value)
@@ -459,7 +459,7 @@ export default function GlobalCalls() {
         const forwardedUserChanged = originalForwardedToUserId !== forwardedToUserId;
         const newForwardAssigned = !originalForwardedToUserId && forwardedToUserId;
         const forwardReassigned = originalForwardedToUserId && forwardedToUserId && forwardedUserChanged;
-        
+
         if (newForwardAssigned || forwardReassigned) {
           // Add small delay to ensure backend notification is created
           setTimeout(() => {
@@ -527,367 +527,367 @@ export default function GlobalCalls() {
               </Button>
             </DialogTrigger>
             <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[95vh]' : 'max-w-2xl max-h-[90vh]'} overflow-y-auto`}>
-            <DialogHeader>
-              <DialogTitle>Create Call Log</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              {/* Customer Type */}
-              <div>
-                <Label>Customer Type *</Label>
-                <Select value={createCustomerType} onValueChange={setCreateCustomerType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Client">Client</SelectItem>
-                    <SelectItem value="Former">Former</SelectItem>
-                    <SelectItem value="Prospect">Prospect</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <DialogHeader>
+                <DialogTitle>Create Call Log</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                {/* Customer Type */}
+                <div>
+                  <Label>Customer Type *</Label>
+                  <Select value={createCustomerType} onValueChange={setCreateCustomerType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Client">Client</SelectItem>
+                      <SelectItem value="Former">Former</SelectItem>
+                      <SelectItem value="Prospect">Prospect</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              {/* Customer Search/Select */}
-              <div>
-                <Label>Customer *</Label>
-                {!selectedCustomer ? (
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Search by name, email, or phone..."
-                        value={createSearchTerm}
-                        onChange={(e) => setCreateSearchTerm(e.target.value)}
-                        className="pl-8"
-                      />
+                {/* Customer Search/Select */}
+                <div>
+                  <Label>Customer *</Label>
+                  {!selectedCustomer ? (
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Search by name, email, or phone..."
+                          value={createSearchTerm}
+                          onChange={(e) => setCreateSearchTerm(e.target.value)}
+                          className="pl-8"
+                        />
+                      </div>
+                      {createCustomers.length > 0 && (
+                        <div className="bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                          {createCustomers.map((customer) => (
+                            <div
+                              key={customer.id}
+                              className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                              onClick={() => {
+                                setSelectedCustomer(customer);
+                                setCreateCustomers([]);
+                                setCreateSearchTerm("");
+                              }}
+                            >
+                              <p className="font-medium">
+                                {customer.first_name} {customer.last_name}
+                              </p>
+                              <p className="text-sm text-gray-600">{customer.email}</p>
+                              <Badge variant="outline" className="mt-1 text-xs">{customer.status}</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {createSearchTerm.length >= 2 && createCustomers.length === 0 && (
+                        <p className="text-sm text-gray-500 py-2">No customers found. Try a different search term.</p>
+                      )}
                     </div>
-                    {createCustomers.length > 0 && (
-                      <div className="bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
-                        {createCustomers.map((customer) => (
-                          <div
-                            key={customer.id}
-                            className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
-                            onClick={() => {
-                              setSelectedCustomer(customer);
-                              setCreateCustomers([]);
-                              setCreateSearchTerm("");
-                            }}
-                          >
-                            <p className="font-medium">
-                              {customer.first_name} {customer.last_name}
-                            </p>
-                            <p className="text-sm text-gray-600">{customer.email}</p>
-                            <Badge variant="outline" className="mt-1 text-xs">{customer.status}</Badge>
-                          </div>
-                        ))}
+                  ) : (
+                    <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium text-blue-900">
+                            {selectedCustomer.first_name} {selectedCustomer.last_name}
+                          </p>
+                          <p className="text-sm text-blue-700">{selectedCustomer.email}</p>
+                          <Badge variant="outline" className="mt-1 text-xs">{selectedCustomer.status}</Badge>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(null)}>
+                          Change
+                        </Button>
                       </div>
-                    )}
-                    {createSearchTerm.length >= 2 && createCustomers.length === 0 && (
-                      <p className="text-sm text-gray-500 py-2">No customers found. Try a different search term.</p>
-                    )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Call Type */}
+                <div>
+                  <Label>Call Type *</Label>
+                  <Select value={callType} onValueChange={setCallType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Incoming Call">Incoming Call</SelectItem>
+                      <SelectItem value="Outgoing Call">Outgoing Call</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Called For and Forwarded To */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Called For</Label>
+                    <Popover open={calledForSearchOpen} onOpenChange={setCalledForSearchOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" role="combobox" aria-expanded={calledForSearchOpen} className="w-full justify-between">
+                          {calledForUserId ? users.find((user) => user.id === calledForUserId) ? `${users.find((user) => user.id === calledForUserId)?.first_name} ${users.find((user) => user.id === calledForUserId)?.last_name}` : "Select user" : "None"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search users..." />
+                          <CommandList>
+                            <CommandEmpty>No user found.</CommandEmpty>
+                            <CommandGroup>
+                              <CommandItem value="none" onSelect={() => { setCalledForUserId(""); setCalledForSearchOpen(false); }}>
+                                <Check className={cn("mr-2 h-4 w-4", !calledForUserId ? "opacity-100" : "opacity-0")} />
+                                None
+                              </CommandItem>
+                              {users.map((user) => (
+                                <CommandItem key={user.id} value={`${user.id}-${user.first_name} ${user.last_name}`} keywords={[user.first_name || '', user.last_name || '', user.email || '']} onSelect={() => { setCalledForUserId(user.id); setCalledForSearchOpen(false); }}>
+                                  <Check className={cn("mr-2 h-4 w-4", calledForUserId === user.id ? "opacity-100" : "opacity-0")} />
+                                  {user.first_name} {user.last_name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
-                ) : (
+                  <div>
+                    <Label>Forwarded To</Label>
+                    <Popover open={forwardedToSearchOpen} onOpenChange={setForwardedToSearchOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" role="combobox" aria-expanded={forwardedToSearchOpen} className="w-full justify-between">
+                          {forwardedToUserId ? users.find((user) => user.id === forwardedToUserId) ? `${users.find((user) => user.id === forwardedToUserId)?.first_name} ${users.find((user) => user.id === forwardedToUserId)?.last_name}` : "Select user" : "None"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search users..." />
+                          <CommandList>
+                            <CommandEmpty>No user found.</CommandEmpty>
+                            <CommandGroup>
+                              <CommandItem value="none" onSelect={() => { setForwardedToUserId(""); setForwardedToSearchOpen(false); }}>
+                                <Check className={cn("mr-2 h-4 w-4", !forwardedToUserId ? "opacity-100" : "opacity-0")} />
+                                None
+                              </CommandItem>
+                              {users.map((user) => (
+                                <CommandItem key={user.id} value={`${user.id}-${user.first_name} ${user.last_name}`} keywords={[user.first_name || '', user.last_name || '', user.email || '']} onSelect={() => { setForwardedToUserId(user.id); setForwardedToSearchOpen(false); }}>
+                                  <Check className={cn("mr-2 h-4 w-4", forwardedToUserId === user.id ? "opacity-100" : "opacity-0")} />
+                                  {user.first_name} {user.last_name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <Label>Description *</Label>
+                  <Textarea
+                    value={callDescription}
+                    onChange={(e) => setCallDescription(e.target.value)}
+                    placeholder="Enter call details..."
+                    rows={3}
+                  />
+                </div>
+
+                {/* Date and Time */}
+                <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+                  <div>
+                    <Label>Date *</Label>
+                    <DateInput
+                      value={callDate}
+                      onChange={(value) => setCallDate(value || new Date().toISOString().split('T')[0])}
+                      placeholder="Select date"
+                    />
+                  </div>
+                  <div>
+                    <Label>Time *</Label>
+                    <Input
+                      type="time"
+                      value={callTime}
+                      onChange={(e) => setCallTime(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => {
+                  setIsCreateDialogOpen(false);
+                  resetCreateForm();
+                }}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateCall} disabled={!selectedCustomer || !callDescription}>
+                  Create Call Log
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Call Dialog */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[95vh]' : 'max-w-2xl max-h-[90vh]'} overflow-y-auto`}>
+              <DialogHeader>
+                <DialogTitle>Edit Call Log</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                {/* Customer Type */}
+                <div>
+                  <Label>Customer Type *</Label>
+                  <Select value={createCustomerType} onValueChange={setCreateCustomerType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Client">Client</SelectItem>
+                      <SelectItem value="Former">Former</SelectItem>
+                      <SelectItem value="Prospect">Prospect</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Selected Customer (Read-only in edit mode) */}
+                {selectedCustomer && (
                   <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium text-blue-900">
-                          {selectedCustomer.first_name} {selectedCustomer.last_name}
-                        </p>
-                        <p className="text-sm text-blue-700">{selectedCustomer.email}</p>
-                        <Badge variant="outline" className="mt-1 text-xs">{selectedCustomer.status}</Badge>
-                      </div>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(null)}>
-                        Change
-                      </Button>
+                    <div>
+                      <p className="font-medium text-blue-900">
+                        {selectedCustomer.first_name} {selectedCustomer.last_name}
+                      </p>
+                      <p className="text-sm text-blue-700">{selectedCustomer.email}</p>
+                      <Badge variant="outline" className="mt-1 text-xs">{selectedCustomer.status}</Badge>
                     </div>
                   </div>
                 )}
-              </div>
 
-              {/* Call Type */}
-              <div>
-                <Label>Call Type *</Label>
-                <Select value={callType} onValueChange={setCallType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Incoming Call">Incoming Call</SelectItem>
-                    <SelectItem value="Outgoing Call">Outgoing Call</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Called For and Forwarded To */}
-              <div className="grid grid-cols-2 gap-4">
+                {/* Call Type */}
                 <div>
-                  <Label>Called For</Label>
-                  <Popover open={calledForSearchOpen} onOpenChange={setCalledForSearchOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" aria-expanded={calledForSearchOpen} className="w-full justify-between">
-                        {calledForUserId ? users.find((user) => user.id === calledForUserId) ? `${users.find((user) => user.id === calledForUserId)?.first_name} ${users.find((user) => user.id === calledForUserId)?.last_name}` : "Select user" : "None"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[300px] p-0">
-                      <Command>
-                        <CommandInput placeholder="Search users..." />
-                        <CommandList>
-                          <CommandEmpty>No user found.</CommandEmpty>
-                          <CommandGroup>
-                            <CommandItem value="none" onSelect={() => { setCalledForUserId(""); setCalledForSearchOpen(false); }}>
-                              <Check className={cn("mr-2 h-4 w-4", !calledForUserId ? "opacity-100" : "opacity-0")} />
-                              None
-                            </CommandItem>
-                            {users.map((user) => (
-                              <CommandItem key={user.id} value={`${user.id}-${user.first_name} ${user.last_name}`} keywords={[user.first_name || '', user.last_name || '', user.email || '']} onSelect={() => { setCalledForUserId(user.id); setCalledForSearchOpen(false); }}>
-                                <Check className={cn("mr-2 h-4 w-4", calledForUserId === user.id ? "opacity-100" : "opacity-0")} />
-                                {user.first_name} {user.last_name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <Label>Call Type *</Label>
+                  <Select value={callType} onValueChange={setCallType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Incoming Call">Incoming Call</SelectItem>
+                      <SelectItem value="Outgoing Call">Outgoing Call</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <Label>Forwarded To</Label>
-                  <Popover open={forwardedToSearchOpen} onOpenChange={setForwardedToSearchOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" aria-expanded={forwardedToSearchOpen} className="w-full justify-between">
-                        {forwardedToUserId ? users.find((user) => user.id === forwardedToUserId) ? `${users.find((user) => user.id === forwardedToUserId)?.first_name} ${users.find((user) => user.id === forwardedToUserId)?.last_name}` : "Select user" : "None"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[300px] p-0">
-                      <Command>
-                        <CommandInput placeholder="Search users..." />
-                        <CommandList>
-                          <CommandEmpty>No user found.</CommandEmpty>
-                          <CommandGroup>
-                            <CommandItem value="none" onSelect={() => { setForwardedToUserId(""); setForwardedToSearchOpen(false); }}>
-                              <Check className={cn("mr-2 h-4 w-4", !forwardedToUserId ? "opacity-100" : "opacity-0")} />
-                              None
-                            </CommandItem>
-                            {users.map((user) => (
-                              <CommandItem key={user.id} value={`${user.id}-${user.first_name} ${user.last_name}`} keywords={[user.first_name || '', user.last_name || '', user.email || '']} onSelect={() => { setForwardedToUserId(user.id); setForwardedToSearchOpen(false); }}>
-                                <Check className={cn("mr-2 h-4 w-4", forwardedToUserId === user.id ? "opacity-100" : "opacity-0")} />
-                                {user.first_name} {user.last_name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
 
-              {/* Description */}
-              <div>
-                <Label>Description *</Label>
-                <Textarea
-                  value={callDescription}
-                  onChange={(e) => setCallDescription(e.target.value)}
-                  placeholder="Enter call details..."
-                  rows={3}
-                />
-              </div>
-
-              {/* Date and Time */}
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
-                <div>
-                  <Label>Date *</Label>
-                  <DateInput
-                    value={callDate}
-                    onChange={(value) => setCallDate(value || new Date().toISOString().split('T')[0])}
-                    placeholder="Select date"
-                  />
-                </div>
-                <div>
-                  <Label>Time *</Label>
-                  <Input
-                    type="time"
-                    value={callTime}
-                    onChange={(e) => setCallTime(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => {
-                setIsCreateDialogOpen(false);
-                resetCreateForm();
-              }}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateCall} disabled={!selectedCustomer || !callDescription}>
-                Create Call Log
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Call Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[95vh]' : 'max-w-2xl max-h-[90vh]'} overflow-y-auto`}>
-            <DialogHeader>
-              <DialogTitle>Edit Call Log</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              {/* Customer Type */}
-              <div>
-                <Label>Customer Type *</Label>
-                <Select value={createCustomerType} onValueChange={setCreateCustomerType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Client">Client</SelectItem>
-                    <SelectItem value="Former">Former</SelectItem>
-                    <SelectItem value="Prospect">Prospect</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Selected Customer (Read-only in edit mode) */}
-              {selectedCustomer && (
-                <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
+                {/* Called For and Forwarded To */}
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="font-medium text-blue-900">
-                      {selectedCustomer.first_name} {selectedCustomer.last_name}
-                    </p>
-                    <p className="text-sm text-blue-700">{selectedCustomer.email}</p>
-                    <Badge variant="outline" className="mt-1 text-xs">{selectedCustomer.status}</Badge>
+                    <Label>Called For</Label>
+                    <Popover open={calledForSearchOpen} onOpenChange={setCalledForSearchOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" role="combobox" aria-expanded={calledForSearchOpen} className="w-full justify-between">
+                          {calledForUserId ? users.find((user) => user.id === calledForUserId) ? `${users.find((user) => user.id === calledForUserId)?.first_name} ${users.find((user) => user.id === calledForUserId)?.last_name}` : "Select user" : "None"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search users..." />
+                          <CommandList>
+                            <CommandEmpty>No user found.</CommandEmpty>
+                            <CommandGroup>
+                              <CommandItem value="none" onSelect={() => { setCalledForUserId(""); setCalledForSearchOpen(false); }}>
+                                <Check className={cn("mr-2 h-4 w-4", !calledForUserId ? "opacity-100" : "opacity-0")} />
+                                None
+                              </CommandItem>
+                              {users.map((user) => (
+                                <CommandItem key={user.id} value={`${user.id}-${user.first_name} ${user.last_name}`} keywords={[user.first_name || '', user.last_name || '', user.email || '']} onSelect={() => { setCalledForUserId(user.id); setCalledForSearchOpen(false); }}>
+                                  <Check className={cn("mr-2 h-4 w-4", calledForUserId === user.id ? "opacity-100" : "opacity-0")} />
+                                  {user.first_name} {user.last_name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div>
+                    <Label>Forwarded To</Label>
+                    <Popover open={forwardedToSearchOpen} onOpenChange={setForwardedToSearchOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" role="combobox" aria-expanded={forwardedToSearchOpen} className="w-full justify-between">
+                          {forwardedToUserId ? users.find((user) => user.id === forwardedToUserId) ? `${users.find((user) => user.id === forwardedToUserId)?.first_name} ${users.find((user) => user.id === forwardedToUserId)?.last_name}` : "Select user" : "None"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search users..." />
+                          <CommandList>
+                            <CommandEmpty>No user found.</CommandEmpty>
+                            <CommandGroup>
+                              <CommandItem value="none" onSelect={() => { setForwardedToUserId(""); setForwardedToSearchOpen(false); }}>
+                                <Check className={cn("mr-2 h-4 w-4", !forwardedToUserId ? "opacity-100" : "opacity-0")} />
+                                None
+                              </CommandItem>
+                              {users.map((user) => (
+                                <CommandItem key={user.id} value={`${user.id}-${user.first_name} ${user.last_name}`} keywords={[user.first_name || '', user.last_name || '', user.email || '']} onSelect={() => { setForwardedToUserId(user.id); setForwardedToSearchOpen(false); }}>
+                                  <Check className={cn("mr-2 h-4 w-4", forwardedToUserId === user.id ? "opacity-100" : "opacity-0")} />
+                                  {user.first_name} {user.last_name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
-              )}
 
-              {/* Call Type */}
-              <div>
-                <Label>Call Type *</Label>
-                <Select value={callType} onValueChange={setCallType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Incoming Call">Incoming Call</SelectItem>
-                    <SelectItem value="Outgoing Call">Outgoing Call</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Called For and Forwarded To */}
-              <div className="grid grid-cols-2 gap-4">
+                {/* Description */}
                 <div>
-                  <Label>Called For</Label>
-                  <Popover open={calledForSearchOpen} onOpenChange={setCalledForSearchOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" aria-expanded={calledForSearchOpen} className="w-full justify-between">
-                        {calledForUserId ? users.find((user) => user.id === calledForUserId) ? `${users.find((user) => user.id === calledForUserId)?.first_name} ${users.find((user) => user.id === calledForUserId)?.last_name}` : "Select user" : "None"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[300px] p-0">
-                      <Command>
-                        <CommandInput placeholder="Search users..." />
-                        <CommandList>
-                          <CommandEmpty>No user found.</CommandEmpty>
-                          <CommandGroup>
-                            <CommandItem value="none" onSelect={() => { setCalledForUserId(""); setCalledForSearchOpen(false); }}>
-                              <Check className={cn("mr-2 h-4 w-4", !calledForUserId ? "opacity-100" : "opacity-0")} />
-                              None
-                            </CommandItem>
-                            {users.map((user) => (
-                              <CommandItem key={user.id} value={`${user.id}-${user.first_name} ${user.last_name}`} keywords={[user.first_name || '', user.last_name || '', user.email || '']} onSelect={() => { setCalledForUserId(user.id); setCalledForSearchOpen(false); }}>
-                                <Check className={cn("mr-2 h-4 w-4", calledForUserId === user.id ? "opacity-100" : "opacity-0")} />
-                                {user.first_name} {user.last_name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div>
-                  <Label>Forwarded To</Label>
-                  <Popover open={forwardedToSearchOpen} onOpenChange={setForwardedToSearchOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" aria-expanded={forwardedToSearchOpen} className="w-full justify-between">
-                        {forwardedToUserId ? users.find((user) => user.id === forwardedToUserId) ? `${users.find((user) => user.id === forwardedToUserId)?.first_name} ${users.find((user) => user.id === forwardedToUserId)?.last_name}` : "Select user" : "None"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[300px] p-0">
-                      <Command>
-                        <CommandInput placeholder="Search users..." />
-                        <CommandList>
-                          <CommandEmpty>No user found.</CommandEmpty>
-                          <CommandGroup>
-                            <CommandItem value="none" onSelect={() => { setForwardedToUserId(""); setForwardedToSearchOpen(false); }}>
-                              <Check className={cn("mr-2 h-4 w-4", !forwardedToUserId ? "opacity-100" : "opacity-0")} />
-                              None
-                            </CommandItem>
-                            {users.map((user) => (
-                              <CommandItem key={user.id} value={`${user.id}-${user.first_name} ${user.last_name}`} keywords={[user.first_name || '', user.last_name || '', user.email || '']} onSelect={() => { setForwardedToUserId(user.id); setForwardedToSearchOpen(false); }}>
-                                <Check className={cn("mr-2 h-4 w-4", forwardedToUserId === user.id ? "opacity-100" : "opacity-0")} />
-                                {user.first_name} {user.last_name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <Label>Description *</Label>
-                <Textarea
-                  value={callDescription}
-                  onChange={(e) => setCallDescription(e.target.value)}
-                  placeholder="Enter call details..."
-                  rows={3}
-                />
-              </div>
-
-              {/* Date and Time */}
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
-                <div>
-                  <Label>Date *</Label>
-                  <DateInput
-                    value={callDate}
-                    onChange={(value) => setCallDate(value || "")}
-                    placeholder="Select date"
+                  <Label>Description *</Label>
+                  <Textarea
+                    value={callDescription}
+                    onChange={(e) => setCallDescription(e.target.value)}
+                    placeholder="Enter call details..."
+                    rows={3}
                   />
                 </div>
-                <div>
-                  <Label>Time *</Label>
-                  <Input
-                    type="time"
-                    value={callTime}
-                    onChange={(e) => setCallTime(e.target.value)}
-                  />
+
+                {/* Date and Time */}
+                <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+                  <div>
+                    <Label>Date *</Label>
+                    <DateInput
+                      value={callDate}
+                      onChange={(value) => setCallDate(value || "")}
+                      placeholder="Select date"
+                    />
+                  </div>
+                  <div>
+                    <Label>Time *</Label>
+                    <Input
+                      type="time"
+                      value={callTime}
+                      onChange={(e) => setCallTime(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => {
-                setIsEditDialogOpen(false);
-                setEditingCall(null);
-                resetCreateForm();
-              }}>
-                Cancel
-              </Button>
-              <Button onClick={handleUpdateCall} disabled={!callDescription}>
-                Update Call Log
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setEditingCall(null);
+                  resetCreateForm();
+                }}>
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateCall} disabled={!callDescription}>
+                  Update Call Log
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -895,9 +895,9 @@ export default function GlobalCalls() {
       <Card>
         {isMobile && (
           <div className="p-3 border-b">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setShowMobileFilters(!showMobileFilters)}
               className="w-full justify-between"
             >
@@ -947,9 +947,9 @@ export default function GlobalCalls() {
                   <span className="text-sm flex-1 truncate">
                     {selectedCustomerFilter.first_name} {selectedCustomerFilter.last_name}
                   </span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setSelectedCustomerFilter(null)}
                     className="h-6 w-6 p-0"
                   >
@@ -1069,136 +1069,136 @@ export default function GlobalCalls() {
               <div className="overflow-x-auto">
                 <Table className="min-w-[800px]">
                   <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[100px]">Type</TableHead>
-                    <TableHead className="min-w-[180px]">Customer</TableHead>
-                    <TableHead className="hidden md:table-cell w-[120px]">Customer Type</TableHead>
-                    <TableHead className="w-[140px]">Date & Time</TableHead>
-                    <TableHead className="hidden lg:table-cell w-[130px]">Performed By</TableHead>
-                    <TableHead className="hidden lg:table-cell w-[120px]">Called For</TableHead>
-                    <TableHead className="hidden md:table-cell w-[100px]">Status</TableHead>
-                    <TableHead className="w-[120px] md:w-[150px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {calls.map((call) => (
-                    <TableRow key={call.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {call.activity_type === "Incoming Call" ? (
-                            <PhoneIncoming className="h-4 w-4 text-green-600" />
-                          ) : (
-                            <PhoneOutgoing className="h-4 w-4 text-blue-600" />
-                          )}
-                          <Badge variant={call.activity_type === "Incoming Call" ? "default" : "secondary"} className="text-xs">
-                            {call.activity_type === "Incoming Call" ? "Incoming" : "Outgoing"}
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {call.customer ? (
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <div className="min-w-0 flex-1">
-                                <p className="font-medium text-sm truncate">
-                                  {call.customer.first_name} {call.customer.last_name}
-                                </p>
-                                <p className="text-xs text-gray-500 truncate">{call.customer.email}</p>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => navigate(getCustomerViewUrl(call.customer!.id, call.customer!.status) + '?tab=calls')}
-                                className="h-7 w-7 p-0 flex-shrink-0"
-                              >
-                                <ExternalLink className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">N/A</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {call.customer ? (
-                          <Badge variant="outline" className="text-xs">{call.customer.status}</Badge>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div>{new Date(call.activity_date).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                          <div className="text-gray-500 text-xs">{call.activity_time ? new Date(`2000-01-01T${call.activity_time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '-'}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        <span className="text-sm">{customerActivitiesService.getFullName(call.performer) || "Unknown"}</span>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        {(call.calledForUser || call.called_for_user) ? (
-                          <span className="text-sm">
-                            {(call.calledForUser || call.called_for_user)!.first_name}{" "}
-                            {(call.calledForUser || call.called_for_user)!.last_name}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {(call as any).child_activities && (call as any).child_activities.length > 0 ? (
-                          <Badge variant="default" className="bg-green-600">Yes</Badge>
-                        ) : (
-                          <Badge variant="outline">No</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1">
-                          {call.customer && (
-                            <>
-                              <CallDetailsDialog
-                                call={call}
-                                customerName={`${call.customer.first_name} ${call.customer.last_name}`}
-                                customerId={call.customer.id}
-                                trigger={
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                }
-                              />
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditCall(call)}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              {!call.parent_activity_id && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedCustomer(call.customer || null);
-                                    const title = call.activity_type === "Incoming Call" 
-                                      ? "Answer Call - " + (call.title || call.description || "").substring(0, 30)
-                                      : "Follow Up - " + (call.title || call.description || "").substring(0, 30);
-                                    setCallTitle(title);
-                                    setCallType(call.activity_type);
-                                    setIsCreateDialogOpen(true);
-                                  }}
-                                  className="h-8 px-2 text-xs hidden sm:inline-flex"
-                                >
-                                  Answer
-                                </Button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
+                    <TableRow>
+                      <TableHead className="w-[100px]">Type</TableHead>
+                      <TableHead className="min-w-[180px]">Customer</TableHead>
+                      <TableHead className="hidden md:table-cell w-[120px]">Customer Type</TableHead>
+                      <TableHead className="w-[140px]">Date & Time</TableHead>
+                      <TableHead className="hidden lg:table-cell w-[130px]">Performed By</TableHead>
+                      <TableHead className="hidden lg:table-cell w-[120px]">Called For</TableHead>
+                      <TableHead className="hidden md:table-cell w-[100px]">Status</TableHead>
+                      <TableHead className="w-[120px] md:w-[150px]">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
+                  </TableHeader>
+                  <TableBody>
+                    {calls.map((call) => (
+                      <TableRow key={call.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {call.activity_type === "Incoming Call" ? (
+                              <PhoneIncoming className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <PhoneOutgoing className="h-4 w-4 text-blue-600" />
+                            )}
+                            <Badge variant={call.activity_type === "Incoming Call" ? "default" : "secondary"} className="text-xs">
+                              {call.activity_type === "Incoming Call" ? "Incoming" : "Outgoing"}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {call.customer ? (
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-medium text-sm truncate">
+                                    {call.customer.first_name} {call.customer.last_name}
+                                  </p>
+                                  <p className="text-xs text-gray-500 truncate">{call.customer.email}</p>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => navigate(getCustomerViewUrl(call.customer!.id, call.customer!.status) + '?tab=calls')}
+                                  className="h-7 w-7 p-0 flex-shrink-0"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">N/A</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {call.customer ? (
+                            <Badge variant="outline" className="text-xs">{call.customer.status}</Badge>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <div>{new Date(call.activity_date).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                            <div className="text-gray-500 text-xs">{call.activity_time ? new Date(`2000-01-01T${call.activity_time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '-'}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <span className="text-sm">{customerActivitiesService.getFullName(call.performer) || "Unknown"}</span>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {(call.calledForUser || call.called_for_user) ? (
+                            <span className="text-sm">
+                              {(call.calledForUser || call.called_for_user)!.first_name}{" "}
+                              {(call.calledForUser || call.called_for_user)!.last_name}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {(call as any).child_activities && (call as any).child_activities.length > 0 ? (
+                            <Badge variant="default" className="bg-green-600">Yes</Badge>
+                          ) : (
+                            <Badge variant="outline">No</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1">
+                            {call.customer && (
+                              <>
+                                <CallDetailsDialog
+                                  call={call}
+                                  customerName={`${call.customer.first_name} ${call.customer.last_name}`}
+                                  customerId={call.customer.id}
+                                  trigger={
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  }
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditCall(call)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                {!call.parent_activity_id && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedCustomer(call.customer || null);
+                                      const title = call.activity_type === "Incoming Call"
+                                        ? "Answer Call - " + (call.title || call.description || "").substring(0, 30)
+                                        : "Follow Up - " + (call.title || call.description || "").substring(0, 30);
+                                      setCallTitle(title);
+                                      setCallType(call.activity_type);
+                                      setIsCreateDialogOpen(true);
+                                    }}
+                                    className="h-8 px-2 text-xs hidden sm:inline-flex"
+                                  >
+                                    Answer
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
                 </Table>
               </div>
 

@@ -56,11 +56,13 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown, Copy, Users2, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useMapSelection } from "@/hooks/useMapSelection";
 
 const Lookup = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { handleMapClick, MapSelectionDialog } = useMapSelection();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchType, setSearchType] = useState<SearchFilters["type"]>("all");
@@ -1708,47 +1710,99 @@ const Lookup = () => {
                       .filter((result) => result.type !== "prospect")
                       .map((result, index) => {
                         const href = getResultHref(result);
-                        const Component = href ? 'a' : 'div';
-                        const linkProps = href ? {
-                          href,
-                          onClick: (e: React.MouseEvent) => {
+                        // Use div for card to avoid nested anchors (invalid HTML)
+                        // But keep main interactive behaviors
+                        const handleClick = (e: React.MouseEvent) => {
+                          handleResultClick(result, e);
+                        };
+
+                        const handleMouseDown = (e: React.MouseEvent) => {
+                          if (e.button === 1) { // Middle click
                             e.preventDefault();
-                            handleResultClick(result, e);
-                          },
-                          onMouseDown: (e: React.MouseEvent) => {
-                            if (e.button === 1) { // Middle click
-                              e.preventDefault();
-                              handleResultClick(result, e);
-                            }
+                            handleClick(e);
                           }
-                        } : {
-                          onClick: (e: React.MouseEvent) => handleResultClick(result, e)
                         };
 
                         return (
-                          <Component
+                          <div
                             key={`${result.type}-${result.id}-${index}`}
-                            className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors no-underline text-inherit"
-                            {...linkProps}
+                            className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors text-inherit"
+                            onClick={handleClick}
+                            onMouseDown={handleMouseDown}
                           >
                             <div className="flex items-center gap-3 flex-1">
                               {getTypeIcon(result.type)}
                               <div className="flex-1 min-w-0">
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
-                                  <h4 className="font-medium truncate">{result.title}</h4>
+                                  <h4 className="font-medium truncate">
+                                    {result.type === 'customer' && href ? (
+                                      <a
+                                        href={href}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          handleResultClick(result, e);
+                                        }}
+                                        className="hover:underline text-primary"
+                                      >
+                                        {result.title}
+                                      </a>
+                                    ) : (
+                                      result.title
+                                    )}
+                                  </h4>
                                   {result.status && (
                                     <Badge variant="outline" className="shrink-0">{result.status}</Badge>
                                   )}
                                 </div>
-                                <p className="text-sm text-gray-600 line-clamp-2">
-                                  {result.description}
-                                </p>
+
+                                {result.type === 'customer' && (
+                                  <div className="text-xs text-gray-500 mb-1 flex flex-wrap gap-x-3">
+                                    {result.ssn && (
+                                      <span className="flex items-center gap-1">
+                                        <span className="font-medium">SSN:</span>
+                                        {result.ssn.length > 4 ? `***-**-${result.ssn.slice(-4)}` : result.ssn}
+                                      </span>
+                                    )}
+                                    {result.phone && (
+                                      <a
+                                        href={`tel:${result.phone}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="flex items-center gap-1 hover:underline hover:text-blue-600 transition-colors z-10 relative"
+                                      >
+                                        <span className="font-medium">Phone:</span> {result.phone}
+                                      </a>
+                                    )}
+                                    {result.address && (
+                                      <span
+                                        onClick={(e) => { e.stopPropagation(); handleMapClick(result.address!); }}
+                                        className="flex items-center gap-1 cursor-pointer hover:underline hover:text-blue-600 transition-colors z-10 relative"
+                                      >
+                                        <span className="font-medium">Address:</span> {result.address}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+
+                                <div className="text-sm text-gray-600 line-clamp-2">
+                                  {result.description && result.description.includes('@') ? (
+                                    <a
+                                      href={`mailto:${result.description}`}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="hover:underline hover:text-blue-600 transition-colors z-10 relative"
+                                    >
+                                      {result.description}
+                                    </a>
+                                  ) : (
+                                    result.description
+                                  )}
+                                </div>
                               </div>
                             </div>
                             <div className="text-sm text-gray-400 self-start sm:self-center shrink-0">
                               Score: {result.relevance_score}/100
                             </div>
-                          </Component>
+                          </div>
                         );
                       })}
                   </TabsContent>
@@ -1780,47 +1834,104 @@ const Lookup = () => {
                         })
                         .map((result, index) => {
                           const href = getResultHref(result);
-                          const Component = href ? 'a' : 'div';
-                          const linkProps = href ? {
-                            href,
-                            onClick: (e: React.MouseEvent) => {
+
+                          // Use div for card to avoid nested anchors (invalid HTML)
+                          // But keep main interactive behaviors
+                          const handleClick = (e: React.MouseEvent) => {
+                            handleResultClick(result, e);
+                          };
+
+                          const handleMouseDown = (e: React.MouseEvent) => {
+                            if (e.button === 1) { // Middle click
                               e.preventDefault();
-                              handleResultClick(result, e);
-                            },
-                            onMouseDown: (e: React.MouseEvent) => {
-                              if (e.button === 1) { // Middle click
-                                e.preventDefault();
-                                handleResultClick(result, e);
-                              }
+                              handleClick(e);
                             }
-                          } : {
-                            onClick: (e: React.MouseEvent) => handleResultClick(result, e)
                           };
 
                           return (
-                            <Component
+                            <div
                               key={`${result.type}-${result.id}-${index}`}
-                              className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors no-underline text-inherit"
-                              {...linkProps}
+                              className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors text-inherit"
+                              onClick={handleClick}
+                              onMouseDown={handleMouseDown}
                             >
                               <div className="flex items-center gap-3 flex-1">
                                 {getTypeIcon(result.type)}
                                 <div className="flex-1 min-w-0">
                                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
-                                    <h4 className="font-medium truncate">{result.title}</h4>
+                                    <h4 className="font-medium truncate">
+                                      {result.type === 'customer' && href ? (
+                                        <a
+                                          href={href}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            handleResultClick(result, e);
+                                          }}
+                                          className="hover:underline text-primary"
+                                        >
+                                          {result.title}
+                                        </a>
+                                      ) : (
+                                        result.title
+                                      )}
+                                    </h4>
                                     {result.status && (
                                       <Badge variant="outline" className="shrink-0">{result.status}</Badge>
                                     )}
                                   </div>
-                                  <p className="text-sm text-gray-600 line-clamp-2">
-                                    {result.description}
-                                  </p>
+
+                                  {/* Customer specific details for disambiguation */}
+                                  {result.type === 'customer' && (
+                                    <div className="text-xs text-gray-500 mb-1 flex flex-wrap gap-x-3">
+                                      {result.ssn && (
+                                        <span className="flex items-center gap-1">
+                                          <span className="font-medium">SSN:</span>
+                                          {/* Mask SSN: show only last 4 digits if length > 4 */}
+                                          {result.ssn.length > 4
+                                            ? `***-**-${result.ssn.slice(-4)}`
+                                            : result.ssn}
+                                        </span>
+                                      )}
+                                      {result.phone && (
+                                        <a
+                                          href={`tel:${result.phone}`}
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="flex items-center gap-1 hover:underline hover:text-blue-600 transition-colors z-10 relative"
+                                        >
+                                          <span className="font-medium">Phone:</span> {result.phone}
+                                        </a>
+                                      )}
+                                      {result.address && (
+                                        <span
+                                          onClick={(e) => { e.stopPropagation(); handleMapClick(result.address!); }}
+                                          className="flex items-center gap-1 cursor-pointer hover:underline hover:text-blue-600 transition-colors z-10 relative"
+                                        >
+                                          <span className="font-medium">Address:</span> {result.address}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  <div className="text-sm text-gray-600 line-clamp-2">
+                                    {result.description && result.description.includes('@') ? (
+                                      <a
+                                        href={`mailto:${result.description}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="hover:underline hover:text-blue-600 transition-colors z-10 relative"
+                                      >
+                                        {result.description}
+                                      </a>
+                                    ) : (
+                                      result.description
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                               <div className="text-sm text-gray-400 self-start sm:self-center shrink-0">
                                 Score: {result.relevance_score}/100
                               </div>
-                            </Component>
+                            </div>
                           );
                         })}
                     </TabsContent>
@@ -2471,6 +2582,7 @@ const Lookup = () => {
         onClose={closeProspectModal}
         prospect={selectedProspect}
       />
+      <MapSelectionDialog />
     </div>
   );
 };
