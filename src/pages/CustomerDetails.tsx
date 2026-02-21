@@ -43,6 +43,39 @@ const CustomerDetails = () => {
   const [mobileActiveTab, setMobileActiveTab] = useState<string>("more");
   const [notesCount, setNotesCount] = useState<number>(0);
 
+  // Set dynamic page title and meta tags for link preview sharing
+  useEffect(() => {
+    if (customer) {
+      const customerType = customer.status || "Client";
+      const fullName = [customer.firstName, customer.middleName, customer.lastName]
+        .filter(Boolean)
+        .join(" ") || customer.name || "Unknown";
+
+      const pageTitle = `SCIS — Viewing ${customerType} ${fullName}`;
+      document.title = pageTitle;
+
+      // Update Open Graph meta tags for link preview in chat/social sharing
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      const ogDescription = document.querySelector('meta[property="og:description"]');
+      const metaDescription = document.querySelector('meta[name="description"]');
+
+      if (ogTitle) ogTitle.setAttribute("content", pageTitle);
+      if (ogDescription) ogDescription.setAttribute("content", `Viewing ${customerType.toLowerCase()} profile for ${fullName}`);
+      if (metaDescription) metaDescription.setAttribute("content", `Viewing ${customerType.toLowerCase()} profile for ${fullName}`);
+    }
+
+    return () => {
+      // Reset title when leaving the page
+      document.title = "SCIS - Insurance Management System";
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      const ogDescription = document.querySelector('meta[property="og:description"]');
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (ogTitle) ogTitle.setAttribute("content", "SCIS - Insurance Management System");
+      if (ogDescription) ogDescription.setAttribute("content", "Comprehensive CRM for Insurance Agents - Manage leads, deals, policies, and customer relationships");
+      if (metaDescription) metaDescription.setAttribute("content", "Comprehensive CRM for Insurance Agents - Manage leads, deals, policies, and customer relationships");
+    };
+  }, [customer]);
+
   // Handler for tab change events
   const handleTabChange = useCallback(
     (tabName: string) => {

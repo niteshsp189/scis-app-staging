@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -157,6 +157,9 @@ export const MainCalendarView = forwardRef<{
   const [officeLocations, setOfficeLocations] = useState<any[]>([]);
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
 
+  // Abort controller to cancel stale API requests and prevent race conditions
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const { toast } = useToast();
   const { getFilterExpanded, setFilterExpanded } = usePreferences();
 
@@ -178,12 +181,29 @@ export const MainCalendarView = forwardRef<{
     },
   }));
 
+  // Load users and office locations only once on mount (not on every filter change)
   useEffect(() => {
+    loadUsers();
+    loadOfficeLocations();
+  }, []);
+
+  // Fetch appointments, holidays, and leaves when filters or view change
+  useEffect(() => {
+    // Cancel any in-flight request to prevent stale data from overwriting fresh results
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
     fetchAppointments();
     fetchHolidays();
     fetchLeaves();
-    loadUsers();
-    loadOfficeLocations();
+
+    return () => {
+      // Cleanup: cancel pending request when dependencies change or component unmounts
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [
     currentDate,
     view,
@@ -250,11 +270,15 @@ export const MainCalendarView = forwardRef<{
   }, [filterDateFrom, view]);
 
   const fetchAppointments = async () => {
+    // Create a new AbortController for this request
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setLoading(true);
     try {
       // Build filters object
       const filters: any = {
-        per_page: 100, // Get more results for calendar display
+        per_page: 1000, // Get all results for calendar display (match CalendarView)
       };
 
       // Always get all appointments in date range (no user filter here)
@@ -314,6 +338,10 @@ export const MainCalendarView = forwardRef<{
       }
 
       const response = await appointmentService.getAppointments(filters);
+
+      // If this request was aborted (a newer request replaced it), don't update state
+      if (controller.signal.aborted) return;
+
       if (response.success) {
         const appointments = Array.isArray(response.data)
           ? response.data
@@ -327,6 +355,9 @@ export const MainCalendarView = forwardRef<{
         console.warn("Invalid appointments data received:", response);
       }
     } catch (error) {
+      // Don't update state if this request was cancelled by a newer request
+      if (controller.signal.aborted) return;
+
       console.error("Failed to fetch appointments:", error);
       setAppointments([]);
       toast({
@@ -335,7 +366,10 @@ export const MainCalendarView = forwardRef<{
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      // Only clear loading if this is still the active request
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
     }
   };
 
@@ -1041,7 +1075,7 @@ export const MainCalendarView = forwardRef<{
                 : "cursor-pointer hover:bg-blue-50 hover:border-blue-400"
             } ${
               isCurrentMonth ? "bg-white" : "bg-gray-50"
-            } ${isToday ? "ring-2 ring-blue-500 border-blue-400" : ""}}`}
+            } ${isToday ? "ring-2 ring-blue-500 border-blue-400" : ""}`}
             onClick={() =>
               !(hasHolidays || isDisabledForLeave) &&
               handleDateClick(currentDay)
