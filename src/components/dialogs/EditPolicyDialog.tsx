@@ -154,24 +154,19 @@ export const EditPolicyDialog = ({
       );
 
       if (response.success) {
-        // Update only the changed fields in the policy object
+        // Use the full response data from the API which includes loaded relationships
+        // (agents.agent, plan.company, plan.planType, customer)
+        const responsePolicy = response.data;
+
+        // Merge the API response with existing policy data to preserve any fields
+        // the API might not return, while using fresh relationship data
         const updatedPolicy: Policy = {
           ...policy,
-          policy_number: formData.policy_number,
-          customer_id: parseInt(formData.customer_id),
-          plan_id: parseInt(formData.plan_id),
-          start_date: formData.start_date, // ✅ FIXED: Use start_date instead of effective_date
-          field_values: formData.extra_fields,
-          // Update agent relationships if they changed
-          agents:
-            policy.agents?.map((agent) => {
-              if (agent.agent_type === "AOR") {
-                return { ...agent, agent_id: formData.agent_of_record };
-              } else if (agent.agent_type === "Writing Agent") {
-                return { ...agent, agent_id: formData.writing_agent };
-              }
-              return agent;
-            }) || [],
+          ...responsePolicy,
+          // Ensure relationships from the API response are used (they have fresh nested data)
+          agents: responsePolicy.agents || policy.agents || [],
+          plan: responsePolicy.plan || policy.plan,
+          customer: responsePolicy.customer || policy.customer,
         };
         onUpdatePolicy(updatedPolicy);
         setOpen(false);
@@ -220,10 +215,10 @@ export const EditPolicyDialog = ({
       plan_id: policy.plan_id.toString(),
       policy_number: policy.policy_number,
       agent_of_record:
-        policy.agents?.find((a) => a.agent_type === "AOR")?.agent_id || "",
+        policy.agents?.find((a) => a.agent_type === "AOR")?.agent_id?.toString() || "",
       writing_agent:
         policy.agents?.find((a) => a.agent_type === "Writing Agent")
-          ?.agent_id || "",
+          ?.agent_id?.toString() || "",
       effective_date: policy.start_date,
       extra_fields: parsedFieldValues || {},
     };
