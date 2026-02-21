@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import ogCrawlerPlugin from "./vite-plugin-og-crawler";
 
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
@@ -25,6 +26,7 @@ export default defineConfig(async ({ mode }) => {
       port: 5173,
     },
     plugins: [
+      ogCrawlerPlugin(),
       react(),
       componentTagger && componentTagger(),
     ].filter(Boolean),

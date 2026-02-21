@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Phone, Clock, Edit, Trash2, UserCheck } from "lucide-react";
+import { Phone, Clock, Edit, Trash2, UserCheck, Share2 } from "lucide-react";
 import { ScheduleMeetingDialog } from "@/components/dialogs/ScheduleMeetingDialog";
 import { SetReminderDialog } from "@/components/dialogs/SetReminderDialog";
 import { EnhancedCustomerDeletionDialog } from "@/components/dialogs/enhanced-customer-deletion/EnhancedCustomerDeletionDialog";
@@ -9,6 +9,7 @@ import { usePhoneSelection } from "@/hooks/usePhoneSelection";
 import { usePermissions } from "@/contexts/PermissionContext";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
 
 interface CustomerHeaderActionsProps {
   customerData: CustomerData;
@@ -39,6 +40,8 @@ export const CustomerHeaderActions = ({
     customerData.name ||
     `${customerData.firstName || ""} ${customerData.lastName || ""}`.trim() ||
     "Unknown Customer";
+  // Share the current frontend URL directly — the server handles OG tags for crawlers
+  const shareUrl = window.location.href;
 
   // Check permissions based on customer status
   const isProspect = customerData.status === "Prospect";
@@ -51,6 +54,22 @@ export const CustomerHeaderActions = ({
     // Navigate back to customers list with a refresh flag
     navigate("/clients", { state: { refresh: true } });
     setShowEnhancedDeleteDialog(false);
+  };
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Share link copied",
+        description: shareUrl,
+      });
+    } catch (error) {
+      toast({
+        title: "Unable to copy link",
+        description: "Please copy the share link manually.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isMobile) {
@@ -112,6 +131,18 @@ export const CustomerHeaderActions = ({
               </Button>
             }
           />
+        </div>
+
+        <div className="mt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full text-xs"
+            onClick={handleShare}
+          >
+            <Share2 className="h-3 w-3 mr-1" />
+            Copy Share Link
+          </Button>
         </div>
 
         {canDelete && (
@@ -197,6 +228,14 @@ export const CustomerHeaderActions = ({
           </Button>
         }
       />
+      <Button
+        variant="outline"
+        className="flex items-center gap-2"
+        onClick={handleShare}
+      >
+        <Share2 className="h-4 w-4" />
+        Copy Share Link
+      </Button>
       {canDelete && (
         <Button
           variant="outline"
