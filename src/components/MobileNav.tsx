@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -45,6 +46,8 @@ import { ChatButton } from "@/components/ChatButton";
 import { NotificationButton } from "@/components/NotificationButton";
 import { usePermissions } from "@/contexts/PermissionContext";
 import { useSecuritySettings } from "@/hooks/useSecuritySettings";
+import SearchInputWithSuggestions from "@/components/ui/SearchInputWithSuggestions";
+import globalSearchService from "@/services/globalSearchService";
 
 // Settings permissions list - user needs ANY of these to access settings
 const settingsPermissions = [
@@ -132,9 +135,19 @@ const allNavigationItems = [
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { hasPermission } = usePermissions();
   const { auditLoggingEnabled } = useSecuritySettings();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearch = (text?: string) => {
+    const query = text || searchTerm;
+    if (!query.trim()) return;
+    const url = globalSearchService.buildSearchUrl(query.trim());
+    navigate(url);
+    setSearchTerm("");
+  };
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -186,17 +199,27 @@ export function MobileNav() {
   if (!isMobile) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-3 py-3 flex items-center justify-between shadow-sm">
-      <div className="flex items-center gap-2 min-w-0 flex-1">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-3 py-2 flex items-center gap-2 shadow-sm">
+      <Link to="/dashboard" className="flex items-center gap-1.5 flex-shrink-0 hover:opacity-80 transition-opacity">
         <img 
           src="/uploads/Maha-Shahwan-150x150.jpg" 
           alt="SCIS Logo" 
-          className="h-8 w-8 flex-shrink-0"
+          className="h-7 w-7 flex-shrink-0"
         />
-        <span className="text-base font-bold text-gray-900 truncate">SCIS</span>
+        <span className="text-sm font-bold text-gray-900">SCIS</span>
+      </Link>
+
+      <div className="flex-1 min-w-0">
+        <SearchInputWithSuggestions
+          value={searchTerm}
+          onChange={setSearchTerm}
+          onSearch={handleSearch}
+          placeholder="Search..."
+          className="w-full text-sm border border-slate-300 rounded-lg shadow-sm focus-within:border-blue-500"
+        />
       </div>
       
-      <div className="flex items-center gap-1 flex-shrink-0">
+      <div className="flex items-center gap-0.5 flex-shrink-0">
         <ChatButton />
         <NotificationButton />
         <Drawer open={open} onOpenChange={setOpen}>

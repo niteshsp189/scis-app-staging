@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { ChatButton } from "@/components/ChatButton";
 import { NotificationButton } from "@/components/NotificationButton";
 import { UserProfileButton } from "@/components/UserProfileButton";
@@ -24,14 +24,14 @@ export function TopNav() {
     <div className="professional-nav px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-4">
         <SidebarTrigger />
-        <div className="flex items-center gap-3">
+        <Link to="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <img 
             src="/uploads/Maha-Shahwan-150x150.jpg" 
             alt="SCIS Logo" 
             className="h-8 w-8 rounded-lg shadow-sm"
           />
           <span className="text-xl font-semibold text-slate-900">SCIS</span>
-        </div>
+        </Link>
       </div>
       <div className="flex-1 max-w-xl mx-6">
         <SearchInputWithSuggestions

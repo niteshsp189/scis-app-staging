@@ -103,6 +103,7 @@ export interface ReminderFilters {
   status?: string;
   created_by?: string;
   assigned_to?: string;
+  my_reminders?: boolean;
   customer_id?: number;
   search?: string;
   due_date_from?: string;

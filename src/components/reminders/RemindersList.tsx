@@ -235,12 +235,30 @@ export function RemindersList({
                         )}
                       </div>
 
-                      {/* Contact and type information */}
+                      {/* Contact, Assigned To & Created By */}
                       <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
                         {contactName !== "No contact" && (
                           <div className="flex items-center gap-1">
                             <User className="h-4 w-4 shrink-0" />
                             <span>{contactName}</span>
+                          </div>
+                        )}
+                        {(reminder.assigned_user || reminder.agent) && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-gray-400">Assigned:</span>
+                            <span>
+                              {reminder.assigned_user
+                                ? `${reminder.assigned_user.first_name} ${reminder.assigned_user.last_name}`
+                                : reminder.agent
+                                  ? `${reminder.agent.first_name} ${reminder.agent.last_name}`
+                                  : ""}
+                            </span>
+                          </div>
+                        )}
+                        {reminder.creator && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-gray-400">By:</span>
+                            <span>{reminder.creator.first_name} {reminder.creator.last_name}</span>
                           </div>
                         )}
                       </div>
