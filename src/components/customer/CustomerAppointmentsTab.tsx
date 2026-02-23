@@ -16,9 +16,10 @@ import { useEventListener } from "@/hooks/useEventListener";
 interface CustomerAppointmentsTabProps {
   customerId: number;
   customerName: string;
+  onCountChange?: (count: number) => void;
 }
 
-export function CustomerAppointmentsTab({ customerId, customerName }: CustomerAppointmentsTabProps) {
+export function CustomerAppointmentsTab({ customerId, customerName, onCountChange }: CustomerAppointmentsTabProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +95,7 @@ export function CustomerAppointmentsTab({ customerId, customerName }: CustomerAp
             ? response.data.data 
             : [];
         setAppointments(appointmentData);
+        onCountChange?.(appointmentData.length);
       } else {
         setError('Failed to load appointments');
       }

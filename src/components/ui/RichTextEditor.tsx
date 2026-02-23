@@ -13,7 +13,7 @@ import {
   Strikethrough
 } from 'lucide-react';
 import { Button } from './button';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface RichTextEditorProps {
   value: string;
@@ -36,6 +36,8 @@ export function RichTextEditor({
   minHeight = '100px',
   defaultBold = false,
 }: RichTextEditorProps) {
+  const defaultBoldApplied = useRef(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -52,12 +54,6 @@ export function RichTextEditor({
     ],
     content: value,
     editable: !disabled,
-    onCreate: ({ editor }) => {
-      if (defaultBold && !value) {
-        // Auto-enable bold for new empty notes
-        editor.chain().focus().setBold().run();
-      }
-    },
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       // Return empty string if editor only contains empty paragraph
@@ -68,6 +64,22 @@ export function RichTextEditor({
       }
     },
   });
+
+  // Apply default bold after editor is mounted in React state
+  // This ensures the toolbar UI properly reflects the bold-active state
+  useEffect(() => {
+    if (editor && defaultBold && !defaultBoldApplied.current) {
+      defaultBoldApplied.current = true;
+      const currentContent = editor.getHTML();
+      const isEmpty = !currentContent || currentContent === '<p></p>';
+      if (isEmpty) {
+        // Use requestAnimationFrame so the editor is fully rendered first
+        requestAnimationFrame(() => {
+          editor.chain().focus().setBold().run();
+        });
+      }
+    }
+  }, [editor, defaultBold]);
 
   // Update editor content when value prop changes externally
   useEffect(() => {

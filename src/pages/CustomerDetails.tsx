@@ -10,6 +10,7 @@ import { CustomerDocumentsTab } from "@/components/customer/CustomerDocumentsTab
 import { CustomerNotesTab } from "@/components/customer/CustomerNotesTab";
 import { CustomerAppointmentsTab } from "@/components/customer/CustomerAppointmentsTab";
 import { CustomerCallsTab } from "@/components/customer/CustomerCallsTab";
+import appointmentService from "@/services/appointmentService";
 import { CustomerHistoryTab } from "@/components/customer/CustomerHistoryTab";
 import { CustomerCredentialsTab } from "@/components/customer/CustomerCredentialsTab";
 import { useEventListener } from "@/hooks/useEventListener";
@@ -42,6 +43,7 @@ const CustomerDetails = () => {
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [mobileActiveTab, setMobileActiveTab] = useState<string>("more");
   const [notesCount, setNotesCount] = useState<number>(0);
+  const [appointmentsCount, setAppointmentsCount] = useState<number>(0);
 
   // Set dynamic page title and meta tags for link preview sharing
   useEffect(() => {
@@ -107,6 +109,19 @@ const CustomerDetails = () => {
       fieldChangeTracker.setInitialData(customer);
       // Initialize notes count from customer data
       setNotesCount(customer.notes?.length || 0);
+      // Eagerly fetch appointments count
+      appointmentService.getAppointments({ customer_id: customer.id, per_page: 1000 })
+        .then((response) => {
+          if (response.success) {
+            const data = Array.isArray(response.data)
+              ? response.data
+              : 'data' in response.data
+                ? response.data.data
+                : [];
+            setAppointmentsCount(data.length);
+          }
+        })
+        .catch(() => {});
     }
   }, [customer]);
 
@@ -335,7 +350,7 @@ const CustomerDetails = () => {
                   <TabsTrigger value="notes">
                     Notes ({notesCount})
                   </TabsTrigger>
-                  <TabsTrigger value="appointments">Appointments</TabsTrigger>
+                  <TabsTrigger value="appointments">Appointments ({appointmentsCount})</TabsTrigger>
                   <TabsTrigger value="history">History</TabsTrigger>
                 </>
               )}
@@ -407,6 +422,7 @@ const CustomerDetails = () => {
                     <CustomerAppointmentsTab
                       customerId={customer.id}
                       customerName={`${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.name || 'Customer'}
+                      onCountChange={setAppointmentsCount}
                     />
                   </TabsContent>
 
@@ -484,6 +500,7 @@ const CustomerDetails = () => {
                     customerName={
                       customer.first_name + " " + customer.last_name
                     }
+                    onCountChange={setAppointmentsCount}
                   />
                 </TabsContent>
 
