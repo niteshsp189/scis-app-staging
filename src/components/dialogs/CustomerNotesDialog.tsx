@@ -365,6 +365,7 @@ const [backendError, setBackendError] = useState<string | null>(null);
                     onChange={(value) => setNewNote({ ...newNote, content: value })}
                     placeholder="Enter your note here..."
                     maxLength={2000}
+                    defaultBold
                   />
                 </div>
                 <div>

@@ -158,7 +158,7 @@ const Lookup = () => {
 
     const { query, filters } = globalSearchService.parseSearchUrl(searchParams);
     if (query) {
-      // Do not set searchTerm to keep input clear on load
+      setSearchTerm(query);
       if (filters.type) setSearchType(filters.type);
       if (filters.status) setStatusFilter(filters.status);
       if (filters.date_from) setDateFilter(filters.date_from);
@@ -207,8 +207,8 @@ const Lookup = () => {
         setIsAdvancedSearchExpanded(true);
       }
 
-      // Do not perform automatic search on page load to keep page in default state
-      // performSearchWithParams(query, filters, false);
+      // Auto-perform search when navigated with URL query params (e.g. from TopNav)
+      performSearchWithParams(query, filters, false);
     }
   }, [searchParams, isAuthenticated]);
 

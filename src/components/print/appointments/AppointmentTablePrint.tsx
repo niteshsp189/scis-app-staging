@@ -83,6 +83,12 @@ const groupAppointmentsByDate = (appointments: Appointment[]): Map<string, Appoi
   return grouped;
 };
 
+const cellStyle = {
+  border: '1px solid #e5e7eb',
+  padding: '3px 8px',
+  borderRadius: '3px',
+};
+
 export const AppointmentTablePrint = ({
   appointments,
   filters,
@@ -171,7 +177,7 @@ export const AppointmentTablePrint = ({
       </div>
 
       {groupByDate && groupedAppointments ? (
-        // Grouped by date view
+        // Grouped by date view - expanded card layout
         Array.from(groupedAppointments.entries()).map(([date, dayAppointments]) => (
           <div key={date} style={{ marginBottom: '20px' }}>
             <div style={{
@@ -185,120 +191,24 @@ export const AppointmentTablePrint = ({
               {formatPrintDate(date)} ({dayAppointments.length} appointments)
             </div>
 
-            <div className="print-table-wrapper">
-              <table className="print-table" style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontSize: '9pt',
-              }}>
-                <thead>
-                  <tr style={{ backgroundColor: '#f9fafb' }}>
-                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Time</th>
-                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Client</th>
-                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Type</th>
-                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Location</th>
-                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Assigned To</th>
-                    <th style={{ padding: '8px', textAlign: 'center', borderBottom: '2px solid #e5e7eb' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dayAppointments.map((apt) => (
-                    <tr key={apt.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                      <td style={{ padding: '8px' }}>
-                        {formatPrintTime(apt.start_datetime)}
-                        {apt.end_datetime && (
-                          <span style={{ color: '#6b7280' }}> - {formatPrintTime(apt.end_datetime)}</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '8px' }}>
-                        {apt.customer ? (
-                          <>
-                            <strong>{apt.customer.first_name} {apt.customer.last_name}</strong>
-                            {apt.customer.cell_phone && (
-                              <span style={{ display: 'block', fontSize: '8pt', color: '#6b7280' }}>
-                                {apt.customer.cell_phone}
-                              </span>
-                            )}
-                          </>
-                        ) : apt.lead ? (
-                          <>
-                            <strong>{apt.lead.first_name} {apt.lead.last_name}</strong>
-                            <span style={{ color: '#f59e0b', fontSize: '8pt' }}> (Lead)</span>
-                          </>
-                        ) : (
-                          <span style={{ color: '#6b7280' }}>No client assigned</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '8px' }}>{getTypeLabel(apt.appointment_type)}</td>
-                      <td style={{ padding: '8px' }}>
-                        {apt.office_location?.name || apt.location || 'N/A'}
-                      </td>
-                      <td style={{ padding: '8px' }}>
-                        {apt.assigned_user
-                          ? `${apt.assigned_user.first_name} ${apt.assigned_user.last_name}`
-                          : 'Unassigned'}
-                      </td>
-                      <td style={{ padding: '8px', textAlign: 'center' }}>
-                        <span style={{
-                          backgroundColor: getStatusColor(apt.status),
-                          color: 'white',
-                          padding: '2px 8px',
-                          borderRadius: '10px',
-                          fontSize: '8pt',
-                        }}>
-                          {getStatusLabel(apt.status)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ))
-      ) : (
-        // Flat table view (no grouping)
-        <div className="print-table-wrapper">
-          <table className="print-table" style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            fontSize: '9pt',
-          }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f9fafb' }}>
-                <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Date</th>
-                <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Time</th>
-                <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Client</th>
-                <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Type</th>
-                <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Location</th>
-                <th style={{ padding: '8px', textAlign: 'left', borderBottom: '2px solid #e5e7eb' }}>Assigned To</th>
-                <th style={{ padding: '8px', textAlign: 'center', borderBottom: '2px solid #e5e7eb' }}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedAppointments.map((apt) => (
-                <tr key={apt.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '8px' }}>{formatPrintDate(apt.start_datetime)}</td>
-                  <td style={{ padding: '8px' }}>
-                    {formatPrintTime(apt.start_datetime)}
-                  </td>
-                  <td style={{ padding: '8px' }}>
-                    {apt.customer ? (
-                      `${apt.customer.first_name} ${apt.customer.last_name}`
-                    ) : apt.lead ? (
-                      `${apt.lead.first_name} ${apt.lead.last_name} (Lead)`
-                    ) : 'N/A'}
-                  </td>
-                  <td style={{ padding: '8px' }}>{getTypeLabel(apt.appointment_type)}</td>
-                  <td style={{ padding: '8px' }}>
-                    {apt.office_location?.name || apt.location || 'N/A'}
-                  </td>
-                  <td style={{ padding: '8px' }}>
-                    {apt.assigned_user
-                      ? `${apt.assigned_user.first_name} ${apt.assigned_user.last_name}`
-                      : 'Unassigned'}
-                  </td>
-                  <td style={{ padding: '8px', textAlign: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {dayAppointments.map((apt) => (
+                <div key={apt.id} style={{
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  padding: '12px 16px',
+                  fontSize: '9pt',
+                  pageBreakInside: 'avoid',
+                }}>
+                  {/* Row 1: Client name + Status badge */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <strong style={{ fontSize: '10pt' }}>
+                      {apt.customer
+                        ? `${apt.customer.first_name} ${apt.customer.last_name}`
+                        : apt.lead
+                        ? `${apt.lead.first_name} ${apt.lead.last_name} (Lead)`
+                        : 'No client assigned'}
+                    </strong>
                     <span style={{
                       backgroundColor: getStatusColor(apt.status),
                       color: 'white',
@@ -308,11 +218,92 @@ export const AppointmentTablePrint = ({
                     }}>
                       {getStatusLabel(apt.status)}
                     </span>
-                  </td>
-                </tr>
+                  </div>
+
+                  {/* Details grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '9pt' }}>
+                    <div style={cellStyle}><span style={{ color: '#6b7280' }}>By Employee: </span>{apt.creator ? `${apt.creator.first_name} ${apt.creator.last_name}` : 'N/A'}</div>
+                    <div style={cellStyle}><span style={{ color: '#6b7280' }}>For Employee: </span>{apt.assigned_user ? `${apt.assigned_user.first_name} ${apt.assigned_user.last_name}` : 'Unassigned'}</div>
+                    <div style={cellStyle}><span style={{ color: '#6b7280' }}>Date: </span>{formatPrintDate(apt.start_datetime)}</div>
+                    <div style={cellStyle}>
+                      <span style={{ color: '#6b7280' }}>Meeting Time: </span>
+                      {formatPrintTime(apt.start_datetime)}
+                      {apt.end_datetime && ` - ${formatPrintTime(apt.end_datetime)}`}
+                    </div>
+                    <div style={cellStyle}><span style={{ color: '#6b7280' }}>Office: </span>{apt.office_location?.name || apt.location || 'N/A'}</div>
+                    <div style={cellStyle}><span style={{ color: '#6b7280' }}>Type: </span>{getTypeLabel(apt.appointment_type)}</div>
+                    {apt.customer?.cell_phone && (
+                      <div style={cellStyle}><span style={{ color: '#6b7280' }}>Phone: </span>{apt.customer.cell_phone}</div>
+                    )}
+                  </div>
+
+                  {/* Notes */}
+                  {(apt.notes || apt.description) && (
+                    <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #f3f4f6', fontSize: '9pt' }}>
+                      <span style={{ color: '#6b7280' }}>Note: </span>{apt.notes || apt.description}
+                    </div>
+                  )}
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
+        ))
+      ) : (
+        // Flat view - expanded card layout (no grouping)
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {sortedAppointments.map((apt) => (
+            <div key={apt.id} style={{
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              padding: '12px 16px',
+              fontSize: '9pt',
+              pageBreakInside: 'avoid',
+            }}>
+              {/* Row 1: Client name + Status badge */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <strong style={{ fontSize: '10pt' }}>
+                  {apt.customer
+                    ? `${apt.customer.first_name} ${apt.customer.last_name}`
+                    : apt.lead
+                    ? `${apt.lead.first_name} ${apt.lead.last_name} (Lead)`
+                    : 'No client assigned'}
+                </strong>
+                <span style={{
+                  backgroundColor: getStatusColor(apt.status),
+                  color: 'white',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  fontSize: '8pt',
+                }}>
+                  {getStatusLabel(apt.status)}
+                </span>
+              </div>
+
+              {/* Details grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '9pt' }}>
+                <div style={cellStyle}><span style={{ color: '#6b7280' }}>By Employee: </span>{apt.creator ? `${apt.creator.first_name} ${apt.creator.last_name}` : 'N/A'}</div>
+                <div style={cellStyle}><span style={{ color: '#6b7280' }}>For Employee: </span>{apt.assigned_user ? `${apt.assigned_user.first_name} ${apt.assigned_user.last_name}` : 'Unassigned'}</div>
+                <div style={cellStyle}><span style={{ color: '#6b7280' }}>Date: </span>{formatPrintDate(apt.start_datetime)}</div>
+                <div style={cellStyle}>
+                  <span style={{ color: '#6b7280' }}>Meeting Time: </span>
+                  {formatPrintTime(apt.start_datetime)}
+                  {apt.end_datetime && ` - ${formatPrintTime(apt.end_datetime)}`}
+                </div>
+                <div style={cellStyle}><span style={{ color: '#6b7280' }}>Office: </span>{apt.office_location?.name || apt.location || 'N/A'}</div>
+                <div style={cellStyle}><span style={{ color: '#6b7280' }}>Type: </span>{getTypeLabel(apt.appointment_type)}</div>
+                {apt.customer?.cell_phone && (
+                  <div style={cellStyle}><span style={{ color: '#6b7280' }}>Phone: </span>{apt.customer.cell_phone}</div>
+                )}
+              </div>
+
+              {/* Notes */}
+              {(apt.notes || apt.description) && (
+                <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #f3f4f6', fontSize: '9pt' }}>
+                  <span style={{ color: '#6b7280' }}>Note: </span>{apt.notes || apt.description}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
 

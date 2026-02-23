@@ -938,7 +938,11 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                   className={`p-3 rounded-lg border-l-4 ${getNoteColorClass(note.color)} ${note.is_pinned ? 'ring-1 ring-yellow-200' : ''}`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="font-medium">
+                        {customerNotesService.getFullName(note.creator)}
+                      </span>
+                      <span>{customerNotesService.formatTimestamp(note.created_at)}</span>
                       {note.is_pinned && (
                         <Badge variant="secondary" className="text-xs">
                           <Pin className="h-3 w-3 mr-1" />
@@ -948,9 +952,6 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                       {note.is_important && (
                         <Badge variant="secondary" className="text-xs">Important</Badge>
                       )}
-                      <span className="text-xs text-muted-foreground">
-                        {customerNotesService.formatTimestamp(note.created_at)}
-                      </span>
                     </div>
                     <Button
                       variant="ghost"
@@ -966,6 +967,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                       )}
                     </Button>
                   </div>
+                  {note.title && (
+                    <h4 className="text-sm font-semibold mb-1">{note.title}</h4>
+                  )}
                   <div 
                     className="text-sm font-medium text-foreground prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: note.content }}

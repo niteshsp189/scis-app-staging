@@ -1099,8 +1099,11 @@ export default function GlobalCalls() {
                           {call.customer ? (
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <div className="min-w-0 flex-1">
-                                  <p className="font-medium text-sm truncate">
+                                <div
+                                  className="min-w-0 flex-1 cursor-pointer hover:text-blue-600 transition-colors"
+                                  onClick={() => navigate(getCustomerViewUrl(call.customer!.id, call.customer!.status) + '?tab=calls')}
+                                >
+                                  <p className="font-medium text-sm truncate hover:underline">
                                     {call.customer.first_name} {call.customer.last_name}
                                   </p>
                                   <p className="text-xs text-gray-500 truncate">{call.customer.email}</p>
@@ -1121,7 +1124,18 @@ export default function GlobalCalls() {
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           {call.customer ? (
-                            <Badge variant="outline" className="text-xs">{call.customer.status}</Badge>
+                            <Badge
+                              variant="outline"
+                              className={`text-xs ${
+                                call.customer.status === 'Client' ? 'bg-green-50 text-green-700 border-green-200' :
+                                call.customer.status === 'Former' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                call.customer.status === 'Deceased' ? 'bg-gray-100 text-gray-600 border-gray-300' :
+                                call.customer.status === 'Prospect' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                ''
+                              }`}
+                            >
+                              {call.customer.status}
+                            </Badge>
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}

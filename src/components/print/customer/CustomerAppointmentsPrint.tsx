@@ -3,7 +3,7 @@
  * Displays upcoming and past appointments
  */
 
-import { formatPrintDateTime, formatPrintDate } from '@/utils/printUtils';
+import { formatPrintDate, formatPrintTime } from '@/utils/printUtils';
 
 interface Appointment {
   id: string;
@@ -53,17 +53,23 @@ const getStatusLabel = (status: string): string => {
   return statusMap[status] || status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
-const getStatusColor = (status: string): string => {
+const getStatusBgColor = (status: string): string => {
   const colorMap: Record<string, string> = {
-    scheduled: 'badge-blue',
-    confirmed: 'badge-green',
-    in_progress: 'badge-yellow',
-    completed: 'badge-green',
-    cancelled: 'badge-red',
-    no_show: 'badge-red',
-    rescheduled: 'badge-yellow',
+    scheduled: '#3b82f6',
+    confirmed: '#10b981',
+    in_progress: '#f59e0b',
+    completed: '#22c55e',
+    cancelled: '#ef4444',
+    no_show: '#6b7280',
+    rescheduled: '#8b5cf6',
   };
-  return colorMap[status] || 'badge-gray';
+  return colorMap[status] || '#6b7280';
+};
+
+const cellStyle = {
+  border: '1px solid #e5e7eb',
+  padding: '3px 8px',
+  borderRadius: '3px',
 };
 
 const getAssignedUserName = (user?: { first_name?: string; last_name?: string }): string => {
@@ -106,6 +112,60 @@ export const CustomerAppointmentsPrint = ({ appointments }: CustomerAppointments
   const upcomingAppointments = appointments.filter((apt) => isUpcoming(apt.start_datetime));
   const pastAppointments = appointments.filter((apt) => !isUpcoming(apt.start_datetime));
 
+  const renderAppointmentCards = (aptList: Appointment[], maxItems?: number) => {
+    const items = maxItems ? aptList.slice(0, maxItems) : aptList;
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {items.map((apt) => (
+          <div key={apt.id} style={{
+            border: '1px solid #e5e7eb',
+            borderRadius: '6px',
+            padding: '12px 16px',
+            fontSize: '9pt',
+            pageBreakInside: 'avoid',
+          }}>
+            {/* Row 1: Title/Type + Status badge */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <strong style={{ fontSize: '10pt' }}>
+                {apt.title || getAppointmentTypeLabel(apt.appointment_type)}
+              </strong>
+              <span style={{
+                backgroundColor: getStatusBgColor(apt.status),
+                color: 'white',
+                padding: '2px 8px',
+                borderRadius: '10px',
+                fontSize: '8pt',
+              }}>
+                {getStatusLabel(apt.status)}
+              </span>
+            </div>
+
+            {/* Details grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '9pt' }}>
+              <div style={cellStyle}><span style={{ color: '#6b7280' }}>Type: </span>{getAppointmentTypeLabel(apt.appointment_type)}</div>
+              <div style={cellStyle}><span style={{ color: '#6b7280' }}>Duration: </span>{getDuration(apt.start_datetime, apt.end_datetime)}</div>
+              <div style={cellStyle}><span style={{ color: '#6b7280' }}>Date: </span>{formatPrintDate(apt.start_datetime)}</div>
+              <div style={cellStyle}>
+                <span style={{ color: '#6b7280' }}>Time: </span>
+                {formatPrintTime(apt.start_datetime)}
+                {apt.end_datetime && ` - ${formatPrintTime(apt.end_datetime)}`}
+              </div>
+              <div style={cellStyle}><span style={{ color: '#6b7280' }}>Location: </span>{apt.location || 'N/A'}</div>
+              <div style={cellStyle}><span style={{ color: '#6b7280' }}>Assigned To: </span>{getAssignedUserName(apt.assigned_user)}</div>
+            </div>
+
+            {/* Notes / Description */}
+            {(apt.notes || apt.description) && (
+              <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #f3f4f6', fontSize: '9pt' }}>
+                <span style={{ color: '#6b7280' }}>Notes: </span>{apt.notes || apt.description}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="print-section">
       <h3 className="print-section-title">Appointments</h3>
@@ -113,78 +173,34 @@ export const CustomerAppointmentsPrint = ({ appointments }: CustomerAppointments
       {/* Upcoming Appointments */}
       {upcomingAppointments.length > 0 && (
         <div style={{ marginBottom: '15px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '8px', color: '#166534' }}>
+          <div style={{
+            fontSize: '11px',
+            fontWeight: 'bold',
+            marginBottom: '8px',
+            color: '#166534',
+            borderLeft: '4px solid #22c55e',
+            paddingLeft: '8px',
+          }}>
             Upcoming Appointments ({upcomingAppointments.length})
           </div>
-          <div className="print-table-wrapper">
-            <table className="print-table">
-              <thead>
-                <tr>
-                  <th>Date/Time</th>
-                  <th>Type</th>
-                  <th>Duration</th>
-                  <th>Location</th>
-                  <th>Assigned To</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {upcomingAppointments.map((apt) => (
-                  <tr key={apt.id}>
-                    <td>{formatPrintDateTime(apt.start_datetime)}</td>
-                    <td>{getAppointmentTypeLabel(apt.appointment_type)}</td>
-                    <td>{getDuration(apt.start_datetime, apt.end_datetime)}</td>
-                    <td>{apt.location || 'N/A'}</td>
-                    <td>{getAssignedUserName(apt.assigned_user)}</td>
-                    <td>
-                      <span className={`print-badge ${getStatusColor(apt.status)}`}>
-                        {getStatusLabel(apt.status)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {renderAppointmentCards(upcomingAppointments)}
         </div>
       )}
 
       {/* Past Appointments */}
       {pastAppointments.length > 0 && (
         <div>
-          <div style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '8px', color: '#6b7280' }}>
+          <div style={{
+            fontSize: '11px',
+            fontWeight: 'bold',
+            marginBottom: '8px',
+            color: '#6b7280',
+            borderLeft: '4px solid #9ca3af',
+            paddingLeft: '8px',
+          }}>
             Past Appointments ({pastAppointments.length})
           </div>
-          <div className="print-table-wrapper">
-            <table className="print-table">
-              <thead>
-                <tr>
-                  <th>Date/Time</th>
-                  <th>Type</th>
-                  <th>Duration</th>
-                  <th>Location</th>
-                  <th>Assigned To</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pastAppointments.slice(0, 10).map((apt) => (
-                  <tr key={apt.id}>
-                    <td>{formatPrintDateTime(apt.start_datetime)}</td>
-                    <td>{getAppointmentTypeLabel(apt.appointment_type)}</td>
-                    <td>{getDuration(apt.start_datetime, apt.end_datetime)}</td>
-                    <td>{apt.location || 'N/A'}</td>
-                    <td>{getAssignedUserName(apt.assigned_user)}</td>
-                    <td>
-                      <span className={`print-badge ${getStatusColor(apt.status)}`}>
-                        {getStatusLabel(apt.status)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {renderAppointmentCards(pastAppointments, 10)}
           {pastAppointments.length > 10 && (
             <p style={{ fontSize: '10px', color: '#6b7280', marginTop: '5px' }}>
               ... and {pastAppointments.length - 10} more past appointments

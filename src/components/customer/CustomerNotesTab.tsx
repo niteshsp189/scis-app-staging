@@ -220,7 +220,11 @@ export const CustomerNotesTab = ({
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 text-xs opacity-75">
+                    <span className="font-medium">
+                      {customerNotesService.getFullName(note.creator)}
+                    </span>
+                    <span>{customerNotesService.formatTimestamp(note.created_at)}</span>
                     {note.is_pinned && (
                       <Badge variant="secondary" className="text-xs">
                         <Pin className="h-3 w-3 mr-1" />
@@ -232,9 +236,6 @@ export const CustomerNotesTab = ({
                         Important
                       </Badge>
                     )}
-                    <span className="text-xs opacity-75">
-                      {customerNotesService.formatTimestamp(note.created_at)}
-                    </span>
                   </div>
                   <div className="flex gap-1">
                     <Button
@@ -268,10 +269,10 @@ export const CustomerNotesTab = ({
                     </Button>
                   </div>
                 </div>
-                <div className="text-sm font-medium mb-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={renderHtmlContent(note.content)} />
-                <p className="text-xs opacity-75">
-                  Created by: {customerNotesService.getFullName(note.creator)}
-                </p>
+                {note.title && (
+                  <h4 className="text-sm font-semibold mb-1">{note.title}</h4>
+                )}
+                <div className="text-sm font-medium prose prose-sm max-w-none" dangerouslySetInnerHTML={renderHtmlContent(note.content)} />
               </CardContent>
             </Card>
           ))}

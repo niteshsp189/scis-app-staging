@@ -23,6 +23,7 @@ interface RichTextEditorProps {
   className?: string;
   disabled?: boolean;
   minHeight?: string;
+  defaultBold?: boolean;
 }
 
 export function RichTextEditor({
@@ -33,6 +34,7 @@ export function RichTextEditor({
   className,
   disabled = false,
   minHeight = '100px',
+  defaultBold = false,
 }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
@@ -50,6 +52,12 @@ export function RichTextEditor({
     ],
     content: value,
     editable: !disabled,
+    onCreate: ({ editor }) => {
+      if (defaultBold && !value) {
+        // Auto-enable bold for new empty notes
+        editor.chain().focus().setBold().run();
+      }
+    },
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       // Return empty string if editor only contains empty paragraph

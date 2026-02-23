@@ -20,6 +20,12 @@ interface ReminderTablePrintProps {
   agents?: { id: string; name: string }[];
 }
 
+const cellStyle = {
+  border: '1px solid #e5e7eb',
+  padding: '3px 8px',
+  borderRadius: '3px',
+};
+
 export const ReminderTablePrint = ({ 
   reminders, 
   filters,
@@ -187,7 +193,7 @@ export const ReminderTablePrint = ({
         )}
       </div>
 
-      {/* Reminders Table */}
+      {/* Reminders */}
       {reminders.length === 0 ? (
         <div style={{
           textAlign: 'center',
@@ -198,163 +204,68 @@ export const ReminderTablePrint = ({
           No reminders found matching the current filters.
         </div>
       ) : (
-        <table style={{
-          width: '100%',
-          borderCollapse: 'collapse',
-          fontSize: '11px',
-        }}>
-          <thead>
-            <tr style={{ backgroundColor: '#f8fafc' }}>
-              <th style={{
-                padding: '10px 8px',
-                textAlign: 'left',
-                borderBottom: '2px solid #e2e8f0',
-                fontWeight: 600,
-                color: '#374151',
-              }}>
-                Title
-              </th>
-              <th style={{
-                padding: '10px 8px',
-                textAlign: 'left',
-                borderBottom: '2px solid #e2e8f0',
-                fontWeight: 600,
-                color: '#374151',
-              }}>
-                Due Date/Time
-              </th>
-              <th style={{
-                padding: '10px 8px',
-                textAlign: 'center',
-                borderBottom: '2px solid #e2e8f0',
-                fontWeight: 600,
-                color: '#374151',
-              }}>
-                Status
-              </th>
-              <th style={{
-                padding: '10px 8px',
-                textAlign: 'left',
-                borderBottom: '2px solid #e2e8f0',
-                fontWeight: 600,
-                color: '#374151',
-              }}>
-                Contact
-              </th>
-              <th style={{
-                padding: '10px 8px',
-                textAlign: 'left',
-                borderBottom: '2px solid #e2e8f0',
-                fontWeight: 600,
-                color: '#374151',
-              }}>
-                Assigned To
-              </th>
-              <th style={{
-                padding: '10px 8px',
-                textAlign: 'left',
-                borderBottom: '2px solid #e2e8f0',
-                fontWeight: 600,
-                color: '#374151',
-              }}>
-                Created By
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {reminders.map((reminder, index) => {
-              const overdueStatus = isOverdue(reminder);
-              return (
-                <tr 
-                  key={reminder.id}
-                  style={{ 
-                    backgroundColor: index % 2 === 0 ? '#ffffff' : '#f9fafb',
-                  }}
-                >
-                  <td style={{
-                    padding: '10px 8px',
-                    borderBottom: '1px solid #e5e7eb',
-                    verticalAlign: 'top',
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {reminders.map((reminder) => {
+            const overdueStatus = isOverdue(reminder);
+            return (
+              <div
+                key={reminder.id}
+                style={{
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  padding: '12px 16px',
+                  fontSize: '11px',
+                  pageBreakInside: 'avoid',
+                  opacity: reminder.status === 'completed' ? 0.75 : 1,
+                }}
+              >
+                {/* Row 1: Title + Status badge */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <strong style={{
+                    fontSize: '12px',
+                    textDecoration: reminder.status === 'completed' ? 'line-through' : 'none',
                   }}>
-                    <div style={{ 
-                      fontWeight: 500,
-                      color: reminder.status === 'completed' ? '#9ca3af' : '#111827',
-                      textDecoration: reminder.status === 'completed' ? 'line-through' : 'none',
-                    }}>
-                      {reminder.title}
-                    </div>
-                    {reminder.description && (
-                      <div style={{
-                        fontSize: '10px',
-                        color: '#6b7280',
-                        marginTop: '2px',
-                        maxWidth: '200px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}>
-                        {reminder.description}
-                      </div>
-                    )}
-                  </td>
-                  <td style={{
-                    padding: '10px 8px',
-                    borderBottom: '1px solid #e5e7eb',
-                    whiteSpace: 'nowrap',
+                    {reminder.title}
+                  </strong>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '2px 8px',
+                    borderRadius: '9999px',
+                    fontSize: '10px',
+                    fontWeight: 500,
+                    backgroundColor: overdueStatus
+                      ? '#fee2e2'
+                      : reminder.status === 'completed'
+                        ? '#dcfce7'
+                        : '#fef3c7',
+                    color: overdueStatus
+                      ? '#dc2626'
+                      : reminder.status === 'completed'
+                        ? '#16a34a'
+                        : '#d97706',
                   }}>
-                    <div>{formatPrintDate(reminder.reminder_datetime)}</div>
-                    <div style={{ color: '#6b7280', fontSize: '10px' }}>
-                      {formatPrintTime(reminder.reminder_datetime)}
-                    </div>
-                  </td>
-                  <td style={{
-                    padding: '10px 8px',
-                    borderBottom: '1px solid #e5e7eb',
-                    textAlign: 'center',
-                  }}>
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '2px 8px',
-                      borderRadius: '9999px',
-                      fontSize: '10px',
-                      fontWeight: 500,
-                      backgroundColor: overdueStatus 
-                        ? '#fee2e2' 
-                        : reminder.status === 'completed' 
-                          ? '#dcfce7' 
-                          : '#fef3c7',
-                      color: overdueStatus 
-                        ? '#dc2626' 
-                        : reminder.status === 'completed' 
-                          ? '#16a34a' 
-                          : '#d97706',
-                    }}>
-                      {overdueStatus ? 'OVERDUE' : reminder.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td style={{
-                    padding: '10px 8px',
-                    borderBottom: '1px solid #e5e7eb',
-                  }}>
-                    {getContactName(reminder)}
-                  </td>
-                  <td style={{
-                    padding: '10px 8px',
-                    borderBottom: '1px solid #e5e7eb',
-                  }}>
-                    {getAssignedName(reminder)}
-                  </td>
-                  <td style={{
-                    padding: '10px 8px',
-                    borderBottom: '1px solid #e5e7eb',
-                  }}>
-                    {getCreatorName(reminder)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    {overdueStatus ? 'OVERDUE' : reminder.status.toUpperCase()}
+                  </span>
+                </div>
+
+                {/* Details grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '11px' }}>
+                  <div style={cellStyle}><span style={{ color: '#6b7280' }}>By: </span>{getCreatorName(reminder)}</div>
+                  <div style={cellStyle}><span style={{ color: '#6b7280' }}>For: </span>{getAssignedName(reminder)}</div>
+                  <div style={cellStyle}><span style={{ color: '#6b7280' }}>Date: </span>{formatPrintDate(reminder.reminder_datetime)} {formatPrintTime(reminder.reminder_datetime)}</div>
+                  <div style={cellStyle}><span style={{ color: '#6b7280' }}>Contact: </span>{getContactName(reminder)}</div>
+                </div>
+
+                {/* Description / Notes */}
+                {reminder.description && (
+                  <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #f3f4f6', fontSize: '11px' }}>
+                    <span style={{ color: '#6b7280' }}>Note: </span>{reminder.description}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

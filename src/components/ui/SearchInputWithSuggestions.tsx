@@ -32,6 +32,7 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
+  const isFocusedRef = useRef(false);
 
   useEffect(() => {
     // Clear existing timeout
@@ -39,8 +40,8 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
       clearTimeout(debounceRef.current);
     }
 
-    // Don't fetch suggestions if we just selected one
-    if (justSelectedSuggestion) {
+    // Don't fetch suggestions if we just selected one or input isn't focused
+    if (justSelectedSuggestion || !isFocusedRef.current) {
       return;
     }
 
@@ -146,6 +147,7 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
   };
 
   const handleInputFocus = () => {
+    isFocusedRef.current = true;
     // Don't show suggestions if we just selected one
     if (justSelectedSuggestion) {
       return;
@@ -153,6 +155,10 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
     if (suggestions && suggestions.length > 0 && value.trim().length >= 2) {
       setShowSuggestions(true);
     }
+  };
+
+  const handleInputBlur = () => {
+    isFocusedRef.current = false;
   };
 
   const getTypeIcon = (type: string) => {
@@ -193,6 +199,7 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
           className={cn("pl-10", className)}
           disabled={disabled}
           autoComplete="off"
