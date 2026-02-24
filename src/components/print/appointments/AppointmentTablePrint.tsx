@@ -5,6 +5,7 @@
 
 import { formatPrintDate, formatPrintTime } from '@/utils/printUtils';
 import { Appointment } from '@/services/appointmentService';
+import { stripHtml } from '@/lib/htmlUtils';
 
 interface AppointmentTablePrintProps {
   appointments: Appointment[];
@@ -240,7 +241,7 @@ export const AppointmentTablePrint = ({
                   {/* Notes */}
                   {(apt.notes || apt.description) && (
                     <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #f3f4f6', fontSize: '9pt' }}>
-                      <span style={{ color: '#6b7280' }}>Note: </span>{apt.notes || apt.description}
+                      <span style={{ color: '#6b7280' }}>Note: </span>{stripHtml(apt.notes || apt.description || '')}
                     </div>
                   )}
                 </div>
@@ -299,7 +300,7 @@ export const AppointmentTablePrint = ({
               {/* Notes */}
               {(apt.notes || apt.description) && (
                 <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #f3f4f6', fontSize: '9pt' }}>
-                  <span style={{ color: '#6b7280' }}>Note: </span>{apt.notes || apt.description}
+                  <span style={{ color: '#6b7280' }}>Note: </span>{stripHtml(apt.notes || apt.description || '')}
                 </div>
               )}
             </div>

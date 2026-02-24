@@ -27,8 +27,8 @@ export interface PlanType {
   is_active: boolean;
 }
 
-// Policy number validation regex - allows alphanumeric, dashes, and underscores
-const policyNumberRegex = /^[a-zA-Z0-9\-_]+$/;
+// Policy number validation regex - allows alphanumeric, dashes, underscores, dots, spaces, slashes, and other common characters
+const policyNumberRegex = /^[a-zA-Z0-9\-_\.\s\/\#\(\)\+]+$/;
 
 // Premium validation regex - allows decimal numbers
 const premiumRegex = /^\d+(\.\d{1,2})?$/;
@@ -43,13 +43,13 @@ const validateDate = (dateString: string): boolean => {
   return !isNaN(date.getTime()) && date >= new Date('1900-01-01');
 };
 
-// Policy number validation function
+// Policy number validation function - flexible to allow manual entry by admin
 const validatePolicyNumber = (policyNumber: string): boolean => {
   if (!policyNumber) return false;
-  if (policyNumber.length < 3) return false;
-  if (policyNumber.length > 50) return false;
+  if (policyNumber.trim().length === 0) return false;
+  if (policyNumber.length > 100) return false;
   if (/[<>'"&]/.test(policyNumber)) return false;
-  return policyNumberRegex.test(policyNumber);
+  return true; // Accept any format that doesn't contain dangerous characters
 };
 
 // Premium validation function
@@ -100,10 +100,9 @@ export const validateField = (
     case 'policy_number':
       if (!stringValue) return 'Policy number is required';
       if (!validatePolicyNumber(stringValue)) {
-        if (stringValue.length < 3) return 'Policy number must be at least 3 characters long';
-        if (stringValue.length > 50) return 'Policy number must be less than 50 characters';
+        if (stringValue.length > 100) return 'Policy number must be less than 100 characters';
         if (/[<>'"&]/.test(stringValue)) return 'Policy number contains invalid characters';
-        return 'Policy number format is invalid';
+        return 'Policy number is invalid';
       }
       return null;
     

@@ -19,12 +19,13 @@ import {
   RefreshCw,
   Plus,
   Search,
-  ExternalLink,
   Edit,
   Printer,
   Check,
   ChevronsUpDown,
   ChevronDown,
+  LayoutGrid,
+  TableProperties,
 } from "lucide-react";
 import {
   Select,
@@ -128,6 +129,7 @@ export default function GlobalCalls() {
   const [calledForSearchOpen, setCalledForSearchOpen] = useState(false);
   const [forwardedToSearchOpen, setForwardedToSearchOpen] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
   // Edit Dialog State
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -1041,7 +1043,31 @@ export default function GlobalCalls() {
         </CardContent>
       </Card>
 
-      {/* Table View */}
+      {/* View Toggle */}
+      <div className="flex justify-end">
+        <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
+          <Button
+            variant={viewMode === 'table' ? 'default' : 'ghost'}
+            size="icon"
+            onClick={() => setViewMode('table')}
+            className={`h-8 w-8 ${viewMode === 'table' ? '' : 'text-muted-foreground'}`}
+            title="Table View"
+          >
+            <TableProperties className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'grid' ? 'default' : 'ghost'}
+            size="icon"
+            onClick={() => setViewMode('grid')}
+            className={`h-8 w-8 ${viewMode === 'grid' ? '' : 'text-muted-foreground'}`}
+            title="Grid View"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Call Logs Data */}
       <Card>
         <CardContent className="p-0">
           {loading ? (
@@ -1064,20 +1090,181 @@ export default function GlobalCalls() {
                 Adjust filters or create a new call log
               </p>
             </div>
+          ) : viewMode === 'grid' ? (
+            /* Grid Card Layout */
+            <>
+              <div className="divide-y">
+                {calls.map((call) => (
+                  <div key={call.id} className="p-4 space-y-3">
+                    {/* Row 1: Type badge + Date/Time */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {call.activity_type === "Incoming Call" ? (
+                          <PhoneIncoming className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <PhoneOutgoing className="h-4 w-4 text-blue-600" />
+                        )}
+                        <Badge variant={call.activity_type === "Incoming Call" ? "default" : "secondary"} className="text-xs">
+                          {call.activity_type === "Incoming Call" ? "Incoming" : "Outgoing"}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-gray-500 text-right">
+                        <div>{new Date(call.activity_date).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                        <div>{call.activity_time ? new Date(`2000-01-01T${call.activity_time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '-'}</div>
+                      </div>
+                    </div>
+
+                    {/* Row 2: Customer name + link */}
+                    {call.customer ? (
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => navigate(getCustomerViewUrl(call.customer!.id, call.customer!.status) + '?tab=calls')}
+                      >
+                        <p className="font-medium text-sm hover:text-blue-600 hover:underline">
+                          {call.customer.first_name} {call.customer.last_name}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">{call.customer.email}</p>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 text-sm">N/A</span>
+                    )}
+
+                    {/* Row 3: Details grid — Customer Type, Performed By, Called For, Status */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-gray-50 rounded px-2 py-1.5">
+                        <span className="text-gray-500 block">Client Type</span>
+                        {call.customer ? (
+                          <Badge
+                            variant="outline"
+                            className={`text-xs mt-0.5 ${
+                              call.customer.status === 'Client' ? 'bg-green-50 text-green-700 border-green-200' :
+                              call.customer.status === 'Former' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                              call.customer.status === 'Deceased' ? 'bg-gray-100 text-gray-600 border-gray-300' :
+                              call.customer.status === 'Prospect' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              ''
+                            }`}
+                          >
+                            {call.customer.status}
+                          </Badge>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </div>
+                      <div className="bg-gray-50 rounded px-2 py-1.5">
+                        <span className="text-gray-500 block">Status</span>
+                        {(call as any).child_activities && (call as any).child_activities.length > 0 ? (
+                          <Badge variant="default" className="bg-green-600 mt-0.5">Yes</Badge>
+                        ) : (
+                          <Badge variant="outline" className="mt-0.5">No</Badge>
+                        )}
+                      </div>
+                      <div className="bg-gray-50 rounded px-2 py-1.5">
+                        <span className="text-gray-500 block">Performed By</span>
+                        <span className="font-medium">{customerActivitiesService.getFullName(call.performer) || "Unknown"}</span>
+                      </div>
+                      <div className="bg-gray-50 rounded px-2 py-1.5">
+                        <span className="text-gray-500 block">Called For</span>
+                        <span className="font-medium">
+                          {(call.calledForUser || call.called_for_user)
+                            ? `${(call.calledForUser || call.called_for_user)!.first_name} ${(call.calledForUser || call.called_for_user)!.last_name}`
+                            : "-"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Row 4: Actions */}
+                    <div className="flex items-center gap-2 pt-1 border-t">
+                      {call.customer && (
+                        <>
+                          <CallDetailsDialog
+                            call={call}
+                            customerName={`${call.customer.first_name} ${call.customer.last_name}`}
+                            customerId={call.customer.id}
+                            trigger={
+                              <Button variant="outline" size="sm" className="h-8 text-xs">
+                                <Eye className="h-3.5 w-3.5 mr-1" />
+                                View
+                              </Button>
+                            }
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditCall(call)}
+                            className="h-8 text-xs"
+                          >
+                            <Edit className="h-3.5 w-3.5 mr-1" />
+                            Edit
+                          </Button>
+                          {!call.parent_activity_id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedCustomer(call.customer || null);
+                                const title = call.activity_type === "Incoming Call"
+                                  ? "Answer Call - " + (call.title || call.description || "").substring(0, 30)
+                                  : "Follow Up - " + (call.title || call.description || "").substring(0, 30);
+                                setCallTitle(title);
+                                setCallType(call.activity_type);
+                                setIsCreateDialogOpen(true);
+                              }}
+                              className="h-8 text-xs"
+                            >
+                              Answer
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 md:p-4 border-t">
+                  <p className="text-xs md:text-sm text-gray-500 text-center sm:text-left">
+                    Showing {(currentPage - 1) * 20 + 1} to {Math.min(currentPage * 20, totalRecords)} of {totalRecords} call logs
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
+            /* Table Layout */
             <>
               <div className="overflow-x-auto">
                 <Table className="min-w-[800px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[100px]">Type</TableHead>
-                      <TableHead className="min-w-[180px]">Customer</TableHead>
-                      <TableHead className="hidden md:table-cell w-[120px]">Customer Type</TableHead>
-                      <TableHead className="w-[140px]">Date & Time</TableHead>
-                      <TableHead className="hidden lg:table-cell w-[130px]">Performed By</TableHead>
-                      <TableHead className="hidden lg:table-cell w-[120px]">Called For</TableHead>
-                      <TableHead className="hidden md:table-cell w-[100px]">Status</TableHead>
-                      <TableHead className="w-[120px] md:w-[150px]">Actions</TableHead>
+                      <TableHead className="min-w-[220px]">Customer</TableHead>
+                      <TableHead className="w-[160px] min-w-[130px]">Date & Time</TableHead>
+                      <TableHead className="w-[130px]">Performed By</TableHead>
+                      <TableHead className="w-[120px]">Called For</TableHead>
+                      <TableHead className="w-[100px]">Status</TableHead>
+                      <TableHead className="w-[150px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1097,47 +1284,31 @@ export default function GlobalCalls() {
                         </TableCell>
                         <TableCell>
                           {call.customer ? (
-                            <div className="min-w-0">
+                            <div
+                              className="min-w-0 cursor-pointer hover:text-blue-600 transition-colors"
+                              onClick={() => navigate(getCustomerViewUrl(call.customer!.id, call.customer!.status) + '?tab=calls')}
+                            >
                               <div className="flex items-center gap-2">
-                                <div
-                                  className="min-w-0 flex-1 cursor-pointer hover:text-blue-600 transition-colors"
-                                  onClick={() => navigate(getCustomerViewUrl(call.customer!.id, call.customer!.status) + '?tab=calls')}
+                                <p className="font-medium text-sm truncate hover:underline">
+                                  {call.customer.first_name} {call.customer.last_name}
+                                </p>
+                                <Badge
+                                  variant="outline"
+                                  className={`text-xs flex-shrink-0 ${
+                                    call.customer.status === 'Client' ? 'bg-green-50 text-green-700 border-green-200' :
+                                    call.customer.status === 'Former' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                    call.customer.status === 'Deceased' ? 'bg-gray-100 text-gray-600 border-gray-300' :
+                                    call.customer.status === 'Prospect' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                    ''
+                                  }`}
                                 >
-                                  <p className="font-medium text-sm truncate hover:underline">
-                                    {call.customer.first_name} {call.customer.last_name}
-                                  </p>
-                                  <p className="text-xs text-gray-500 truncate">{call.customer.email}</p>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => navigate(getCustomerViewUrl(call.customer!.id, call.customer!.status) + '?tab=calls')}
-                                  className="h-7 w-7 p-0 flex-shrink-0"
-                                >
-                                  <ExternalLink className="h-4 w-4" />
-                                </Button>
+                                  {call.customer.status}
+                                </Badge>
                               </div>
+                              <p className="text-xs text-gray-500 truncate">{call.customer.email}</p>
                             </div>
                           ) : (
                             <span className="text-gray-400">N/A</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          {call.customer ? (
-                            <Badge
-                              variant="outline"
-                              className={`text-xs ${
-                                call.customer.status === 'Client' ? 'bg-green-50 text-green-700 border-green-200' :
-                                call.customer.status === 'Former' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                                call.customer.status === 'Deceased' ? 'bg-gray-100 text-gray-600 border-gray-300' :
-                                call.customer.status === 'Prospect' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                ''
-                              }`}
-                            >
-                              {call.customer.status}
-                            </Badge>
-                          ) : (
-                            <span className="text-gray-400">-</span>
                           )}
                         </TableCell>
                         <TableCell>
@@ -1146,10 +1317,10 @@ export default function GlobalCalls() {
                             <div className="text-gray-500 text-xs">{call.activity_time ? new Date(`2000-01-01T${call.activity_time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '-'}</div>
                           </div>
                         </TableCell>
-                        <TableCell className="hidden lg:table-cell">
+                        <TableCell>
                           <span className="text-sm">{customerActivitiesService.getFullName(call.performer) || "Unknown"}</span>
                         </TableCell>
-                        <TableCell className="hidden lg:table-cell">
+                        <TableCell>
                           {(call.calledForUser || call.called_for_user) ? (
                             <span className="text-sm">
                               {(call.calledForUser || call.called_for_user)!.first_name}{" "}
@@ -1159,7 +1330,7 @@ export default function GlobalCalls() {
                             <span className="text-gray-400">-</span>
                           )}
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">
+                        <TableCell>
                           {(call as any).child_activities && (call as any).child_activities.length > 0 ? (
                             <Badge variant="default" className="bg-green-600">Yes</Badge>
                           ) : (
@@ -1167,7 +1338,7 @@ export default function GlobalCalls() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1">
+                          <div className="flex items-center gap-1">
                             {call.customer && (
                               <>
                                 <CallDetailsDialog
@@ -1201,7 +1372,7 @@ export default function GlobalCalls() {
                                       setCallType(call.activity_type);
                                       setIsCreateDialogOpen(true);
                                     }}
-                                    className="h-8 px-2 text-xs hidden sm:inline-flex"
+                                    className="h-8 px-2 text-xs"
                                   >
                                     Answer
                                   </Button>

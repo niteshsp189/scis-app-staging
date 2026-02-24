@@ -1347,38 +1347,27 @@ export const SimplifiedPolicyForm = ({
                   )}
 
                 <Label htmlFor="policy_number">
-                  Policy Number <span className="text-red-500">*</span> {isEditMode && "(Read-only)"}
+                  Policy Number <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative">
                   <Input
                     id="policy_number"
                     value={formData.policy_number}
                     onChange={(e) => {
-                      if (!isEditMode) {
-                        handleInputChange("policy_number", e.target.value);
-                      }
+                      handleInputChange("policy_number", e.target.value);
                     }}
-                    placeholder={
-                      isEditMode
-                        ? "Policy number (cannot be changed)"
-                        : "Enter policy number or click generate"
-                    }
-                    readOnly={isEditMode}
-                    disabled={isEditMode}
+                    placeholder="Enter policy number or click generate"
                     className={`
                       ${(validationErrors.policy_number || policyNumberError) ? "border-red-500 focus:border-red-500" : ""}
-                      ${isEditMode ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""}
                     `}
                   />
-                  {!isEditMode && (
-                    <button
-                      type="button"
-                      onClick={generatePolicyNumber}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
-                    >
-                      Generate
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={generatePolicyNumber}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                  >
+                    Generate
+                  </button>
                 </div>
                 {(validationErrors.policy_number || policyNumberError) && (
                   <p className="text-sm text-red-500 mt-1">{validationErrors.policy_number || policyNumberError}</p>

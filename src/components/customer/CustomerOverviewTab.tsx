@@ -933,11 +933,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
           {latestNotes.length > 0 ? (
             <div className="space-y-3">
               {latestNotes.map((note) => (
-                <div
-                  key={note.id}
-                  className={`p-3 rounded-lg border-l-4 ${getNoteColorClass(note.color)} ${note.is_pinned ? 'ring-1 ring-yellow-200' : ''}`}
-                >
-                  <div className="flex items-center justify-between mb-1">
+                <div key={note.id} className="space-y-1">
+                  {/* Name, timestamp, badges - OUTSIDE the color box */}
+                  <div className="flex items-center justify-between px-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="font-medium">
                         {customerNotesService.getFullName(note.creator)}
@@ -967,13 +965,18 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                       )}
                     </Button>
                   </div>
-                  {note.title && (
-                    <h4 className="text-sm font-semibold mb-1">{note.title}</h4>
-                  )}
-                  <div 
-                    className="text-sm font-medium text-foreground prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: note.content }}
-                  />
+                  {/* Color box - only title and content */}
+                  <div
+                    className={`p-3 rounded-lg border-l-4 ${getNoteColorClass(note.color)} ${note.is_pinned ? 'ring-1 ring-yellow-200' : ''}`}
+                  >
+                    {note.title && (
+                      <h4 className="text-sm font-semibold mb-1">{note.title}</h4>
+                    )}
+                    <div 
+                      className="text-sm font-medium text-foreground prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: note.content }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>

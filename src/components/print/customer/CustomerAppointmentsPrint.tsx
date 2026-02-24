@@ -4,6 +4,7 @@
  */
 
 import { formatPrintDate, formatPrintTime } from '@/utils/printUtils';
+import { stripHtml } from '@/lib/htmlUtils';
 
 interface Appointment {
   id: string;
@@ -157,7 +158,7 @@ export const CustomerAppointmentsPrint = ({ appointments }: CustomerAppointments
             {/* Notes / Description */}
             {(apt.notes || apt.description) && (
               <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #f3f4f6', fontSize: '9pt' }}>
-                <span style={{ color: '#6b7280' }}>Notes: </span>{apt.notes || apt.description}
+                <span style={{ color: '#6b7280' }}>Notes: </span>{stripHtml(apt.notes || apt.description || '')}
               </div>
             )}
           </div>

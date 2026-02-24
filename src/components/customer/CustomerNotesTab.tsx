@@ -214,67 +214,70 @@ export const CustomerNotesTab = ({
       ) : (
         <div className="space-y-4">
           {customerNotesService.sortNotes(notes, "date", "desc").map((note) => (
-            <Card
-              key={note.id}
-              className={`border-l-4 ${getNoteColorClass(note.color)} ${note.is_pinned ? 'ring-2 ring-yellow-200' : ''}`}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2 text-xs opacity-75">
-                    <span className="font-medium">
-                      {customerNotesService.getFullName(note.creator)}
-                    </span>
-                    <span>{customerNotesService.formatTimestamp(note.created_at)}</span>
-                    {note.is_pinned && (
-                      <Badge variant="secondary" className="text-xs">
-                        <Pin className="h-3 w-3 mr-1" />
-                        Pinned
-                      </Badge>
-                    )}
-                    {note.is_important && (
-                      <Badge variant="secondary" className="text-xs">
-                        Important
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleTogglePin(note.id, note.is_pinned)}
-                      className="h-6 w-6 p-0 hover:bg-yellow-100"
-                      title={note.is_pinned ? "Unpin note" : "Pin note"}
-                    >
-                      {note.is_pinned ? (
-                        <PinOff className="h-3 w-3" />
-                      ) : (
-                        <Pin className="h-3 w-3" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditNote(note)}
-                      className="h-6 w-6 p-0 hover:bg-blue-100"
-                    >
-                      <Edit2 className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteNote(note.id)}
-                      className="h-6 w-6 p-0 hover:bg-red-100"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
+            <div key={note.id} className="space-y-1">
+              {/* Name, timestamp, badges, and actions - OUTSIDE the color box */}
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="font-medium">
+                    {customerNotesService.getFullName(note.creator)}
+                  </span>
+                  <span>{customerNotesService.formatTimestamp(note.created_at)}</span>
+                  {note.is_pinned && (
+                    <Badge variant="secondary" className="text-xs">
+                      <Pin className="h-3 w-3 mr-1" />
+                      Pinned
+                    </Badge>
+                  )}
+                  {note.is_important && (
+                    <Badge variant="secondary" className="text-xs">
+                      Important
+                    </Badge>
+                  )}
                 </div>
-                {note.title && (
-                  <h4 className="text-sm font-semibold mb-1">{note.title}</h4>
-                )}
-                <div className="text-sm font-medium prose prose-sm max-w-none" dangerouslySetInnerHTML={renderHtmlContent(note.content)} />
-              </CardContent>
-            </Card>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleTogglePin(note.id, note.is_pinned)}
+                    className="h-6 w-6 p-0 hover:bg-yellow-100"
+                    title={note.is_pinned ? "Unpin note" : "Pin note"}
+                  >
+                    {note.is_pinned ? (
+                      <PinOff className="h-3 w-3" />
+                    ) : (
+                      <Pin className="h-3 w-3" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEditNote(note)}
+                    className="h-6 w-6 p-0 hover:bg-blue-100"
+                  >
+                    <Edit2 className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteNote(note.id)}
+                    className="h-6 w-6 p-0 hover:bg-red-100"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+              {/* Color box - only contains title and content */}
+              <Card
+                className={`border-l-4 ${getNoteColorClass(note.color)} ${note.is_pinned ? 'ring-2 ring-yellow-200' : ''}`}
+              >
+                <CardContent className="p-4">
+                  {note.title && (
+                    <h4 className="text-sm font-semibold mb-1">{note.title}</h4>
+                  )}
+                  <div className="text-sm font-medium prose prose-sm max-w-none" dangerouslySetInnerHTML={renderHtmlContent(note.content)} />
+                </CardContent>
+              </Card>
+            </div>
           ))}
         </div>
       )}
