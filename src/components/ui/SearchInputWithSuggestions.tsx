@@ -9,9 +9,12 @@ interface SearchInputWithSuggestionsProps {
   onChange: (value: string) => void;
   onSearch: (searchText?: string) => void;
   onSuggestionSelect?: () => void;
+  onSuggestionNavigate?: (suggestion: SearchSuggestion) => void;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  showSearchButton?: boolean;
+  suggestionsFilter?: string;
 }
 
 const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
@@ -19,9 +22,12 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
   onChange,
   onSearch,
   onSuggestionSelect,
+  onSuggestionNavigate,
   placeholder = "Search customers, policies, appointments...",
   className,
   disabled = false,
+  showSearchButton = false,
+  suggestionsFilter,
 }) => {
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -51,7 +57,10 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
         setIsLoadingSuggestions(true);
         try {
           const response = await globalSearchService.getSuggestions(value.trim(), 8);
-          setSuggestions(response.data);
+          const filtered = suggestionsFilter
+            ? response.data.filter((s: SearchSuggestion) => s.type === suggestionsFilter)
+            : response.data;
+          setSuggestions(filtered);
           setShowSuggestions(true);
           setActiveSuggestionIndex(-1);
         } catch (error) {
@@ -135,9 +144,14 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
     inputRef.current?.blur();
     // Notify parent that a suggestion was selected
     onSuggestionSelect?.();
-    // Trigger search immediately with the suggestion text
-    // Pass the text directly to avoid state timing issues
-    onSearch(suggestion.text);
+    // If onSuggestionNavigate is provided, use it for direct navigation
+    if (onSuggestionNavigate) {
+      onSuggestionNavigate(suggestion);
+    } else {
+      // Trigger search immediately with the suggestion text
+      // Pass the text directly to avoid state timing issues
+      onSearch(suggestion.text);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,23 +203,37 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
 
   return (
     <div className="relative flex-1">
-      <div className="relative">
-        <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
-        <Input
-          ref={inputRef}
-          type="text"
-          placeholder={placeholder}
-          value={value}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          onFocus={handleInputFocus}
-          onBlur={handleInputBlur}
-          className={cn("pl-10", className)}
-          disabled={disabled}
-          autoComplete="off"
-        />
-        {isLoadingSuggestions && (
-          <Loader2 className="h-4 w-4 absolute right-3 top-3 text-gray-400 animate-spin" />
+      <div className={cn("relative", showSearchButton && "flex items-stretch")}>
+        <div className="relative flex-1">
+          {!showSearchButton && (
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          )}
+          <Input
+            ref={inputRef}
+            type="text"
+            placeholder={placeholder}
+            value={value}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
+            className={cn(showSearchButton ? "pl-3 h-10" : "pl-10 h-10", showSearchButton && "rounded-r-none border-r-0 focus-visible:ring-0 focus-visible:ring-offset-0", className)}
+            disabled={disabled}
+            autoComplete="off"
+          />
+          {isLoadingSuggestions && (
+            <Loader2 className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 animate-spin" />
+          )}
+        </div>
+        {showSearchButton && (
+          <button
+            type="button"
+            onClick={() => onSearch()}
+            disabled={disabled || !value.trim()}
+            className="inline-flex items-center justify-center px-3 h-10 bg-transparent hover:bg-slate-100 text-slate-500 hover:text-slate-700 rounded-r-lg border border-l-0 border-slate-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+          >
+            <Search className="h-4 w-4" />
+          </button>
         )}
       </div>
 

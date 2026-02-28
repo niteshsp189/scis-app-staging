@@ -111,6 +111,20 @@ export const CustomerSearch = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Handle Enter key regardless of suggestion state
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (showSuggestions && suggestions.length > 0 && activeSuggestionIndex >= 0) {
+        handleSuggestionClick(suggestions[activeSuggestionIndex]);
+      } else {
+        // Close suggestions and blur to commit the current search term
+        setShowSuggestions(false);
+        setActiveSuggestionIndex(-1);
+        inputRef.current?.blur();
+      }
+      return;
+    }
+
     if (!showSuggestions || !suggestions || suggestions.length === 0) {
       return;
     }
@@ -128,12 +142,6 @@ export const CustomerSearch = ({
           prev > 0 ? prev - 1 : (suggestions?.length || 0) - 1
         );
         break;
-      case 'Enter':
-        e.preventDefault();
-        if (activeSuggestionIndex >= 0) {
-          handleSuggestionClick(suggestions[activeSuggestionIndex]);
-        }
-        break;
       case 'Escape':
         setShowSuggestions(false);
         setActiveSuggestionIndex(-1);
@@ -147,7 +155,7 @@ export const CustomerSearch = ({
     setActiveSuggestionIndex(-1);
     inputRef.current?.blur();
     // Navigate directly to the customer detail page
-    navigate(getCustomerViewUrl(suggestion.id, suggestion.customer_type));
+    navigate(getCustomerViewUrl(suggestion.id, suggestion.customer_type, suggestion.legacy_client_id));
   };
 
   const getTypeColor = (type: string) => {

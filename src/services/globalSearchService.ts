@@ -21,6 +21,7 @@ export interface SearchFilters {
   date_from?: string;
   date_to?: string;
   limit?: number;
+  offset?: number;
   // Advanced filters
   customer_type?: 'Client' | 'Former' | 'Deceased' | 'Prospect';
   employee_id?: string;
@@ -75,6 +76,7 @@ export interface SearchResponse {
     query: string;
     type: string;
     total_results: number;
+    total_counts?: Record<string, number>;
     results: SearchResult[];
     filters: {
       status?: string;
@@ -92,6 +94,7 @@ export interface SearchSuggestion {
   address?: string;
   ssn?: string;
   customer_type?: string;
+  legacy_client_id?: number | null;
 }
 
 export interface SuggestionsResponse {

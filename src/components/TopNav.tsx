@@ -7,6 +7,8 @@ import { UserProfileButton } from "@/components/UserProfileButton";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import SearchInputWithSuggestions from "@/components/ui/SearchInputWithSuggestions";
 import globalSearchService from "@/services/globalSearchService";
+import { SearchSuggestion } from "@/services/globalSearchService";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 
 export function TopNav() {
   const navigate = useNavigate();
@@ -18,6 +20,18 @@ export function TopNav() {
     const url = globalSearchService.buildSearchUrl(query.trim());
     navigate(url);
     setSearchTerm("");
+  };
+
+  const handleSuggestionNavigate = (suggestion: SearchSuggestion) => {
+    if (suggestion.type === 'customer') {
+      navigate(getCustomerViewUrl(suggestion.id, suggestion.customer_type, suggestion.legacy_client_id));
+      setSearchTerm("");
+    } else if (suggestion.type === 'policy') {
+      navigate(`/policies/${suggestion.id}`);
+      setSearchTerm("");
+    } else {
+      handleSearch(suggestion.text);
+    }
   };
 
   return (
@@ -38,8 +52,11 @@ export function TopNav() {
           value={searchTerm}
           onChange={setSearchTerm}
           onSearch={handleSearch}
+          onSuggestionNavigate={handleSuggestionNavigate}
           placeholder="Search customers, policies..."
-          className="w-full border border-slate-300 rounded-lg shadow-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
+          className="w-full"
+          showSearchButton
+          suggestionsFilter="customer"
         />
       </div>
       <div className="flex items-center gap-3">

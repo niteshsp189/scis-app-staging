@@ -54,7 +54,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Copy, Users2, Printer } from "lucide-react";
+import { Check, ChevronsUpDown, Copy, Users2, Printer, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMapSelection } from "@/hooks/useMapSelection";
 
@@ -80,6 +80,12 @@ const Lookup = () => {
   const [suggestionSelected, setSuggestionSelected] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [filtersEnabled, setFiltersEnabled] = useState(false);
+  const [pageSize, setPageSize] = useState(25);
+  const [activeResultTab, setActiveResultTab] = useState("all");
+  const [totalCounts, setTotalCounts] = useState<Record<string, number>>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [paginatedResults, setPaginatedResults] = useState<SearchResult[]>([]);
+  const [isPageLoading, setIsPageLoading] = useState(false);
 
   // Modal states
   const [selectedReminder, setSelectedReminder] = useState<SearchResult | null>(
@@ -212,6 +218,54 @@ const Lookup = () => {
     }
   }, [searchParams, isAuthenticated]);
 
+  // Reset to page 1 when page size changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [pageSize]);
+
+  // Fetch page for specific type tabs (server-side pagination)
+  const fetchTypePage = async (tab: string, page: number) => {
+    if (tab === "all" || !searchTerm.trim()) return;
+
+    const typeMap: Record<string, string> = {
+      customers: 'customers',
+      policies: 'policies',
+      appointments: 'appointments',
+      reminders: 'reminders',
+      users: 'users',
+    };
+    const apiType = typeMap[tab];
+    if (!apiType) return;
+
+    setIsPageLoading(true);
+    try {
+      const filters: SearchFilters = {
+        type: apiType as SearchFilters['type'],
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        date_from: dateFilter || undefined,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
+        ...advancedFilters,
+      };
+      const response = await globalSearchService.search(searchTerm, filters);
+      const pageResults = response.data?.results || [];
+      setPaginatedResults(pageResults);
+    } catch (error) {
+      console.error('Page fetch error:', error);
+      setPaginatedResults([]);
+    } finally {
+      setIsPageLoading(false);
+    }
+  };
+
+  // When switching to a specific type tab or changing page, fetch from server
+  useEffect(() => {
+    if (activeResultTab !== "all" && searchTerm.trim()) {
+      fetchTypePage(activeResultTab, currentPage);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeResultTab, currentPage, pageSize]);
+
   const performSearchWithParams = async (
     query: string,
     filters: SearchFilters,
@@ -242,12 +296,17 @@ const Lookup = () => {
       const response = await globalSearchService.search(query, filters);
       // console.log('Search response:', response);
       const results = response.data?.results || [];
-      // console.log('Parsed results:', results.length, 'items');
+      const counts = response.data?.total_counts || {};
+      // console.log('Parsed results:', results.length, 'items, total_counts:', counts);
       setResults(results);
+      setTotalCounts(counts);
+      setActiveResultTab("all"); // Reset to "all" tab on new search
+      setCurrentPage(1); // Reset to first page on new search
       setFiltersEnabled(true); // Enable filters after results are received
     } catch (error) {
       console.error('Search error:', error);
       setResults([]);
+      setTotalCounts({});
     } finally {
       if (!skipLoading) {
         setIsSearching(false);
@@ -264,7 +323,7 @@ const Lookup = () => {
       type: searchType,
       status: statusFilter !== "all" ? statusFilter : undefined,
       date_from: dateFilter || undefined,
-      limit: 50,
+      limit: 500,
       ...advancedFilters, // Merge advanced filters
     };
 
@@ -356,7 +415,7 @@ const Lookup = () => {
         type: searchType,
         status: statusFilter !== "all" ? statusFilter : undefined,
         date_from: dateFilter || undefined,
-        limit: 50,
+        limit: 500,
         ...filters,
       };
       performSearchWithParams(searchTerm, searchFilters, false);
@@ -432,11 +491,18 @@ const Lookup = () => {
     }
 
     // For other types, navigate to the result's URL
+    // For customer results, use proper URL based on customer_type
+    let targetUrl = result.url;
+    if (result.type === "customer") {
+      const customerType = result.details?.customer_type || result.status;
+      targetUrl = getCustomerViewUrl(result.id, customerType);
+    }
+
     // If middle click or ctrl+click, open in new tab
     if (e && (e.ctrlKey || e.metaKey || e.button === 1)) {
-      window.open(result.url, '_blank');
+      window.open(targetUrl, '_blank');
     } else {
-      navigate(result.url);
+      navigate(targetUrl);
     }
   };
 
@@ -444,6 +510,10 @@ const Lookup = () => {
     // Return href for navigation-supported types
     if (result.type === "reminder" || result.type === "prospect" || result.type === "user") {
       return undefined; // These use modals or no navigation
+    }
+    if (result.type === "customer") {
+      const customerType = result.details?.customer_type || result.status;
+      return getCustomerViewUrl(result.id, customerType);
     }
     return result.url;
   };
@@ -1666,40 +1736,73 @@ const Lookup = () => {
           {/* Search Results */}
           {results.length > 0 && (
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Search Results ({results.length})</CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePrintSearchResults}
-                  className="shrink-0"
-                >
-                  <Printer className="h-4 w-4 mr-2" />
-                  Print
-                </Button>
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
+                <CardTitle className="whitespace-nowrap">
+                  Search Results
+                  <span className="ml-2 text-base font-normal text-muted-foreground">
+                    ({activeResultTab === "all"
+                      ? (Object.entries(totalCounts).reduce((sum, [key, val]) => key !== 'prospect' ? sum + val : sum, 0) || results.filter((r) => r.type !== "prospect").length)
+                      : activeResultTab === "customers"
+                        ? (totalCounts.customer || resultCounts.customer || 0)
+                        : activeResultTab === "policies"
+                          ? (totalCounts.policy || resultCounts.policy || 0)
+                          : activeResultTab === "appointments"
+                            ? (totalCounts.appointment || resultCounts.appointment || 0)
+                            : activeResultTab === "reminders"
+                              ? (totalCounts.reminder || resultCounts.reminder || 0)
+                              : activeResultTab === "users"
+                                ? (totalCounts.user || resultCounts.user || 0)
+                                : results.length
+                    } matching)
+                  </span>
+                </CardTitle>
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">Per page:</span>
+                    <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+                      <SelectTrigger className="w-[80px] h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[25, 50, 100, 250, 500].map((size) => (
+                          <SelectItem key={size} value={String(size)}>{size}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePrintSearchResults}
+                    className="shrink-0"
+                  >
+                    <Printer className="h-4 w-4 mr-2" />
+                    Print
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="all" className="w-full">
+                <Tabs defaultValue="all" className="w-full" value={activeResultTab} onValueChange={(val) => { setActiveResultTab(val); setCurrentPage(1); }}>
                   <div className="overflow-x-auto pb-2">
                     <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground w-max min-w-full sm:w-auto">
                       <TabsTrigger value="all" className="whitespace-nowrap">
-                        All ({results.filter((r) => r.type !== "prospect").length})
+                        All ({Object.entries(totalCounts).reduce((sum, [key, val]) => key !== 'prospect' ? sum + val : sum, 0) || results.filter((r) => r.type !== "prospect").length})
                       </TabsTrigger>
                       <TabsTrigger value="customers" className="whitespace-nowrap">
-                        Customers ({resultCounts.customer || 0})
+                        Customers ({totalCounts.customer || resultCounts.customer || 0})
                       </TabsTrigger>
                       <TabsTrigger value="policies" className="whitespace-nowrap">
-                        Policies ({resultCounts.policy || 0})
+                        Policies ({totalCounts.policy || resultCounts.policy || 0})
                       </TabsTrigger>
                       <TabsTrigger value="appointments" className="whitespace-nowrap">
-                        Appointments ({resultCounts.appointment || 0})
+                        Appointments ({totalCounts.appointment || resultCounts.appointment || 0})
                       </TabsTrigger>
                       <TabsTrigger value="reminders" className="whitespace-nowrap">
-                        Reminders ({resultCounts.reminder || 0})
+                        Reminders ({totalCounts.reminder || resultCounts.reminder || 0})
                       </TabsTrigger>
-                      {resultCounts.user && (
+                      {(totalCounts.user || resultCounts.user) && (
                         <TabsTrigger value="users" className="whitespace-nowrap">
-                          Users ({resultCounts.user})
+                          Users ({totalCounts.user || resultCounts.user})
                         </TabsTrigger>
                       )}
                     </TabsList>
@@ -1708,6 +1811,7 @@ const Lookup = () => {
                   <TabsContent value="all" className="space-y-3 mt-4">
                     {results
                       .filter((result) => result.type !== "prospect")
+                      .slice((currentPage - 1) * pageSize, currentPage * pageSize)
                       .map((result, index) => {
                         const href = getResultHref(result);
                         // Use div for card to avoid nested anchors (invalid HTML)
@@ -1817,21 +1921,14 @@ const Lookup = () => {
                     <TabsContent
                       key={category}
                       value={category}
-                      className="space-y-3 mt-4"
+                      className="space-y-3 mt-4 relative min-h-[200px]"
                     >
-                      {results
-                        .filter((result) => {
-                          if (category === "customers")
-                            return result.type === "customer";
-                          if (category === "policies")
-                            return result.type === "policy";
-                          if (category === "appointments")
-                            return result.type === "appointment";
-                          if (category === "reminders")
-                            return result.type === "reminder";
-                          if (category === "users") return result.type === "user";
-                          return false;
-                        })
+                      {isPageLoading && (
+                        <div className="absolute inset-0 flex justify-center pt-12 bg-white/60 z-10">
+                          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                        </div>
+                      )}
+                      {paginatedResults
                         .map((result, index) => {
                           const href = getResultHref(result);
 
@@ -1937,6 +2034,88 @@ const Lookup = () => {
                     </TabsContent>
                   ))}
                 </Tabs>
+
+                {/* Pagination Controls */}
+                {(() => {
+                  const typeMap: Record<string, string> = { customers: 'customer', policies: 'policy', appointments: 'appointment', reminders: 'reminder', users: 'user' };
+
+                  let totalItems: number;
+                  if (activeResultTab === "all") {
+                    // "All" tab: client-side pagination over loaded results
+                    totalItems = results.filter(r => r.type !== "prospect").length;
+                  } else {
+                    // Specific type tabs: use DB total count for server-side pagination
+                    const mappedType = typeMap[activeResultTab] || activeResultTab;
+                    totalItems = totalCounts[mappedType] || 0;
+                  }
+
+                  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+                  const startItem = totalItems > 0 ? Math.min((currentPage - 1) * pageSize + 1, totalItems) : 0;
+                  const endItem = Math.min(currentPage * pageSize, totalItems);
+
+                  if (totalPages <= 1) return null;
+
+                  // Generate page numbers to show
+                  const getPageNumbers = () => {
+                    const pages: (number | string)[] = [];
+                    if (totalPages <= 7) {
+                      for (let i = 1; i <= totalPages; i++) pages.push(i);
+                    } else {
+                      pages.push(1);
+                      if (currentPage > 3) pages.push('...');
+                      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+                        pages.push(i);
+                      }
+                      if (currentPage < totalPages - 2) pages.push('...');
+                      pages.push(totalPages);
+                    }
+                    return pages;
+                  };
+
+                  return (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t mt-4">
+                      <p className="text-sm text-gray-500">
+                        Showing {startItem}–{endItem} of {totalItems.toLocaleString()} results
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="h-8 w-8 p-0"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        {getPageNumbers().map((page, idx) =>
+                          typeof page === 'string' ? (
+                            <span key={`ellipsis-${idx}`} className="px-1 text-gray-400">…</span>
+                          ) : (
+                            <Button
+                              key={page}
+                              variant={currentPage === page ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCurrentPage(page)}
+                              className="h-8 w-8 p-0 text-xs"
+                            >
+                              {page}
+                            </Button>
+                          )
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className="h-8 w-8 p-0"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
+
               </CardContent>
             </Card>
           )}
