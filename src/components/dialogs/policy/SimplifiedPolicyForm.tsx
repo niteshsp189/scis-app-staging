@@ -45,6 +45,7 @@ import {
   PolicyFormData,
   PlanType as PlanTypeValidation
 } from "@/schemas/policyValidationSchema";
+import { customerCredentialsService } from "@/services/customerCredentialsService";
 
 interface PlanType {
   id: number;
@@ -580,6 +581,73 @@ export const SimplifiedPolicyForm = ({
       });
     }
   }, [formData.customer_id, formData.plan_id]);
+
+  // Mapping of customer credential fields to plan extra field keys
+  const CREDENTIAL_TO_EXTRA_FIELD_MAP: Record<string, string> = {
+    medicare_number: 'medicare_number',
+  };
+
+  /**
+   * Fetch customer credentials and auto-populate matching extra fields.
+   * Only populates fields that are included in the current plan type
+   * and that are currently empty (doesn't overwrite user input).
+   */
+  const fetchAndApplyCredentials = useCallback(async (customerId: number) => {
+    try {
+      const credentials = await customerCredentialsService.getCustomerCredentials(customerId);
+      if (!credentials) return;
+
+      const includedFields = planType.extra_fields || {};
+      const updatedExtraFields: Record<string, unknown> = {};
+      let hasUpdates = false;
+
+      for (const [credKey, extraFieldKey] of Object.entries(CREDENTIAL_TO_EXTRA_FIELD_MAP)) {
+        const credValue = credentials[credKey as keyof typeof credentials];
+        const fieldConfig = includedFields[extraFieldKey];
+
+        // Only populate if: field is included in plan type, credential has a value, and field is currently empty
+        if (fieldConfig?.included && credValue && typeof credValue === 'string' && credValue.trim() !== '') {
+          updatedExtraFields[extraFieldKey] = credValue;
+          hasUpdates = true;
+        }
+      }
+
+      if (hasUpdates) {
+        setFormData(prev => {
+          const newExtraFields = { ...prev.extra_fields };
+          for (const [key, value] of Object.entries(updatedExtraFields)) {
+            // Only set if the field is currently empty
+            if (!newExtraFields[key] || String(newExtraFields[key]).trim() === '') {
+              newExtraFields[key] = value;
+            }
+          }
+          return { ...prev, extra_fields: newExtraFields };
+        });
+
+        toast({
+          title: "Credentials Auto-filled",
+          description: "Medicare information from customer credentials has been applied.",
+        });
+      }
+    } catch (error) {
+      // Silently fail - credentials are optional
+      console.warn('Failed to fetch customer credentials for auto-fill:', error);
+    }
+  }, [planType.extra_fields]);
+
+  // Auto-populate credentials when customer is passed as prop (e.g., from customer detail page)
+  useEffect(() => {
+    if (customer?.id && !isEditMode) {
+      // Check if plan type has any credential-mappable fields
+      const includedFields = planType.extra_fields || {};
+      const hasMappableFields = Object.values(CREDENTIAL_TO_EXTRA_FIELD_MAP).some(
+        fieldKey => includedFields[fieldKey]?.included
+      );
+      if (hasMappableFields) {
+        fetchAndApplyCredentials(customer.id);
+      }
+    }
+  }, [customer?.id, planType.extra_fields, isEditMode, fetchAndApplyCredentials]);
 
   const loadCompaniesForPlanType = async () => {
     setLoading((prev) => ({ ...prev, companies: true }));
@@ -1189,6 +1257,14 @@ export const SimplifiedPolicyForm = ({
                           localStorage.setItem("simplifiedPolicyFormData", JSON.stringify(newFormData));
                         } catch (error) {
                           console.warn("Failed to save policy form data:", error);
+                        }
+                      }
+
+                      // Auto-populate Medicare fields from customer credentials
+                      if (customer?.id || parseInt(customerId)) {
+                        const cid = parseInt(customerId);
+                        if (cid) {
+                          fetchAndApplyCredentials(cid);
                         }
                       }
                       

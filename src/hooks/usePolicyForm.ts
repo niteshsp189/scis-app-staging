@@ -13,7 +13,6 @@ export const usePolicyForm = (customer?: CustomerData, onAddPolicy?: (policy: an
     policyType: "",
     premium: "",
     startDate: "",
-    endDate: "",
     status: "Active",
     customerAge: "",
     income: "",
@@ -40,7 +39,6 @@ export const usePolicyForm = (customer?: CustomerData, onAddPolicy?: (policy: an
       policyType: "",
       premium: "",
       startDate: "",
-      endDate: "",
       status: "Active",
       customerAge: "",
       income: "",
@@ -76,7 +74,7 @@ export const usePolicyForm = (customer?: CustomerData, onAddPolicy?: (policy: an
   const handleSubmit = (e: React.FormEvent, companies: any[], insurancePlans: any[], agentAssignment?: AgentAssignment) => {
     e.preventDefault();
     
-    if (!formData.customerName || !formData.companyId || !formData.planId || !formData.startDate || !formData.endDate) {
+    if (!formData.customerName || !formData.companyId || !formData.planId || !formData.startDate) {
       toast({
         title: "Error",
         description: "Please fill in all required fields.",

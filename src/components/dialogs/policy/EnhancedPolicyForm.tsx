@@ -31,6 +31,7 @@ import policyCreationService from "@/services/policyCreationService";
 import planConflictService, { ConflictDetail, ExistingPolicy } from "@/services/planConflictService";
 import { taxService, Tax } from "@/services/taxService";
 import policyConfigService, { PolicyConfiguration } from "@/services/policyConfigService";
+import { customerCredentialsService } from "@/services/customerCredentialsService";
 import { toast } from "@/components/ui/use-toast";
 import { Loader2, Calculator, Calendar, DollarSign, Lock, Edit, AlertTriangle, Shield, CheckCircle } from "lucide-react";
 
@@ -409,6 +410,64 @@ export const EnhancedPolicyForm = ({
   });
 
   // Define callback functions before useEffect hooks that reference them
+  // Mapping of customer credential fields to plan custom field names
+  const CREDENTIAL_FIELD_NAMES = ['medicare_number'];
+
+  /**
+   * Fetch customer credentials and auto-populate matching custom fields.
+   * EnhancedPolicyForm uses composite keys like "medicare_number_5",
+   * so we match by field.name or field.field_name.
+   */
+  const fetchAndApplyCredentials = useCallback(async (customerId: number) => {
+    try {
+      const credentials = await customerCredentialsService.getCustomerCredentials(customerId);
+      if (!credentials) return;
+
+      // We need customFields to be loaded to know the composite keys
+      setFormData(prev => {
+        const updatedCustomFields = { ...prev.custom_fields };
+        let hasUpdates = false;
+
+        // Iterate through loaded custom fields to find Medicare-related ones
+        for (const field of customFields) {
+          const fieldName = field.name || field.field_name;
+          const fieldKey = `${fieldName}_${field.id}`;
+
+          if (fieldName === 'medicare_number' && credentials.medicare_number) {
+            // Only set if currently empty
+            if (!updatedCustomFields[fieldKey] || String(updatedCustomFields[fieldKey]).trim() === '') {
+              updatedCustomFields[fieldKey] = credentials.medicare_number;
+              hasUpdates = true;
+            }
+          }
+        }
+
+        if (hasUpdates) {
+          toast({
+            title: "Credentials Auto-filled",
+            description: "Medicare information from customer credentials has been applied.",
+          });
+          return { ...prev, custom_fields: updatedCustomFields };
+        }
+        return prev;
+      });
+    } catch (error) {
+      console.warn('Failed to fetch customer credentials for auto-fill:', error);
+    }
+  }, [customFields]);
+
+  // Auto-populate credentials when customer prop is provided and custom fields are loaded
+  useEffect(() => {
+    if (customer?.id && customFields.length > 0) {
+      const hasMedicareField = customFields.some(
+        f => (f.name || f.field_name) === 'medicare_number' && f.is_active && f.is_visible
+      );
+      if (hasMedicareField) {
+        fetchAndApplyCredentials(customer.id);
+      }
+    }
+  }, [customer?.id, customFields, fetchAndApplyCredentials]);
+
   const loadCustomFields = useCallback(async (planId: number) => {
     
     try {
@@ -1005,6 +1064,13 @@ export const EnhancedPolicyForm = ({
                         email: email,
                         customer_number: customerNumber,
                       }));
+
+                      // Auto-populate Medicare fields from customer credentials
+                      const cid = parseInt(customerId);
+                      if (cid && customFields.length > 0) {
+                        fetchAndApplyCredentials(cid);
+                      }
+
                       setCustomerSearchOpen(false);
                     }}
                     selectedCustomerId={formData.customer_id}
@@ -1454,12 +1520,6 @@ export const EnhancedPolicyForm = ({
                       <Label>Start Date</Label>
                       <div className="font-semibold">
                         {policyTerms.start_date}
-                      </div>
-                    </div>
-                    <div>
-                      <Label>End Date</Label>
-                      <div className="font-semibold">
-                        {policyTerms.end_date}
                       </div>
                     </div>
                     <div>

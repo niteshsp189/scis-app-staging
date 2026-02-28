@@ -47,7 +47,6 @@ export function AddInsuranceProductDialog({
     hasAgentOfRecordField: true,
     hasWritingAgentField: true,
     hasStartDateField: true,
-    hasEndDateField: true,
   });
 
   const [fieldValues, setFieldValues] = useState<Record<string, any>>({});
@@ -188,17 +187,6 @@ export function AddInsuranceProductDialog({
             },
           ]
         : []),
-      ...(commonFields.hasEndDateField
-        ? [
-            {
-              id: "end_date",
-              name: "endDate",
-              label: "End Date",
-              type: "date",
-              required: false,
-            },
-          ]
-        : []),
     ];
 
     const enabledFields = fieldTemplates
@@ -243,7 +231,6 @@ export function AddInsuranceProductDialog({
       hasAgentOfRecordField: true,
       hasWritingAgentField: true,
       hasStartDateField: true,
-      hasEndDateField: true,
     });
   };
 

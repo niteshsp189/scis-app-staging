@@ -104,16 +104,6 @@ export function CommonPolicyFieldsSection({ commonFields, onUpdate, allowTermOve
             />
             <Label htmlFor="hasStartDateField" className="text-sm">Start Date</Label>
           </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="hasEndDateField"
-              checked={commonFields.hasEndDateField}
-              onChange={(e) => onUpdate({ hasEndDateField: e.target.checked })}
-              className="rounded"
-            />
-            <Label htmlFor="hasEndDateField" className="text-sm">End Date</Label>
-          </div>
         </div>
       </CardContent>
     </Card>

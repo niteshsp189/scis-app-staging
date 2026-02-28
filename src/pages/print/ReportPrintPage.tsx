@@ -110,7 +110,6 @@ const REPORT_COLUMNS: Record<string, { key: string; label: string; align?: strin
     { key: 'company_name', label: 'Company' },
     { key: 'plan_type', label: 'Type' },
     { key: 'start_date', label: 'Effective Date' },
-    { key: 'end_date', label: 'End Date' },
     { key: 'premium_amount', label: 'Premium', align: 'right', format: 'currency' },
     { key: 'status', label: 'Status' },
   ],

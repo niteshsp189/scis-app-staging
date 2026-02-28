@@ -147,7 +147,6 @@ export const PolicyDetailsSection = ({ policies, nextRenewal }: PolicyDetailsSec
             ` : ''}
             <div style="margin-top: 10px;">
               <span class="badge badge-green">Active</span>
-              <span class="badge badge-blue">Renewal Due: ${new Date(nextRenewal).toLocaleDateString('en-US', { timeZone: 'UTC' })}</span>
             </div>
           </div>
         `;

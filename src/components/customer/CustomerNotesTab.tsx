@@ -93,7 +93,7 @@ export const CustomerNotesTab = ({
         noteId,
         !currentlyPinned,
       );
-      
+
       const updatedNotes = notes.map((note) =>
         note.id === noteId ? response.data : note,
       );
@@ -102,7 +102,7 @@ export const CustomerNotesTab = ({
 
       toast({
         title: currentlyPinned ? "Note Unpinned" : "Note Pinned",
-        description: `Note has been ${currentlyPinned ? 'unpinned' : 'pinned'} successfully.`,
+        description: `Note has been ${currentlyPinned ? "unpinned" : "pinned"} successfully.`,
       });
     } catch (error: any) {
       console.error("Failed to toggle pin:", error);
@@ -217,11 +217,11 @@ export const CustomerNotesTab = ({
             <div key={note.id} className="space-y-1">
               {/* Name, timestamp, badges, and actions - OUTSIDE the color box */}
               <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2 text-base text-muted-foreground font-semibold">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold">
+                  <span>{customerNotesService.getFullName(note.creator)}</span>
                   <span>
-                    {customerNotesService.getFullName(note.creator)}
+                    {customerNotesService.formatTimestamp(note.created_at)}
                   </span>
-                  <span>{customerNotesService.formatTimestamp(note.created_at)}</span>
                   {note.is_pinned && (
                     <Badge variant="secondary" className="text-xs">
                       <Pin className="h-3 w-3 mr-1" />
@@ -268,13 +268,16 @@ export const CustomerNotesTab = ({
               </div>
               {/* Color box - only contains title and content */}
               <Card
-                className={`border-l-4 ${getNoteColorClass(note.color)} ${note.is_pinned ? 'ring-2 ring-yellow-200' : ''}`}
+                className={`border-l-4 ${getNoteColorClass(note.color)} ${note.is_pinned ? "ring-2 ring-yellow-200" : ""}`}
               >
                 <CardContent className="p-4">
                   {note.title && (
                     <h4 className="text-sm font-semibold mb-1">{note.title}</h4>
                   )}
-                  <div className="text-sm font-medium prose prose-sm max-w-none" dangerouslySetInnerHTML={renderHtmlContent(note.content)} />
+                  <div
+                    className="text-sm font-medium prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={renderHtmlContent(note.content)}
+                  />
                 </CardContent>
               </Card>
             </div>

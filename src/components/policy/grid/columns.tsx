@@ -139,28 +139,6 @@ export const createColumns = (handlers: ActionHandlers): ColumnDef<Policy>[] => 
     }
   },
   {
-    accessorKey: "end_date", 
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="End Date" />
-    ),
-    cell: ({ row }) => {
-      const endDate = row.getValue("end_date");
-      if (!endDate) return <span className="text-gray-400">Ongoing</span>;
-      
-      const date = new Date(endDate as string);
-      const isExpiringSoon = date.getTime() - new Date().getTime() < 30 * 24 * 60 * 60 * 1000; // 30 days
-      
-      return (
-        <div>
-          <div className={isExpiringSoon ? "text-orange-600 font-medium" : ""}>
-            {date.toLocaleDateString('en-US', { timeZone: 'UTC' })}
-          </div>
-          <div className="text-sm text-gray-500">{date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })}</div>
-        </div>
-      );
-    }
-  },
-  {
     accessorKey: "updated_at",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Last Updated" />

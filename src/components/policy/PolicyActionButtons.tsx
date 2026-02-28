@@ -53,11 +53,6 @@ export const PolicyActionButtons: React.FC<PolicyActionButtonsProps> = ({
   const isInGracePeriod = policy.gracePeriods?.some(
     (gp) => gp.status === "active",
   );
-  const isRenewalDue =
-    policy.status === "Active" &&
-    policy.next_renewal_date &&
-    new Date(policy.next_renewal_date) <=
-      new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
   const getStatusBadge = () => {
     const statusConfig = {
@@ -386,17 +381,8 @@ export const PolicyActionButtons: React.FC<PolicyActionButtonsProps> = ({
       )}
 
       {/* Additional Info */}
-      {(isRenewalDue || isInGracePeriod) && (
+      {isInGracePeriod && (
         <div className="text-xs text-gray-600 space-y-1">
-          {isRenewalDue && (
-            <div className="flex items-center gap-1">
-              <RefreshCw className="h-3 w-3" />
-              <span>
-                Renewal due:{" "}
-                {new Date(policy.next_renewal_date!).toLocaleDateString('en-US', { timeZone: 'UTC' })}
-              </span>
-            </div>
-          )}
           {isInGracePeriod && (
             <div className="flex items-center gap-1 text-orange-600">
               <AlertCircle className="h-3 w-3" />

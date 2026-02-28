@@ -143,7 +143,6 @@ export const EditPolicyDialog = ({
         field_values: formData.extra_fields,
         // Keep existing values for fields not in the simplified form
         premium_frequency: policy.premium_frequency,
-        end_date: policy.end_date,
         premium_amount: policy.premium_amount,
       };
 

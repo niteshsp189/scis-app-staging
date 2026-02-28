@@ -1,8 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, DollarSign, FileText, Calendar } from "lucide-react";
+import { Users, DollarSign, FileText } from "lucide-react";
 import { CustomerData } from "@/types/customer";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { formatDisplayDate } from "@/utils/dateFormatters";
 
 interface CustomerQuickStatsProps {
   customerData: CustomerData;
@@ -23,22 +22,6 @@ export const CustomerQuickStats = ({
   const totalPremium = customerData.totalPremium || 0;
   const totalActivePremium = customerData.totalActivePremium || 0;
   const familyMembersCount = customerData.familyMembers?.length || 0;
-  
-  // Get next renewal date from active policies
-  const getNextRenewalDate = () => {
-    if (activePolicies === 0) {
-      return "No Active Policy";
-    }
-    
-    // Try to get the next renewal date from the customer data
-    // This should ideally come from the earliest active policy renewal date
-    if (customerData.nextRenewal && customerData.nextRenewal !== "No Active Policy") {
-      return formatDisplayDate(customerData.nextRenewal);
-    }
-    
-    // Fallback to a default date
-    return formatDisplayDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString());
-  };
 
   const stats = [
     {
@@ -62,18 +45,11 @@ export const CustomerQuickStats = ({
       color: "text-purple-600",
       bgColor: "bg-purple-50",
     },
-    {
-      icon: Calendar,
-      label: isMobile ? "Renewal" : "Next Renewal",
-      value: getNextRenewalDate(),
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-    },
   ];
 
   return (
     <div
-      className={`grid ${isMobile ? "grid-cols-2 gap-3" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"}`}
+      className={`grid ${isMobile ? "grid-cols-2 gap-3" : "grid-cols-1 md:grid-cols-3 gap-6"}`}
     >
       {stats.map((stat, index) => (
         <Card key={index} className="border-0 shadow-sm">

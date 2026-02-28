@@ -33,14 +33,6 @@ export const CustomerCardHeader = ({ customer, onUpdateCustomerType }: CustomerC
     }
   };
 
-  const isRenewalSoon = (renewalDate: string) => {
-    const renewal = new Date(renewalDate);
-    const today = new Date();
-    const diffTime = renewal.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 30;
-  };
-
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg p-6">
       <div className="flex flex-col gap-4">
@@ -65,11 +57,6 @@ export const CustomerCardHeader = ({ customer, onUpdateCustomerType }: CustomerC
           <Badge className={`text-xs font-medium ${getStatusColor(customer.status)}`}>
             {customer.status}
           </Badge>
-          {isRenewalSoon(customer.nextRenewal) && (
-            <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
-              🔔 Renewal Soon
-            </Badge>
-          )}
           {customer.groupPolicy && (
             <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
               👥 Group Policy

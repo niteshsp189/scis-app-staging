@@ -3,15 +3,41 @@ import { useNavigate } from "react-router-dom";
 import { usePermissions } from "@/contexts/PermissionContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, MapPin, Calendar, DollarSign, FileText, Users, MessageSquare, User, Heart, Home, PhoneIncoming, PhoneOutgoing, Link, Trash2, Pin, PinOff, Plus, Edit2, BookOpen, PhoneOff, ExternalLink } from "lucide-react";
-import { customerActivitiesService, CustomerActivity } from "@/services/customerActivitiesService";
+import {
+  Phone,
+  Mail,
+  MapPin,
+  Calendar,
+  DollarSign,
+  FileText,
+  Users,
+  MessageSquare,
+  User,
+  Heart,
+  Home,
+  PhoneIncoming,
+  PhoneOutgoing,
+  Link,
+  Trash2,
+  Pin,
+  PinOff,
+  Plus,
+  Edit2,
+  BookOpen,
+  PhoneOff,
+  ExternalLink,
+} from "lucide-react";
+import {
+  customerActivitiesService,
+  CustomerActivity,
+} from "@/services/customerActivitiesService";
 import { api } from "@/lib/axios";
 import { useDataMasking, MaskedDisplay } from "@/utils/dataMasking";
 import { RelationshipForm } from "./RelationshipForm";
 import {
   customerRelationshipService,
   relationshipUtils,
-  CustomerRelationship
+  CustomerRelationship,
 } from "@/services/customerRelationshipService";
 import { toast } from "@/components/ui/use-toast";
 import { CustomerNotesDialog } from "@/components/dialogs/CustomerNotesDialog";
@@ -29,7 +55,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatPermissionError, isPermissionError, getErrorData } from "@/utils/permissionErrorHandler";
+import {
+  formatPermissionError,
+  isPermissionError,
+  getErrorData,
+} from "@/utils/permissionErrorHandler";
 import { getCustomerViewUrl } from "@/utils/customerRoutes";
 import { formatDisplayDate } from "@/utils/dateFormatters";
 
@@ -51,7 +81,16 @@ interface CustomerNote {
   id: string;
   customer_id: number;
   content: string;
-  color: "black" | "red" | "blue" | "purple" | "green" | "orange" | "yellow" | "pink" | "brown";
+  color:
+    | "black"
+    | "red"
+    | "blue"
+    | "purple"
+    | "green"
+    | "orange"
+    | "yellow"
+    | "pink"
+    | "brown";
   is_important: boolean;
   is_pinned: boolean;
   created_by: string;
@@ -158,13 +197,13 @@ interface CustomerOverviewTabProps {
 
 const defaultCustomer: Customer = {
   id: 0,
-  name: '',
-  email: '',
-  phone: '',
-  location: '',
-  joinDate: '',
-  lastContact: '',
-  nextRenewal: '',
+  name: "",
+  email: "",
+  phone: "",
+  location: "",
+  joinDate: "",
+  lastContact: "",
+  nextRenewal: "",
   totalPolicies: 0,
   totalPremium: 0,
   familyMembers: [],
@@ -174,7 +213,10 @@ const defaultCustomer: Customer = {
   notes: [],
 };
 
-export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = false }: CustomerOverviewTabProps) => {
+export const CustomerOverviewTab = ({
+  customer = defaultCustomer,
+  isAdmin = false,
+}: CustomerOverviewTabProps) => {
   const navigate = useNavigate();
   const dispatchTabChange = useEventDispatcher("changeTab");
   const {
@@ -183,28 +225,37 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
     getMaskedEmail,
     getMaskedAddress,
     canViewContact,
-    canViewAddress
+    canViewAddress,
   } = useDataMasking();
 
   // Use permission context for sensitive data
   const { hasPermission } = usePermissions();
-  const canViewSensitive = hasPermission && hasPermission("view_sensitive_data");
+  const canViewSensitive =
+    hasPermission && hasPermission("view_sensitive_data");
 
   // Priority badge color mapping - remove since we don't use priority anymore
   const [recentCallLogs, setRecentCallLogs] = useState<CustomerActivity[]>([]);
-  const [relationships, setRelationships] = useState<CustomerRelationship[]>([]);
+  const [relationships, setRelationships] = useState<CustomerRelationship[]>(
+    [],
+  );
   const [dependents, setDependents] = useState<any[]>([]);
-  const [dependentsPolicies, setDependentsPolicies] = useState<Record<number, any[]>>({});
+  const [dependentsPolicies, setDependentsPolicies] = useState<
+    Record<number, any[]>
+  >({});
   const [isAddRelationshipOpen, setIsAddRelationshipOpen] = useState(false);
   const [isLoadingRelationships, setIsLoadingRelationships] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [customerNotes, setCustomerNotes] = useState<CustomerNote[]>([]);
-  const [editingRelationship, setEditingRelationship] = useState<CustomerRelationship | null>(null);
-  const [deletingRelationshipId, setDeletingRelationshipId] = useState<number | null>(null);
+  const [editingRelationship, setEditingRelationship] =
+    useState<CustomerRelationship | null>(null);
+  const [deletingRelationshipId, setDeletingRelationshipId] = useState<
+    number | null
+  >(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [relationshipToDelete, setRelationshipToDelete] = useState<CustomerRelationship | null>(null);
+  const [relationshipToDelete, setRelationshipToDelete] =
+    useState<CustomerRelationship | null>(null);
 
   useEffect(() => {
     const fetchOverviewData = async () => {
@@ -218,13 +269,16 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
 
       try {
         // Fetch recent call logs
-        const activitiesResponse = await customerActivitiesService.getCustomerActivities(customer.id, {
-          per_page: 10, // Get more activities and filter client-side
-        });
+        const activitiesResponse =
+          await customerActivitiesService.getCustomerActivities(customer.id, {
+            per_page: 10, // Get more activities and filter client-side
+          });
 
         // Filter for only call activities (Incoming Call and Outgoing Call)
-        const callActivities = (activitiesResponse.data || []).filter((activity: CustomerActivity) =>
-          activity.activity_type === "Incoming Call" || activity.activity_type === "Outgoing Call"
+        const callActivities = (activitiesResponse.data || []).filter(
+          (activity: CustomerActivity) =>
+            activity.activity_type === "Incoming Call" ||
+            activity.activity_type === "Outgoing Call",
         );
 
         // Take only the first 2 call activities for recent calls
@@ -232,14 +286,18 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
 
         // Fetch relationships
         setIsLoadingRelationships(true);
-        const relationshipsResponse = await customerRelationshipService.getRelationships(customer.id);
-        const sortedRelationships = relationshipUtils.sortRelationshipsByPriority(relationshipsResponse);
+        const relationshipsResponse =
+          await customerRelationshipService.getRelationships(customer.id);
+        const sortedRelationships =
+          relationshipUtils.sortRelationshipsByPriority(relationshipsResponse);
         setRelationships(sortedRelationships);
         setIsLoadingRelationships(false);
 
         // Fetch dependents
         try {
-          const dependentsData = await dependentService.getDependents(customer.id);
+          const dependentsData = await dependentService.getDependents(
+            customer.id,
+          );
           setDependents(dependentsData || []);
 
           // Fetch policies for each dependent
@@ -247,13 +305,18 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
           await Promise.all(
             (dependentsData || []).map(async (dependent: any) => {
               try {
-                const policies = await dependentService.getDependentPolicies(dependent.id);
+                const policies = await dependentService.getDependentPolicies(
+                  dependent.id,
+                );
                 policiesMap[dependent.id] = policies || [];
               } catch (error) {
-                console.error(`Failed to fetch policies for dependent ${dependent.id}:`, error);
+                console.error(
+                  `Failed to fetch policies for dependent ${dependent.id}:`,
+                  error,
+                );
                 policiesMap[dependent.id] = [];
               }
-            })
+            }),
           );
           setDependentsPolicies(policiesMap);
         } catch (error) {
@@ -263,9 +326,11 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
         }
 
         // Fetch customer notes
-        const notesResponse = await customerNotesService.getCustomerNotes(customer.id, { per_page: 5 });
+        const notesResponse = await customerNotesService.getCustomerNotes(
+          customer.id,
+          { per_page: 5 },
+        );
         setCustomerNotes(notesResponse.data);
-
       } catch (err) {
         setError("Failed to load overview data. Please try again later.");
         console.error(err);
@@ -289,13 +354,16 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
 
     try {
       // Fetch recent call logs
-      const activitiesResponse = await customerActivitiesService.getCustomerActivities(customer.id, {
-        per_page: 10, // Get more activities and filter client-side
-      });
+      const activitiesResponse =
+        await customerActivitiesService.getCustomerActivities(customer.id, {
+          per_page: 10, // Get more activities and filter client-side
+        });
 
       // Filter for only call activities (Incoming Call and Outgoing Call)
-      const callActivities = (activitiesResponse.data || []).filter((activity: CustomerActivity) =>
-        activity.activity_type === "Incoming Call" || activity.activity_type === "Outgoing Call"
+      const callActivities = (activitiesResponse.data || []).filter(
+        (activity: CustomerActivity) =>
+          activity.activity_type === "Incoming Call" ||
+          activity.activity_type === "Outgoing Call",
       );
 
       // Take only the first 2 call activities for recent calls
@@ -306,19 +374,24 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
   }, [customer?.id]);
 
   // Listen for call created events
-  useEventListener('callCreated', handleCallCreated);
+  useEventListener("callCreated", handleCallCreated);
 
   const handleRelationshipSuccess = async () => {
     // Refresh the relationships list
     setIsLoadingRelationships(true);
     try {
-      const customerRelationships = await customerRelationshipService.getRelationships(customer.id);
-      const sortedRelationships = relationshipUtils.sortRelationshipsByPriority(customerRelationships);
+      const customerRelationships =
+        await customerRelationshipService.getRelationships(customer.id);
+      const sortedRelationships = relationshipUtils.sortRelationshipsByPriority(
+        customerRelationships,
+      );
       setRelationships(sortedRelationships);
       setEditingRelationship(null); // Reset editing state
 
       toast({
-        title: editingRelationship ? "Relationship Updated" : "Relationship Added",
+        title: editingRelationship
+          ? "Relationship Updated"
+          : "Relationship Added",
         description: editingRelationship
           ? "The relationship has been updated successfully."
           : "The relationship has been added successfully.",
@@ -327,7 +400,8 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
       console.error("Error refreshing relationships:", error);
       toast({
         title: "Error",
-        description: "Could not refresh relationships. Please refresh the page.",
+        description:
+          "Could not refresh relationships. Please refresh the page.",
         variant: "destructive",
       });
     } finally {
@@ -358,7 +432,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
       await customerRelationshipService.deleteRelationship(relationshipId);
 
       // Remove from local state immediately for better UX
-      setRelationships((prev) => prev.filter((rel) => rel.id !== relationshipId));
+      setRelationships((prev) =>
+        prev.filter((rel) => rel.id !== relationshipId),
+      );
 
       toast({
         title: "Relationship Removed",
@@ -381,10 +457,12 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
         let errorTitle = "Error";
 
         if (error.response?.status === 404) {
-          errorMessage = "Relationship not found. It may have already been removed.";
+          errorMessage =
+            "Relationship not found. It may have already been removed.";
           errorTitle = "Not Found";
         } else if (error.response?.status === 500) {
-          errorMessage = "Server error occurred. Please contact support if the problem persists.";
+          errorMessage =
+            "Server error occurred. Please contact support if the problem persists.";
           errorTitle = "Server Error";
         } else if (error.response?.data?.message) {
           errorMessage = error.response.data.message;
@@ -400,11 +478,16 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
 
       // Refresh the relationships list to ensure UI is in sync
       try {
-        const relationshipsResponse = await customerRelationshipService.getRelationships(customer.id);
-        const sortedRelationships = relationshipUtils.sortRelationshipsByPriority(relationshipsResponse);
+        const relationshipsResponse =
+          await customerRelationshipService.getRelationships(customer.id);
+        const sortedRelationships =
+          relationshipUtils.sortRelationshipsByPriority(relationshipsResponse);
         setRelationships(sortedRelationships);
       } catch (refreshError) {
-        console.error("Error refreshing relationships after delete failure:", refreshError);
+        console.error(
+          "Error refreshing relationships after delete failure:",
+          refreshError,
+        );
       }
     } finally {
       setDeletingRelationshipId(null);
@@ -417,10 +500,19 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
     return phone;
   };
 
-  const formatAddress = (address?: string, apartment?: string, apartmentType?: string, city?: string, state?: string, zipCode?: string, country?: string) => {
+  const formatAddress = (
+    address?: string,
+    apartment?: string,
+    apartmentType?: string,
+    city?: string,
+    state?: string,
+    zipCode?: string,
+    country?: string,
+  ) => {
     let fullAddress = "";
     if (address) fullAddress += address;
-    if (apartment && apartmentType) fullAddress += `, ${apartmentType} ${apartment}`;
+    if (apartment && apartmentType)
+      fullAddress += `, ${apartmentType} ${apartment}`;
     else if (apartment) fullAddress += `, ${apartment}`;
     if (city || state || zipCode || country) {
       fullAddress += fullAddress ? ", " : "";
@@ -436,7 +528,7 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
     if (match) {
       return {
         feet: match[1] || "",
-        inches: match[2] || ""
+        inches: match[2] || "",
       };
     }
     return { feet: "", inches: "" };
@@ -463,7 +555,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
   const { feet, inches } = parseHeight(customer.height);
 
   // Get latest 2 notes with proper sorting (pinned first, then by date)
-  const latestNotes = customerNotesService.sortNotes(customerNotes, "date", "desc").slice(0, 2) || [];
+  const latestNotes =
+    customerNotesService.sortNotes(customerNotes, "date", "desc").slice(0, 2) ||
+    [];
 
   // Color mapping for notes with all 9 colors
   const getNoteColorClass = (color: string) => {
@@ -496,7 +590,7 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
 
       toast({
         title: currentlyPinned ? "Note Unpinned" : "Note Pinned",
-        description: `Note has been ${currentlyPinned ? 'unpinned' : 'pinned'} successfully.`,
+        description: `Note has been ${currentlyPinned ? "unpinned" : "pinned"} successfully.`,
       });
     } catch (error: any) {
       console.error("Failed to toggle pin:", error);
@@ -528,7 +622,6 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
 
   return (
     <div className="space-y-6">
-
       {/* Personal Information, Contact Information, and Physical Details - Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column: Personal Information and Physical Details */}
@@ -544,13 +637,14 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
               <div className="p-3 bg-muted rounded-lg col-span-2">
                 <div className="flex items-center gap-2 mb-2">
                   <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground font-medium">Full Name</span>
+                  <span className="text-xs text-muted-foreground font-medium">
+                    Full Name
+                  </span>
                 </div>
                 <span className="text-sm font-semibold text-foreground">
                   {customer.firstName && customer.lastName
-                    ? `${customer.firstName} ${customer.middleName ? customer.middleName + ' ' : ''}${customer.lastName}`
-                    : customer.name
-                  }
+                    ? `${customer.firstName} ${customer.middleName ? customer.middleName + " " : ""}${customer.lastName}`
+                    : customer.name}
                 </span>
               </div>
 
@@ -559,9 +653,13 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 <div className="p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs text-muted-foreground font-medium">Gender</span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Gender
+                    </span>
                   </div>
-                  <span className="text-sm font-semibold text-foreground">{customer.gender}</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    {customer.gender}
+                  </span>
                 </div>
               )}
 
@@ -570,7 +668,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 <div className="p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs text-muted-foreground font-medium">Date of Birth</span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Date of Birth
+                    </span>
                   </div>
                   <span className="text-sm font-semibold text-foreground">
                     {formatDisplayDate(customer.dateOfBirth)}
@@ -583,9 +683,13 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 <div className="p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs text-muted-foreground font-medium">Marital Status</span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Marital Status
+                    </span>
                   </div>
-                  <span className="text-sm font-semibold text-foreground">{customer.maritalStatus}</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    {customer.maritalStatus}
+                  </span>
                 </div>
               )}
 
@@ -594,7 +698,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 <div className="p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs text-muted-foreground font-medium">SSN</span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      SSN
+                    </span>
                   </div>
                   <MaskedDisplay
                     value={customer.ssn}
@@ -620,10 +726,14 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                   <div className="p-3 bg-muted rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <Heart className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span className="text-xs text-muted-foreground font-medium">Height</span>
+                      <span className="text-xs text-muted-foreground font-medium">
+                        Height
+                      </span>
                     </div>
                     <span className="text-sm font-semibold text-foreground">
-                      {feet && inches ? `${feet} ft ${inches} in` : customer.height}
+                      {feet && inches
+                        ? `${feet} ft ${inches} in`
+                        : customer.height}
                     </span>
                   </div>
                 )}
@@ -633,9 +743,13 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                   <div className="p-3 bg-muted rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <Heart className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span className="text-xs text-muted-foreground font-medium">Weight</span>
+                      <span className="text-xs text-muted-foreground font-medium">
+                        Weight
+                      </span>
                     </div>
-                    <span className="text-sm font-semibold text-foreground">{customer.weight}</span>
+                    <span className="text-sm font-semibold text-foreground">
+                      {customer.weight}
+                    </span>
                   </div>
                 )}
 
@@ -644,9 +758,15 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                   <div className="p-3 bg-muted rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <Heart className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span className="text-xs text-muted-foreground font-medium">Smoker</span>
+                      <span className="text-xs text-muted-foreground font-medium">
+                        Smoker
+                      </span>
                     </div>
-                    <Badge variant={customer.smoker === "Yes" ? "destructive" : "default"}>
+                    <Badge
+                      variant={
+                        customer.smoker === "Yes" ? "destructive" : "default"
+                      }
+                    >
                       {customer.smoker}
                     </Badge>
                   </div>
@@ -669,7 +789,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
               <div className="p-3 bg-muted rounded-lg col-span-2">
                 <div className="flex items-center gap-2 mb-2">
                   <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground font-medium">Email</span>
+                  <span className="text-xs text-muted-foreground font-medium">
+                    Email
+                  </span>
                 </div>
                 <MaskedDisplay
                   value={customer.email}
@@ -685,7 +807,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 <div className="p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs text-muted-foreground font-medium">Cell Phone</span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Cell Phone
+                    </span>
                   </div>
                   <MaskedDisplay
                     value={customer.cellPhone}
@@ -701,7 +825,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 <div className="p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs text-muted-foreground font-medium">Home Phone</span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Home Phone
+                    </span>
                   </div>
                   <MaskedDisplay
                     value={customer.homePhone}
@@ -717,7 +843,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 <div className="p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs text-muted-foreground font-medium">Work Phone</span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Work Phone
+                    </span>
                   </div>
                   <MaskedDisplay
                     value={customer.workPhone}
@@ -733,7 +861,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 <div className="p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs text-muted-foreground font-medium">Fax</span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Fax
+                    </span>
                   </div>
                   <MaskedDisplay
                     value={customer.fax}
@@ -757,10 +887,20 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
               <div className="p-3 bg-muted rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground font-medium">Physical Address</span>
+                  <span className="text-xs text-muted-foreground font-medium">
+                    Physical Address
+                  </span>
                 </div>
                 <MaskedDisplay
-                  value={formatAddress(customer.address, customer.apartment, customer.apartmentType, customer.city, customer.state, customer.zipCode, customer.country)}
+                  value={formatAddress(
+                    customer.address,
+                    customer.apartment,
+                    customer.apartmentType,
+                    customer.city,
+                    customer.state,
+                    customer.zipCode,
+                    customer.country,
+                  )}
                   type="address"
                   className="text-sm text-foreground font-medium"
                   fallback="No address provided"
@@ -772,7 +912,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
               <div className="p-3 bg-muted rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground font-medium">Referral Source</span>
+                  <span className="text-xs text-muted-foreground font-medium">
+                    Referral Source
+                  </span>
                 </div>
                 <span className="text-sm font-medium text-foreground">
                   {customer.referral || "Not specified"}
@@ -784,10 +926,20 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 <div className="p-3 bg-muted rounded-lg col-span-2">
                   <div className="flex items-center gap-2 mb-2">
                     <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs text-muted-foreground font-medium">Mailing Address</span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Mailing Address
+                    </span>
                   </div>
                   <MaskedDisplay
-                    value={formatAddress(customer.mailingAddress, customer.mailingApartment, customer.mailingApartmentType, customer.mailingCity, customer.mailingState, customer.mailingZipCode, customer.mailingCountry)}
+                    value={formatAddress(
+                      customer.mailingAddress,
+                      customer.mailingApartment,
+                      customer.mailingApartmentType,
+                      customer.mailingCity,
+                      customer.mailingState,
+                      customer.mailingZipCode,
+                      customer.mailingCountry,
+                    )}
                     type="address"
                     className="text-sm text-foreground font-medium"
                     fallback="No mailing address provided"
@@ -815,8 +967,12 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 </div>
               </div>
               <div>
-                <p className="text-sm font-semibold text-blue-900">Included in Client Book</p>
-                <p className="text-xs text-blue-700">This customer mark as included in client book</p>
+                <p className="text-sm font-semibold text-blue-900">
+                  Included in Client Book
+                </p>
+                <p className="text-xs text-blue-700">
+                  This customer mark as included in client book
+                </p>
               </div>
             </div>
           ) : (
@@ -827,8 +983,12 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 </div>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-700">Not Included in Client Book</p>
-                <p className="text-xs text-gray-600">This customer is not part of client book</p>
+                <p className="text-sm font-semibold text-gray-700">
+                  Not Included in Client Book
+                </p>
+                <p className="text-xs text-gray-600">
+                  This customer is not part of client book
+                </p>
               </div>
             </div>
           )}
@@ -840,8 +1000,12 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 </div>
               </div>
               <div>
-                <p className="text-sm font-semibold text-red-900">Included in Don't Call List</p>
-                <p className="text-xs text-red-700">This customer mark as to include in do not call list</p>
+                <p className="text-sm font-semibold text-red-900">
+                  Included in Don't Call List
+                </p>
+                <p className="text-xs text-red-700">
+                  This customer mark as to include in do not call list
+                </p>
               </div>
             </div>
           ) : (
@@ -852,8 +1016,12 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 </div>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-700">Not Included in Don't Call List</p>
-                <p className="text-xs text-gray-600">This customer is not in do not call list</p>
+                <p className="text-sm font-semibold text-gray-700">
+                  Not Included in Don't Call List
+                </p>
+                <p className="text-xs text-gray-600">
+                  This customer is not in do not call list
+                </p>
               </div>
             </div>
           )}
@@ -921,11 +1089,7 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
               <MessageSquare className="h-4 w-4 text-primary" />
               Latest Notes
             </h4>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleAddNote}
-            >
+            <Button variant="outline" size="sm" onClick={handleAddNote}>
               <Plus className="h-4 w-4 mr-1" />
               Add Note
             </Button>
@@ -936,11 +1100,13 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 <div key={note.id} className="space-y-1">
                   {/* Name, timestamp, badges - OUTSIDE the color box */}
                   <div className="flex items-center justify-between px-1">
-                    <div className="flex items-center gap-2 text-base text-muted-foreground font-semibold">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold">
                       <span>
                         {customerNotesService.getFullName(note.creator)}
                       </span>
-                      <span>{customerNotesService.formatTimestamp(note.created_at)}</span>
+                      <span>
+                        {customerNotesService.formatTimestamp(note.created_at)}
+                      </span>
                       {note.is_pinned && (
                         <Badge variant="secondary" className="text-xs">
                           <Pin className="h-3 w-3 mr-1" />
@@ -948,7 +1114,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                         </Badge>
                       )}
                       {note.is_important && (
-                        <Badge variant="secondary" className="text-xs">Important</Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          Important
+                        </Badge>
                       )}
                     </div>
                     <Button
@@ -967,12 +1135,14 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                   </div>
                   {/* Color box - only title and content */}
                   <div
-                    className={`p-3 rounded-lg border-l-4 ${getNoteColorClass(note.color)} ${note.is_pinned ? 'ring-1 ring-yellow-200' : ''}`}
+                    className={`p-3 rounded-lg border-l-4 ${getNoteColorClass(note.color)} ${note.is_pinned ? "ring-1 ring-yellow-200" : ""}`}
                   >
                     {note.title && (
-                      <h4 className="text-sm font-semibold mb-1">{note.title}</h4>
+                      <h4 className="text-sm font-semibold mb-1">
+                        {note.title}
+                      </h4>
                     )}
-                    <div 
+                    <div
                       className="text-sm font-medium text-foreground prose prose-sm max-w-none"
                       dangerouslySetInnerHTML={{ __html: note.content }}
                     />
@@ -996,11 +1166,7 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
               <Users className="h-4 w-4 text-primary" />
               Related People
             </h4>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleAddRelationship}
-            >
+            <Button variant="outline" size="sm" onClick={handleAddRelationship}>
               <Link className="h-4 w-4 mr-1" />
               Add People
             </Button>
@@ -1010,167 +1176,210 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
           {isLoadingRelationships ? (
             <div className="text-center py-4">
               <div className="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
-              <p className="text-sm text-muted-foreground mt-2">Loading relationships...</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Loading relationships...
+              </p>
             </div>
-          ) : (() => {
-            // Get IDs of converted dependents (to avoid duplication)
-            const convertedDependentIds = new Set(
-              (dependents || [])
-                .filter(d => d.relatedCustomerId)
-                .map(d => d.relatedCustomerId)
-            );
+          ) : (
+            (() => {
+              // Get IDs of converted dependents (to avoid duplication)
+              const convertedDependentIds = new Set(
+                (dependents || [])
+                  .filter((d) => d.relatedCustomerId)
+                  .map((d) => d.relatedCustomerId),
+              );
 
-            // Combine relationships and dependents
-            const allRelatedPeople = [
-              // Manual relationships (exclude those that are converted dependents)
-              ...(relationships || [])
-                .filter(rel => !convertedDependentIds.has(rel.related_customer?.id))
-                .map(rel => ({
-                  ...rel,
-                  type: 'relationship' as const,
-                  displayName: rel.related_customer_name || `${rel.related_customer?.first_name} ${rel.related_customer?.last_name}`,
-                  badgeText: rel.relationship_type,
-                  badgeColor: relationshipUtils.getRelationshipTypeColor(rel.relationship_type),
-                  addedDate: rel.created_at,
-                  isEditable: true,
-                  isDeletable: true,
-                  navigateTo: rel.related_customer?.id ? getCustomerViewUrl(
-                    rel.related_customer.id, 
-                    rel.related_customer.status || rel.related_customer.customer_type,
-                    rel.related_customer.legacy_client_id
-                  ) : null,
+              // Combine relationships and dependents
+              const allRelatedPeople = [
+                // Manual relationships (exclude those that are converted dependents)
+                ...(relationships || [])
+                  .filter(
+                    (rel) =>
+                      !convertedDependentIds.has(rel.related_customer?.id),
+                  )
+                  .map((rel) => ({
+                    ...rel,
+                    type: "relationship" as const,
+                    displayName:
+                      rel.related_customer_name ||
+                      `${rel.related_customer?.first_name} ${rel.related_customer?.last_name}`,
+                    badgeText: rel.relationship_type,
+                    badgeColor: relationshipUtils.getRelationshipTypeColor(
+                      rel.relationship_type,
+                    ),
+                    addedDate: rel.created_at,
+                    isEditable: true,
+                    isDeletable: true,
+                    navigateTo: rel.related_customer?.id
+                      ? getCustomerViewUrl(
+                          rel.related_customer.id,
+                          rel.related_customer.status ||
+                            rel.related_customer.customer_type,
+                          rel.related_customer.legacy_client_id,
+                        )
+                      : null,
+                  })),
+                // Dependents (use legacy_client_id for converted ones)
+                ...(dependents || []).map((dependent) => ({
+                  id: `dependent-${dependent.id}`,
+                  type: "dependent" as const,
+                  displayName: `${dependent.firstName} ${dependent.lastName}`,
+                  badgeText: dependent.relationship || "Dependent",
+                  badgeColor: "bg-green-100 text-green-800 border-green-200",
+                  addedDate: null,
+                  isEditable: false,
+                  isDeletable: false,
+                  policies: (dependentsPolicies[dependent.id] || []).map(
+                    (policy: any) => policy.policy_number,
+                  ),
+                  navigateTo: dependent.relatedCustomerId
+                    ? getCustomerViewUrl(
+                        dependent.relatedCustomerId,
+                        dependent.relatedCustomerStatus ||
+                          dependent.status ||
+                          "Client",
+                        dependent.relatedCustomerLegacyId,
+                      )
+                    : (null as string | null),
                 })),
-              // Dependents (use legacy_client_id for converted ones)
-              ...(dependents || []).map((dependent) => ({
-                id: `dependent-${dependent.id}`,
-                type: 'dependent' as const,
-                displayName: `${dependent.firstName} ${dependent.lastName}`,
-                badgeText: dependent.relationship || 'Dependent',
-                badgeColor: 'bg-green-100 text-green-800 border-green-200',
-                addedDate: null,
-                isEditable: false,
-                isDeletable: false,
-                policies: (dependentsPolicies[dependent.id] || []).map((policy: any) => policy.policy_number),
-                navigateTo: dependent.relatedCustomerId
-                  ? getCustomerViewUrl(
-                      dependent.relatedCustomerId,
-                      dependent.relatedCustomerStatus || dependent.status || 'Client',
-                      dependent.relatedCustomerLegacyId
-                    )
-                  : null as string | null,
-              })),
-            ];
+              ];
 
-            return allRelatedPeople.length > 0 ? (
-              <div className="space-y-3">
-                {allRelatedPeople.map((person) => (
-                  <div
-                    key={person.id}
-                    className={`flex items-center justify-between p-4 border rounded-lg ${person.type === 'relationship'
-                        ? 'bg-blue-50 border-blue-200'
-                        : 'bg-green-50 border-green-200'
+              return allRelatedPeople.length > 0 ? (
+                <div className="space-y-3">
+                  {allRelatedPeople.map((person) => (
+                    <div
+                      key={person.id}
+                      className={`flex items-center justify-between p-4 border rounded-lg ${
+                        person.type === "relationship"
+                          ? "bg-blue-50 border-blue-200"
+                          : "bg-green-50 border-green-200"
                       }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${person.type === 'relationship'
-                          ? 'bg-blue-100'
-                          : 'bg-green-100'
-                        }`}>
-                        {person.type === 'relationship' ? (
-                          <Link className={`h-4 w-4 ${person.type === 'relationship'
-                              ? 'text-blue-600'
-                              : 'text-green-600'
-                            }`} />
-                        ) : (
-                          <Users className="h-4 w-4 text-green-600" />
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-2 rounded-full ${
+                            person.type === "relationship"
+                              ? "bg-blue-100"
+                              : "bg-green-100"
+                          }`}
+                        >
+                          {person.type === "relationship" ? (
+                            <Link
+                              className={`h-4 w-4 ${
+                                person.type === "relationship"
+                                  ? "text-blue-600"
+                                  : "text-green-600"
+                              }`}
+                            />
+                          ) : (
+                            <Users className="h-4 w-4 text-green-600" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            {person.navigateTo ? (
+                              <a
+                                href={
+                                  person.navigateTo!.startsWith("tab:")
+                                    ? undefined
+                                    : person.navigateTo!
+                                }
+                                className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex items-center gap-1"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  if (person.navigateTo!.startsWith("tab:")) {
+                                    dispatchTabChange(
+                                      person.navigateTo!.replace("tab:", ""),
+                                    );
+                                  } else {
+                                    navigate(person.navigateTo!);
+                                    window.scrollTo({
+                                      top: 0,
+                                      behavior: "smooth",
+                                    });
+                                  }
+                                }}
+                                title={`View ${person.displayName}`}
+                              >
+                                {person.displayName}
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            ) : (
+                              <h5 className="font-medium text-foreground">
+                                {person.displayName}
+                              </h5>
+                            )}
+                            <Badge
+                              variant="outline"
+                              className={person.badgeColor}
+                            >
+                              {person.badgeText}
+                            </Badge>
+                            {person.type === "dependent" && (
+                              <Badge variant="secondary" className="text-xs">
+                                Dependent
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {person.type === "relationship"
+                              ? `Added on ${formatDisplayDate(person.addedDate)}`
+                              : person.policies && person.policies.length > 0
+                                ? `Policies: ${person.policies.join(", ")}`
+                                : "Family member"}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        {person.isEditable && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleEditRelationship(
+                                person as CustomerRelationship,
+                              )
+                            }
+                            title="Edit relationship"
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                        {person.isDeletable && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleDeleteRelationship(
+                                person as CustomerRelationship,
+                              )
+                            }
+                            title="Delete relationship"
+                            disabled={deletingRelationshipId === person.id}
+                          >
+                            {deletingRelationshipId === person.id ? (
+                              <div className="animate-spin h-3 w-3 border border-gray-300 border-t-transparent rounded-full"></div>
+                            ) : (
+                              <Trash2 className="h-3 w-3" />
+                            )}
+                          </Button>
                         )}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          {person.navigateTo ? (
-                            <a
-                              href={person.navigateTo!.startsWith('tab:') ? undefined : person.navigateTo!}
-                              className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex items-center gap-1"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                if (person.navigateTo!.startsWith('tab:')) {
-                                  dispatchTabChange(person.navigateTo!.replace('tab:', ''));
-                                } else {
-                                  navigate(person.navigateTo!);
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }
-                              }}
-                              title={`View ${person.displayName}`}
-                            >
-                              {person.displayName}
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          ) : (
-                            <h5 className="font-medium text-foreground">
-                              {person.displayName}
-                            </h5>
-                          )}
-                          <Badge
-                            variant="outline"
-                            className={person.badgeColor}
-                          >
-                            {person.badgeText}
-                          </Badge>
-                          {person.type === 'dependent' && (
-                            <Badge variant="secondary" className="text-xs">
-                              Dependent
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {person.type === 'relationship' ? (
-                            `Added on ${formatDisplayDate(person.addedDate)}`
-                          ) : person.policies && person.policies.length > 0 ? (
-                            `Policies: ${person.policies.join(', ')}`
-                          ) : (
-                            'Family member'
-                          )}
-                        </div>
-                      </div>
                     </div>
-                    <div className="flex gap-1">
-                      {person.isEditable && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditRelationship(person as CustomerRelationship)}
-                          title="Edit relationship"
-                        >
-                          <Edit2 className="h-3 w-3" />
-                        </Button>
-                      )}
-                      {person.isDeletable && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteRelationship(person as CustomerRelationship)}
-                          title="Delete relationship"
-                          disabled={deletingRelationshipId === person.id}
-                        >
-                          {deletingRelationshipId === person.id ? (
-                            <div className="animate-spin h-3 w-3 border border-gray-300 border-t-transparent rounded-full"></div>
-                          ) : (
-                            <Trash2 className="h-3 w-3" />
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 text-muted-foreground">
-                <Users className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
-                <p className="text-sm">No related people added yet</p>
-                <p className="text-xs">Click "Add Relationship" to connect this customer with others</p>
-              </div>
-            );
-          })()}
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Users className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                  <p className="text-sm">No related people added yet</p>
+                  <p className="text-xs">
+                    Click "Add Relationship" to connect this customer with
+                    others
+                  </p>
+                </div>
+              );
+            })()
+          )}
         </div>
       </div>
 
@@ -1179,7 +1388,9 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
         <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
           <div className="flex items-center gap-2 mb-2">
             <Users className="h-5 w-5 text-purple-600" />
-            <h4 className="font-semibold text-purple-800">Group Policy Coverage</h4>
+            <h4 className="font-semibold text-purple-800">
+              Group Policy Coverage
+            </h4>
           </div>
           <p className="text-purple-700 font-medium">{customer.groupPolicy}</p>
         </div>
@@ -1221,18 +1432,36 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                     ) : (
                       <PhoneOutgoing className="h-4 w-4 text-blue-600" />
                     )}
-                    <Badge variant={log.activity_type === "Incoming Call" ? "default" : "secondary"} className="text-xs">
+                    <Badge
+                      variant={
+                        log.activity_type === "Incoming Call"
+                          ? "default"
+                          : "secondary"
+                      }
+                      className="text-xs"
+                    >
                       {log.activity_type}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      {customerActivitiesService.formatActivityDateTime(log.activity_date, log.activity_time)} • {customerActivitiesService.formatDuration(log.duration_minutes)}
+                      {customerActivitiesService.formatActivityDateTime(
+                        log.activity_date,
+                        log.activity_time,
+                      )}{" "}
+                      •{" "}
+                      {customerActivitiesService.formatDuration(
+                        log.duration_minutes,
+                      )}
                     </span>
                   </div>
-                  <p className="text-sm text-foreground">{log.description || log.title}</p>
+                  <p className="text-sm text-foreground">
+                    {log.description || log.title}
+                  </p>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No recent call logs found.</p>
+              <p className="text-sm text-muted-foreground">
+                No recent call logs found.
+              </p>
             )}
           </div>
         )}
@@ -1255,12 +1484,14 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
       {/* Customer Notes Dialog */}
       <CustomerNotesDialog
         customerId={customer.id || 0}
-        customerName={customer.name || `${customer.firstName} ${customer.lastName}`}
+        customerName={
+          customer.name || `${customer.firstName} ${customer.lastName}`
+        }
         notes={customerNotes}
         onUpdateNotes={handleNotesUpdate}
         open={notesDialogOpen}
         onOpenChange={setNotesDialogOpen}
-        relatedContacts={relationships.map(rel => ({
+        relatedContacts={relationships.map((rel) => ({
           id: rel.related_customer?.id || rel.id,
           name: rel.related_customer_name,
           first_name: rel.related_customer?.first_name,

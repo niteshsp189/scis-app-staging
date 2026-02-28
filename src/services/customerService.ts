@@ -188,33 +188,6 @@ const transformCustomerResponse = (
   apiCustomer: CustomerResponse,
 ): CustomerData => {
 
-  // Helper function to get next renewal date from active policies
-  const getNextRenewalDate = () => {
-    // Check if there are any active policies with renewal dates
-    if (apiCustomer.policies && apiCustomer.policies.length > 0) {
-      const activePolicies = apiCustomer.policies.filter(p => p.status === 'Active');
-      
-      if (activePolicies.length === 0) {
-        return "No Active Policy";
-      }
-      
-      // Find the earliest renewal date from active policies
-      const renewalDates = activePolicies
-        .map(p => p.next_renewal_date || p.end_date)
-        .filter(date => date)
-        .sort();
-      
-      if (renewalDates.length > 0) {
-        return renewalDates[0];
-      }
-    }
-    
-    // Fallback to one year from now if no policy data
-    const futureDate = new Date();
-    futureDate.setFullYear(futureDate.getFullYear() + 1);
-    return futureDate.toISOString();
-  };
-
   const transformedData = {
     id: apiCustomer.id,
     // Name fields
@@ -292,7 +265,7 @@ const transformCustomerResponse = (
     totalActivePremium: apiCustomer.total_active_premium || 0,
     lastContact: apiCustomer.updated_at,
     policies: apiCustomer.policies?.map((p) => p.policy_number) || [],
-    nextRenewal: getNextRenewalDate(), // Default to one year from now
+    nextRenewal: "", // Renewal logic removed
     relationship: "", // Not applicable for main customer
     familyId: apiCustomer.family_id || "",
     dependents:

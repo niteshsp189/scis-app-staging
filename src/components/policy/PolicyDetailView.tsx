@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { api } from "@/lib/axios";
@@ -69,6 +70,7 @@ export const PolicyDetailView: React.FC<PolicyDetailViewProps> = ({
   onPolicyUpdate,
 }) => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [newNote, setNewNote] = useState("");
 
   // Document-related state
@@ -517,9 +519,21 @@ export const PolicyDetailView: React.FC<PolicyDetailViewProps> = ({
                   <CardContent className="space-y-4">
                     <div>
                       <Label className="text-sm font-medium">Name</Label>
-                      <p className="text-sm text-gray-600">
-                        {currentPolicy.customer?.name}
-                      </p>
+                      {currentPolicy.customer?.id ? (
+                        <p
+                          className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium"
+                          onClick={() => {
+                            onClose();
+                            navigate(`/clients/view/${currentPolicy.customer!.id}`);
+                          }}
+                        >
+                          {currentPolicy.customer?.name}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-600">
+                          {currentPolicy.customer?.name}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-sm font-medium">Email</Label>
@@ -635,21 +649,11 @@ export const PolicyDetailView: React.FC<PolicyDetailViewProps> = ({
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {currentPolicy.agents && currentPolicy.agents.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {currentPolicy.agents.map(
-                        (
-                          agent: {
-                            agent_type?: string;
-                            agent?: {
-                              name?: string;
-                              first_name?: string;
-                              last_name?: string;
-                              email?: string;
-                            };
-                          },
-                          index: number,
-                        ) => (
+                  {(() => {
+                    const activeAgents = (currentPolicy.agents || []).filter(a => a.is_active);
+                    return activeAgents.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {activeAgents.map((agent, index) => (
                           <div key={index} className="border rounded-lg p-4">
                             <div className="flex items-center justify-between mb-3">
                               <Badge
@@ -670,10 +674,7 @@ export const PolicyDetailView: React.FC<PolicyDetailViewProps> = ({
                                   Agent Name
                                 </Label>
                                 <p className="text-sm font-medium">
-                                  {agent.agent?.name ||
-                                    agent.agent?.first_name +
-                                      " " +
-                                      agent.agent?.last_name}
+                                  {agent.agent?.name || `${agent.agent?.first_name || ''} ${agent.agent?.last_name || ''}`.trim() || '—'}
                                 </p>
                               </div>
                               <div>
@@ -681,20 +682,20 @@ export const PolicyDetailView: React.FC<PolicyDetailViewProps> = ({
                                   Email
                                 </Label>
                                 <p className="text-sm text-gray-600">
-                                  {agent.agent?.email || "N/A"}
+                                  {agent.agent?.email || "—"}
                                 </p>
                               </div>
                             </div>
                           </div>
-                        ),
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p>No agents assigned to this policy</p>
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                        <p>No agents assigned to this policy</p>
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
 
@@ -728,67 +729,67 @@ export const PolicyDetailView: React.FC<PolicyDetailViewProps> = ({
                             parsedFieldValues = {};
                           }
                         }
+                        if (!parsedFieldValues || typeof parsedFieldValues !== 'object') {
+                          parsedFieldValues = {};
+                        }
 
-                        return (
-                          parsedFieldValues &&
-                          Object.entries(parsedFieldValues).map(
-                            ([key, value]: [string, unknown]) => {
-                              // Only show non-empty values
-                              if (
-                                !value ||
-                                value === "" ||
-                                value === null ||
-                                value === undefined
-                              )
-                                return null;
+                        // Iterate by plan type extra_fields config for consistency
+                        const planType =
+                          currentPolicy.plan?.planType ||
+                          currentPolicy.plan?.plan_type;
+                        const extraFields = planType?.extra_fields || {};
 
-                              // Get the field configuration from plan type (handle both camelCase and snake_case)
-                              const planType =
-                                currentPolicy.plan?.planType ||
-                                currentPolicy.plan?.plan_type;
-                              const fieldConfig = planType?.extra_fields?.[key];
-                              const label =
-                                fieldConfig?.label ||
-                                key
-                                  .replace(/_/g, " ")
-                                  .replace(/\b\w/g, (c) => c.toUpperCase());
+                        return Object.entries(extraFields)
+                          .filter(([_, config]: [string, any]) => config.included)
+                          .map(([key, config]: [string, any]) => {
+                            const rawValue = (parsedFieldValues as Record<string, any>)[key];
+                            let displayValue = rawValue !== null && rawValue !== undefined && rawValue !== '' ? String(rawValue) : '—';
 
-                              return (
-                                <div key={key}>
-                                  <Label className="text-sm font-medium">
-                                    {label}
-                                  </Label>
-                                  <p className="text-sm text-gray-600">
-                                    {typeof value === "string" &&
-                                    key.includes("date")
-                                      ? new Date(value).toLocaleDateString('en-US', { timeZone: 'UTC' })
-                                      : String(value)}
-                                  </p>
-                                </div>
-                              );
-                            },
-                          )
-                        );
+                            // Format dates
+                            if (key.includes('date') && displayValue !== '—') {
+                              try {
+                                const d = new Date(displayValue);
+                                if (!isNaN(d.getTime())) {
+                                  displayValue = d.toLocaleDateString('en-US', { timeZone: 'UTC', month: '2-digit', day: '2-digit', year: 'numeric' });
+                                }
+                              } catch {}
+                            }
+
+                            // Format currency-like numbers
+                            if (['premium', 'deductible', 'out_of_pocket', 'credit', 'payment', 'value'].includes(key) && displayValue !== '—') {
+                              const num = parseFloat(displayValue);
+                              if (!isNaN(num)) {
+                                displayValue = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                              }
+                            }
+
+                            const label = config.label || key.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+
+                            return (
+                              <div key={key}>
+                                <Label className="text-sm font-medium">
+                                  {label}
+                                </Label>
+                                <p className="text-sm text-gray-600">
+                                  {displayValue}
+                                </p>
+                              </div>
+                            );
+                          });
                       })()}
                     </div>
-                    {!currentPolicy.field_values ||
-                    (typeof currentPolicy.field_values === "object" &&
-                      Object.keys(currentPolicy.field_values).length === 0) ||
-                    (typeof currentPolicy.field_values === "string" &&
-                      (() => {
-                        try {
-                          return (
-                            Object.keys(JSON.parse(currentPolicy.field_values))
-                              .length === 0
-                          );
-                        } catch {
-                          return true;
-                        }
-                      })()) ? (
-                      <p className="text-gray-500 text-center py-4">
-                        No additional information available
-                      </p>
-                    ) : null}
+                    {(() => {
+                      const planType =
+                        currentPolicy.plan?.planType ||
+                        currentPolicy.plan?.plan_type;
+                      const extraFields = planType?.extra_fields || {};
+                      const hasIncludedFields = Object.values(extraFields).some((config: any) => config.included);
+                      return !hasIncludedFields ? (
+                        <p className="text-gray-500 text-center py-4">
+                          No additional information available
+                        </p>
+                      ) : null;
+                    })()}
                   </CardContent>
                 </Card>
               ) : null}
