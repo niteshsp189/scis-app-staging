@@ -130,6 +130,14 @@ export default function GlobalCalls() {
   const [forwardedToSearchOpen, setForwardedToSearchOpen] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  // details dialog state for row-click behaviour
+  const [detailsCall, setDetailsCall] = useState<ActivityWithCustomer | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+
+  const openDetails = (call: ActivityWithCustomer) => {
+    setDetailsCall(call);
+    setDetailsDialogOpen(true);
+  }
 
   // Edit Dialog State
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -1255,12 +1263,12 @@ export default function GlobalCalls() {
             /* Table Layout */
             <>
               <div className="overflow-x-auto">
-                <Table className="min-w-[800px]">
+                <Table className="w-full table-fixed">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[100px]">Type</TableHead>
-                      <TableHead className="min-w-[220px]">Customer</TableHead>
-                      <TableHead className="w-[160px] min-w-[130px]">Date & Time</TableHead>
+                      <TableHead className="w-[90px]">Type</TableHead>
+                      <TableHead className="w-[240px]">Customer</TableHead>
+                      <TableHead className="w-[160px]">Date & Time</TableHead>
                       <TableHead className="w-[130px]">Performed By</TableHead>
                       <TableHead className="w-[120px]">Called For</TableHead>
                       <TableHead className="w-[100px]">Status</TableHead>
@@ -1269,7 +1277,12 @@ export default function GlobalCalls() {
                   </TableHeader>
                   <TableBody>
                     {calls.map((call) => (
-                      <TableRow key={call.id}>
+                      <TableRow key={call.id} className="hover:bg-gray-50 cursor-pointer" onClick={(e) => {
+                            // ignore if clicked inside customer name cell (handled separately)
+                            if ((e.target as HTMLElement).closest('.customer-cell')) return;
+                            // ignore clicks on action buttons so they behave normally
+                            openDetails(call);
+                          }}>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {call.activity_type === "Incoming Call" ? (
@@ -1282,14 +1295,17 @@ export default function GlobalCalls() {
                             </Badge>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="customer-cell max-w-[240px]">
                           {call.customer ? (
                             <div
-                              className="min-w-0 cursor-pointer hover:text-blue-600 transition-colors"
-                              onClick={() => navigate(getCustomerViewUrl(call.customer!.id, call.customer!.status) + '?tab=calls')}
+                              className="truncate cursor-pointer hover:text-blue-600 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(getCustomerViewUrl(call.customer!.id, call.customer!.status) + '?tab=calls');
+                              }}
                             >
                               <div className="flex items-center gap-2">
-                                <p className="font-medium text-sm truncate hover:underline">
+                                <p className="font-medium text-sm truncate hover:underline max-w-full">
                                   {call.customer.first_name} {call.customer.last_name}
                                 </p>
                                 <Badge
@@ -1346,7 +1362,7 @@ export default function GlobalCalls() {
                                   customerName={`${call.customer.first_name} ${call.customer.last_name}`}
                                   customerId={call.customer.id}
                                   trigger={
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e)=>e.stopPropagation()}>
                                       <Eye className="h-4 w-4" />
                                     </Button>
                                   }
@@ -1354,7 +1370,7 @@ export default function GlobalCalls() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleEditCall(call)}
+                                  onClick={(e)=>{e.stopPropagation(); handleEditCall(call);}}
                                   className="h-8 w-8 p-0"
                                 >
                                   <Edit className="h-4 w-4" />
@@ -1363,7 +1379,7 @@ export default function GlobalCalls() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => {
+                                    onClick={(e)=>{e.stopPropagation();
                                       setSelectedCustomer(call.customer || null);
                                       const title = call.activity_type === "Incoming Call"
                                         ? "Answer Call - " + (call.title || call.description || "").substring(0, 30)
@@ -1420,6 +1436,15 @@ export default function GlobalCalls() {
           )}
         </CardContent>
       </Card>
+      {detailsCall && (
+        <CallDetailsDialog
+          call={detailsCall}
+          customerName={`${detailsCall.customer?.first_name} ${detailsCall.customer?.last_name}`}
+          customerId={detailsCall.customer?.id || 0}
+          open={detailsDialogOpen}
+          onOpenChange={setDetailsDialogOpen}
+        />
+      )}
     </div>
   );
 }

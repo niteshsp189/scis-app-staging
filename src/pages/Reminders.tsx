@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { EmployeeCombobox } from "@/components/ui/employee-combobox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Filter, RefreshCw, ChevronDown, ChevronUp, Printer, Plus, Bell, Table2, UserCircle, Calendar, Clock, User, Check, Trash2, AlertTriangle, Pencil, ChevronLeft, ChevronRight } from "lucide-react";
@@ -1013,36 +1014,30 @@ export default function Reminders() {
 
                     <div className="space-y-2">
                       <Label htmlFor="createdBy" className="text-sm font-medium">Created By</Label>
-                      <Select value={createdByFilter} onValueChange={setCreatedByFilter}>
-                        <SelectTrigger id="createdBy">
-                          <SelectValue placeholder="All employees" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All employees</SelectItem>
-                          {employees.map((employee) => (
-                            <SelectItem key={employee.id} value={employee.id}>
-                              {employee.first_name} {employee.last_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <EmployeeCombobox
+                        users={employees}
+                        value={createdByFilter}
+                        onChange={setCreatedByFilter}
+                        loading={employees.length === 0}
+                        showAnyOption={false}
+                        showAllOption={true}
+                        allLabel="All employees"
+                        placeholder="Select an employee"
+                      />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="assignedTo" className="text-sm font-medium">Assigned To</Label>
-                      <Select value={assignedToFilter} onValueChange={setAssignedToFilter}>
-                        <SelectTrigger id="assignedTo">
-                          <SelectValue placeholder="All users" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All users</SelectItem>
-                          {agents.map((agent) => (
-                            <SelectItem key={agent.id} value={agent.id}>
-                              {agent.name || `${agent.first_name || ""} ${agent.last_name || ""}`.trim()}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <EmployeeCombobox
+                        users={agents}
+                        value={assignedToFilter}
+                        onChange={setAssignedToFilter}
+                        loading={agents.length === 0}
+                        showAnyOption={false}
+                        showAllOption={true}
+                        allLabel="All users"
+                        placeholder="Select a user"
+                      />
                     </div>
 
                     <div className="space-y-2">
@@ -1184,29 +1179,29 @@ export default function Reminders() {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Created By</Label>
-                      <Select value={tableCreatedByFilter} onValueChange={setTableCreatedByFilter}>
-                        <SelectTrigger><SelectValue placeholder="All employees" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All employees</SelectItem>
-                          {employees.map((emp) => (
-                            <SelectItem key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <EmployeeCombobox
+                        users={employees}
+                        value={tableCreatedByFilter}
+                        onChange={setTableCreatedByFilter}
+                        loading={employees.length === 0}
+                        showAnyOption={false}
+                        showAllOption={true}
+                        allLabel="All employees"
+                        placeholder="Select an employee"
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Assigned To</Label>
-                      <Select value={tableAssignedToFilter} onValueChange={setTableAssignedToFilter}>
-                        <SelectTrigger><SelectValue placeholder="All users" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All users</SelectItem>
-                          {agents.map((agent) => (
-                            <SelectItem key={agent.id} value={agent.id}>
-                              {agent.name || `${agent.first_name || ""} ${agent.last_name || ""}`.trim()}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <EmployeeCombobox
+                        users={agents}
+                        value={tableAssignedToFilter}
+                        onChange={setTableAssignedToFilter}
+                        loading={agents.length === 0}
+                        showAnyOption={false}
+                        showAllOption={true}
+                        allLabel="All users"
+                        placeholder="Select a user"
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">From Date</Label>
@@ -1233,13 +1228,13 @@ export default function Reminders() {
           {/* Table */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 w-full">
                 <CardTitle className="flex items-center gap-2">
                   <Table2 className="h-5 w-5" />
-                  All Reminders
+                  {isMobile ? "All Reminders" : "All Reminders"}
                 </CardTitle>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">Rows per page:</span>
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                  <span className="text-sm text-gray-500 whitespace-nowrap">Rows per page:</span>
                   <Select
                     value={tablePagination.per_page.toString()}
                     onValueChange={(val) => {
@@ -1299,17 +1294,15 @@ export default function Reminders() {
                             <tr
                               key={r.id}
                               className={`transition-colors ${
-                                r.status === "completed"
-                                  ? "bg-gray-50 opacity-70"
-                                  : isOverdue
-                                    ? "bg-red-50"
-                                    : isDueToday
-                                      ? "bg-yellow-50"
-                                      : "hover:bg-gray-50"
+                                isOverdue
+                                  ? "bg-red-50"
+                                  : isDueToday
+                                    ? "bg-yellow-50"
+                                    : "hover:bg-gray-50"
                               }`}
                             >
                               <td className="px-4 py-3">
-                                <div className={`font-medium ${r.status === "completed" ? "line-through text-gray-400" : ""}`}>
+                                <div className="font-medium">
                                   {r.title}
                                 </div>
                                 {r.description && (

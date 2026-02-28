@@ -15,6 +15,10 @@ interface SearchInputWithSuggestionsProps {
   disabled?: boolean;
   showSearchButton?: boolean;
   suggestionsFilter?: string;
+  /**
+   * when true the dropdown expands to the full screen width (useful for mobile)
+   */
+  fullWidthSuggestions?: boolean;
 }
 
 const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
@@ -28,6 +32,7 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
   disabled = false,
   showSearchButton = false,
   suggestionsFilter,
+  fullWidthSuggestions = false,
 }) => {
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -39,6 +44,7 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
   const isFocusedRef = useRef(false);
+  const [suggestionStyle, setSuggestionStyle] = useState<React.CSSProperties>({});
 
   useEffect(() => {
     // Clear existing timeout
@@ -175,6 +181,24 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
     isFocusedRef.current = false;
   };
 
+  // adjust suggestion container position for full-width mode
+  useEffect(() => {
+    if (showSuggestions && fullWidthSuggestions && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      // add 10px margin on each side
+      const horizontalMargin = 10;
+      setSuggestionStyle({
+        position: 'fixed',
+        top: rect.bottom + window.scrollY,
+        left: horizontalMargin,
+        width: `calc(100vw - ${horizontalMargin * 2}px)`,
+        zIndex: 9999,
+      });
+    } else {
+      setSuggestionStyle({});
+    }
+  }, [showSuggestions, fullWidthSuggestions, value]);
+
   const getTypeIcon = (type: string) => {
     const iconMap: Record<string, string> = {
       customer: '👤',
@@ -241,7 +265,12 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
       {showSuggestions && suggestions && suggestions.length > 0 && (
         <div
           ref={suggestionsRef}
-          className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-64 overflow-y-auto"
+          className={cn(
+            // position classes are mostly for non-full-width mode; style will override when fixed
+            "absolute top-full z-50 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-64 overflow-y-auto",
+            !fullWidthSuggestions && "left-0 right-0"
+          )}
+          style={fullWidthSuggestions ? suggestionStyle : undefined}
         >
           {suggestions.map((suggestion, index) => (
             <button

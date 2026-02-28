@@ -165,9 +165,8 @@ export function RemindersList({
                 return (
                   <div
                     key={reminder.id}
-                    className={`border rounded-lg transition-all shadow-sm overflow-hidden ${reminder.status === "completed"
-                        ? "bg-gray-50 opacity-75"
-                        : isOverdue
+                    className={`border rounded-lg transition-all shadow-sm overflow-hidden ${
+                        isOverdue
                           ? "bg-red-50 border-red-200"
                           : isDueToday
                             ? "bg-yellow-50 border-yellow-200"
@@ -177,12 +176,7 @@ export function RemindersList({
                     {/* Main content area */}
                     <div className="p-4 space-y-3">
                       {/* Title - Clean and prominent */}
-                      <h3
-                        className={`font-semibold text-lg leading-tight ${reminder.status === "completed"
-                            ? "line-through text-gray-500"
-                            : "text-gray-900"
-                          }`}
-                      >
+                      <h3 className="font-semibold text-lg leading-tight text-gray-900">
                         {reminder.title}
                       </h3>
 
@@ -290,19 +284,13 @@ export function RemindersList({
                         )}
 
                         <Button
-                          variant={
-                            reminder.status === "completed"
-                              ? "secondary"
-                              : "default"
-                          }
+                          variant="default"
                           size="sm"
                           onClick={() => onToggleComplete(reminder.id)}
                           className={isMobile ? "w-full" : "min-w-0"}
                         >
                           <Check className="h-4 w-4 mr-1" />
-                          {reminder.status === "completed"
-                            ? "Mark Pending"
-                            : "Mark Complete"}
+                          {reminder.status === "completed" ? "Mark Pending" : "Mark Complete"}
                         </Button>
 
                         {/* Snooze dropdown */}

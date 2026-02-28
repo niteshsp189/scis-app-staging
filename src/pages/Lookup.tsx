@@ -1736,7 +1736,7 @@ const Lookup = () => {
           {/* Search Results */}
           {results.length > 0 && (
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between gap-4">
+              <CardHeader className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <CardTitle className="whitespace-nowrap">
                   Search Results
                   <span className="ml-2 text-base font-normal text-muted-foreground">
@@ -1756,7 +1756,7 @@ const Lookup = () => {
                     } matching)
                   </span>
                 </CardTitle>
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="w-full sm:w-auto flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground whitespace-nowrap">Per page:</span>
                     <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
@@ -1774,7 +1774,6 @@ const Lookup = () => {
                     variant="outline"
                     size="sm"
                     onClick={handlePrintSearchResults}
-                    className="shrink-0"
                   >
                     <Printer className="h-4 w-4 mr-2" />
                     Print

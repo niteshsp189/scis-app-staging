@@ -936,8 +936,8 @@ export const CustomerOverviewTab = ({ customer = defaultCustomer, isAdmin = fals
                 <div key={note.id} className="space-y-1">
                   {/* Name, timestamp, badges - OUTSIDE the color box */}
                   <div className="flex items-center justify-between px-1">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="font-medium">
+                    <div className="flex items-center gap-2 text-base text-muted-foreground font-semibold">
+                      <span>
                         {customerNotesService.getFullName(note.creator)}
                       </span>
                       <span>{customerNotesService.formatTimestamp(note.created_at)}</span>

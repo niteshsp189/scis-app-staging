@@ -19,6 +19,13 @@ interface CallDetailsDialogProps {
   customerName: string;
   customerId: number;
   trigger?: React.ReactNode;
+  /**
+   * When `open` is provided the component is controlled and no trigger
+   * will be rendered automatically. You must handle opening/closing
+   * and focus yourself.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const CallDetailsDialog = ({
@@ -26,6 +33,8 @@ export const CallDetailsDialog = ({
   customerName,
   customerId,
   trigger,
+  open,
+  onOpenChange,
 }: CallDetailsDialogProps) => {
   const [answerCalls, setAnswerCalls] = useState<CustomerActivity[]>([]);
   const [parentCall, setParentCall] = useState<CustomerActivity | null>(null);
@@ -129,15 +138,18 @@ export const CallDetailsDialog = ({
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        {trigger || (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* only render a trigger when not controlled or when one is explicitly provided */}
+      {trigger ? (
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
+      ) : open === undefined ? (
+        <DialogTrigger asChild>
           <Button variant="ghost" size="sm">
             <Eye className="h-4 w-4 mr-2" />
             View Details
           </Button>
-        )}
-      </DialogTrigger>
+        </DialogTrigger>
+      ) : null}
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

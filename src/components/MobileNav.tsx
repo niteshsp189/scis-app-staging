@@ -215,7 +215,9 @@ export function MobileNav() {
           onChange={setSearchTerm}
           onSearch={handleSearch}
           placeholder="Search..."
-          className="w-full text-sm border border-slate-300 rounded-lg shadow-sm focus-within:border-blue-500"
+          className="w-full text-sm"
+          showSearchButton
+          fullWidthSuggestions
         />
       </div>
       
