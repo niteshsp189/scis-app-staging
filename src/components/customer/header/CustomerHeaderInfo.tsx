@@ -40,7 +40,6 @@ export const CustomerHeaderInfo = ({
       .toUpperCase() || "UC";
   const company = customerData.company || "";
   const status = customerData.status || "Client";
-  const familyId = customerData.familyId || customerData.id?.toString() || "";
 
   if (isMobile) {
     return (
@@ -53,9 +52,6 @@ export const CustomerHeaderInfo = ({
           <div className="flex items-center gap-2 mt-1">
             <Badge className={`text-xs ${getStatusColor(status)}`}>
               {status}
-            </Badge>
-            <Badge variant="outline" className="text-xs">
-              {familyId}
             </Badge>
           </div>
         </div>
@@ -74,9 +70,6 @@ export const CustomerHeaderInfo = ({
         <div className="flex items-center gap-2 mt-2">
           <Badge className={`text-xs ${getStatusColor(status)}`}>
             {status}
-          </Badge>
-          <Badge variant="outline" className="text-xs">
-            ID: {familyId}
           </Badge>
         </div>
       </div>

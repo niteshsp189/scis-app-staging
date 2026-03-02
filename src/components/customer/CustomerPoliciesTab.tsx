@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   Eye,
   RefreshCw,
+  Link2,
 } from "lucide-react";
 import { Currency } from "@/components/ui/currency";
 
@@ -557,6 +558,12 @@ export const CustomerPoliciesTab = ({
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-3">
                             <span className="text-sm text-muted-foreground font-medium">{typeName}</span>
+                            {policy.is_linked_policy && (
+                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 gap-1">
+                                <Link2 className="h-3 w-3" />
+                                Linked
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
                             {/* Action Buttons */}

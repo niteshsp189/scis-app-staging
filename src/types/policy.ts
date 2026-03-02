@@ -45,6 +45,10 @@ export interface Policy {
   reinstatementRequests?: PolicyReinstatementRequest[];
   gracePeriods?: GracePeriod[];
   amendments?: PolicyAmendment[];
+
+  // Indicates this policy belongs to a parent customer and is linked
+  // to the current dependent-customer through the policy_dependents pivot.
+  is_linked_policy?: boolean;
 }
 
 export type PolicyStatus =
