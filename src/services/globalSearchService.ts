@@ -87,14 +87,26 @@ export interface SearchResponse {
 }
 
 export interface SearchSuggestion {
+  /** Display name / title text */
   text: string;
-  type: string;
+  /** Also available as 'title' from the unified backend */
+  title?: string;
+  type: 'customer' | 'policy' | 'appointment' | 'reminder' | 'user';
   id: number;
+  /** Relevance score (0-100) — used for unified ordering */
+  relevance_score?: number;
+  /** Pre-built URL for direct navigation */
+  url?: string;
   phone?: string;
   address?: string;
   ssn?: string;
   customer_type?: string;
   legacy_client_id?: number | null;
+  /** Extra description line */
+  description?: string;
+  status?: string;
+  /** Detailed sub-fields */
+  details?: Record<string, any>;
 }
 
 export interface SuggestionsResponse {
@@ -132,11 +144,16 @@ class GlobalSearchService {
   /**
    * Get search suggestions based on partial query
    */
-  async getSuggestions(query: string, limit: number = 10): Promise<SuggestionsResponse> {
+  async getSuggestions(query: string, limit: number = 10, accountStatus?: string): Promise<SuggestionsResponse> {
     const params = new URLSearchParams({
       query,
       limit: limit.toString(),
     });
+
+    // Pass account_status filter when on a status-specific page (e.g. /clients → "Client")
+    if (accountStatus && accountStatus !== 'all') {
+      params.set('account_status', accountStatus);
+    }
 
     try {
       const response = await api.get<SuggestionsResponse>(`/search/suggestions?${params.toString()}`);

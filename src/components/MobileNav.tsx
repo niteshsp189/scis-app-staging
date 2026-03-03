@@ -48,6 +48,8 @@ import { usePermissions } from "@/contexts/PermissionContext";
 import { useSecuritySettings } from "@/hooks/useSecuritySettings";
 import SearchInputWithSuggestions from "@/components/ui/SearchInputWithSuggestions";
 import globalSearchService from "@/services/globalSearchService";
+import { SearchSuggestion } from "@/services/globalSearchService";
+import { getCustomerViewUrl } from "@/utils/customerRoutes";
 
 // Settings permissions list - user needs ANY of these to access settings
 const settingsPermissions = [
@@ -149,6 +151,22 @@ export function MobileNav() {
     setSearchTerm("");
   };
 
+  const handleSuggestionNavigate = (suggestion: SearchSuggestion) => {
+    // Use pre-built URL from the backend when available
+    if (suggestion.url) {
+      navigate(suggestion.url);
+      setSearchTerm("");
+    } else if (suggestion.type === 'customer') {
+      navigate(getCustomerViewUrl(suggestion.id, suggestion.customer_type, suggestion.legacy_client_id));
+      setSearchTerm("");
+    } else if (suggestion.type === 'policy') {
+      navigate(`/policies/${suggestion.id}`);
+      setSearchTerm("");
+    } else {
+      handleSearch(suggestion.text);
+    }
+  };
+
   // Prevent body scroll when drawer is open
   useEffect(() => {
     if (open) {
@@ -214,6 +232,7 @@ export function MobileNav() {
           value={searchTerm}
           onChange={setSearchTerm}
           onSearch={handleSearch}
+          onSuggestionNavigate={handleSuggestionNavigate}
           placeholder="Search..."
           className="w-full text-sm"
           showSearchButton

@@ -51,6 +51,7 @@ export function CustomersSearchSection({
             <CustomerSearch
               onSearch={onSearch}
               searchTerm={searchTerm}
+              accountStatus={pageStatus}
             />
           </div>
 
@@ -164,6 +165,7 @@ export function CustomersSearchSection({
         <CustomerSearch
           onSearch={onSearch}
           searchTerm={searchTerm}
+          accountStatus={pageStatus}
         />
       </div>
 

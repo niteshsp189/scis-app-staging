@@ -23,7 +23,11 @@ export function TopNav() {
   };
 
   const handleSuggestionNavigate = (suggestion: SearchSuggestion) => {
-    if (suggestion.type === 'customer') {
+    // Use pre-built URL from the backend when available
+    if (suggestion.url) {
+      navigate(suggestion.url);
+      setSearchTerm("");
+    } else if (suggestion.type === 'customer') {
       navigate(getCustomerViewUrl(suggestion.id, suggestion.customer_type, suggestion.legacy_client_id));
       setSearchTerm("");
     } else if (suggestion.type === 'policy') {

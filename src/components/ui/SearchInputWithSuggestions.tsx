@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, User, FileText, Calendar, Target, Bell, Users, Phone, MapPin, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import globalSearchService, { SearchSuggestion } from '@/services/globalSearchService';
 
@@ -15,6 +15,11 @@ interface SearchInputWithSuggestionsProps {
   disabled?: boolean;
   showSearchButton?: boolean;
   suggestionsFilter?: string;
+  /**
+   * When set, pass this account_status to the suggestions API so only
+   * customers matching the page-level status are returned (e.g. "Client").
+   */
+  suggestionsAccountStatus?: string;
   /**
    * when true the dropdown expands to the full screen width (useful for mobile)
    */
@@ -32,6 +37,7 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
   disabled = false,
   showSearchButton = false,
   suggestionsFilter,
+  suggestionsAccountStatus,
   fullWidthSuggestions = false,
 }) => {
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -62,7 +68,7 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
       debounceRef.current = setTimeout(async () => {
         setIsLoadingSuggestions(true);
         try {
-          const response = await globalSearchService.getSuggestions(value.trim(), 8);
+          const response = await globalSearchService.getSuggestions(value.trim(), 8, suggestionsAccountStatus);
           const filtered = suggestionsFilter
             ? response.data.filter((s: SearchSuggestion) => s.type === suggestionsFilter)
             : response.data;
@@ -86,7 +92,7 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
         clearTimeout(debounceRef.current);
       }
     };
-  }, [value, justSelectedSuggestion]);
+  }, [value, justSelectedSuggestion, suggestionsAccountStatus]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -107,7 +113,12 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!showSuggestions || !suggestions || suggestions.length === 0) {
       if (e.key === 'Enter') {
+        e.preventDefault();
         onSearch();
+        // Close dropdown & blur so the user sees the list results
+        setShowSuggestions(false);
+        setActiveSuggestionIndex(-1);
+        inputRef.current?.blur();
       }
       return;
     }
@@ -131,6 +142,10 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
           handleSuggestionClick(suggestions[activeSuggestionIndex]);
         } else {
           onSearch();
+          // Close dropdown & blur so the user sees the list results
+          setShowSuggestions(false);
+          setActiveSuggestionIndex(-1);
+          inputRef.current?.blur();
         }
         break;
       case 'Escape':
@@ -200,16 +215,16 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
   }, [showSuggestions, fullWidthSuggestions, value]);
 
   const getTypeIcon = (type: string) => {
-    const iconMap: Record<string, string> = {
-      customer: '👤',
-      policy: '📄',
-      appointment: '📅',
-      prospect: '🎯',
-      deal: '💰',
-      reminder: '🔔',
-      user: '👥',
+    const iconMap: Record<string, React.ReactNode> = {
+      customer: <User className="h-4 w-4 text-blue-500" />,
+      policy: <FileText className="h-4 w-4 text-green-500" />,
+      appointment: <Calendar className="h-4 w-4 text-purple-500" />,
+      prospect: <Target className="h-4 w-4 text-orange-500" />,
+      deal: <FileText className="h-4 w-4 text-yellow-500" />,
+      reminder: <Bell className="h-4 w-4 text-red-500" />,
+      user: <Users className="h-4 w-4 text-gray-500" />,
     };
-    return iconMap[type] || '🔍';
+    return iconMap[type] || <Search className="h-4 w-4 text-gray-400" />;
   };
 
   const getTypeColor = (type: string) => {
@@ -283,7 +298,7 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
               onClick={() => handleSuggestionClick(suggestion)}
               onMouseEnter={() => setActiveSuggestionIndex(index)}
             >
-              <span className="text-lg">{getTypeIcon(suggestion.type)}</span>
+              <span className="flex-shrink-0">{getTypeIcon(suggestion.type)}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-gray-900">{suggestion.text}</span>
@@ -298,17 +313,23 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
                     </span>
                   )}
                 </div>
-                {suggestion.type === 'customer' && (suggestion.phone || suggestion.address) && (
+                {suggestion.type === 'customer' && (suggestion.phone || suggestion.address || suggestion.ssn) && (
                   <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
                     {suggestion.phone && (
                       <span className="flex items-center gap-1">
-                        <span>📞</span>
+                        <Phone className="h-3 w-3" />
                         <span>{suggestion.phone}</span>
+                      </span>
+                    )}
+                    {suggestion.ssn && (
+                      <span className="flex items-center gap-1">
+                        <Lock className="h-3 w-3" />
+                        <span>{suggestion.ssn}</span>
                       </span>
                     )}
                     {suggestion.address && (
                       <span className="flex items-center gap-1 truncate">
-                        <span>🗺️</span>
+                        <MapPin className="h-3 w-3" />
                         <span className="truncate">{suggestion.address}</span>
                       </span>
                     )}
