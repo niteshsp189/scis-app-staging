@@ -44,9 +44,13 @@ export const DesktopCustomerHeader = ({ customerData, onEditCustomer, onConvertP
         </Button>
       </div>
 
-      <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-        <CustomerHeaderInfo customerData={customerData} />
-        <CustomerHeaderActions customerData={customerData} onEditCustomer={onEditCustomer} onConvertProspect={onConvertProspect} />
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+        <div className="flex-1 min-w-0 lg:pr-4">
+          <CustomerHeaderInfo customerData={customerData} />
+        </div>
+        <div className="flex-none w-full lg:w-auto lg:max-w-[60%]">
+          <CustomerHeaderActions customerData={customerData} onEditCustomer={onEditCustomer} onConvertProspect={onConvertProspect} />
+        </div>
       </div>
     </div>
   );

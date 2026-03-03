@@ -300,7 +300,7 @@ export const PRINT_CSS = `
   }
 
   .print-info-value.highlight {
-    color: #dc2626;
+    color: #111827;
     font-weight: 500;
   }
 

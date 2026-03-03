@@ -643,9 +643,9 @@ export const CustomerOverviewTab = ({
           </div>
 
           {/* Phone numbers row */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-wrap gap-3">
             {customer.cellPhone && (
-              <div className="p-3 bg-muted rounded-lg">
+              <div className="flex-grow basis-[calc(50%-0.75rem)] p-3 bg-muted rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
                   <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground font-medium">
@@ -653,12 +653,12 @@ export const CustomerOverviewTab = ({
                   </span>
                 </div>
                 <span className="text-sm font-semibold text-foreground">
-                  {maskPhone(customer.cellPhone)}
+                  {customer.cellPhone}
                 </span>
               </div>
             )}
             {customer.homePhone && (
-              <div className="p-3 bg-muted rounded-lg">
+              <div className="flex-grow basis-[calc(50%-0.75rem)] p-3 bg-muted rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
                   <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground font-medium">
@@ -666,12 +666,12 @@ export const CustomerOverviewTab = ({
                   </span>
                 </div>
                 <span className="text-sm font-semibold text-foreground">
-                  {maskPhone(customer.homePhone)}
+                  {customer.homePhone}
                 </span>
               </div>
             )}
             {customer.workPhone && (
-              <div className="p-3 bg-muted rounded-lg">
+              <div className="flex-grow basis-[calc(50%-0.75rem)] p-3 bg-muted rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
                   <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground font-medium">
@@ -679,7 +679,7 @@ export const CustomerOverviewTab = ({
                   </span>
                 </div>
                 <span className="text-sm font-semibold text-foreground">
-                  {maskPhone(customer.workPhone)}
+                  {customer.workPhone}
                 </span>
               </div>
             )}
@@ -706,33 +706,36 @@ export const CustomerOverviewTab = ({
             </span>
           </div>
 
-          {/* Referral */}
-          <div className="p-3 bg-muted rounded-lg">
-            <div className="flex items-center gap-2 mb-1">
-              <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <span className="text-xs text-muted-foreground font-medium">
-                Referral Source
-              </span>
-            </div>
-            <span className="text-sm font-semibold text-foreground">
-              {customer.referral || "Not specified"}
-            </span>
-          </div>
-
-          {/* DOB */}
-          {customer.dateOfBirth && (
-            <div className="p-3 bg-muted rounded-lg">
+          {/* Referral & DOB Row */}
+          <div className="flex flex-wrap gap-3">
+            {/* Referral */}
+            <div className="flex-grow basis-[calc(50%-0.75rem)] p-3 bg-muted rounded-lg">
               <div className="flex items-center gap-2 mb-1">
-                <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <span className="text-xs text-muted-foreground font-medium">
-                  Date of Birth
+                  Referral Source
                 </span>
               </div>
-              <span className="text-sm font-semibold text-[#58c4f2]">
-                {formatDisplayDate(customer.dateOfBirth)}
+              <span className="text-sm font-semibold text-foreground break-words whitespace-normal">
+                {customer.referral || "Not specified"}
               </span>
             </div>
-          )}
+
+            {/* DOB */}
+            {customer.dateOfBirth && (
+              <div className="flex-grow basis-[calc(50%-0.75rem)] p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground font-medium">
+                    Date of Birth
+                  </span>
+                </div>
+                <span className="text-sm font-semibold text-[#58c4f2]">
+                  {formatDisplayDate(customer.dateOfBirth)}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       )}
       {/* Personal Information, Contact Information, and Physical Details - Two Column Layout */}

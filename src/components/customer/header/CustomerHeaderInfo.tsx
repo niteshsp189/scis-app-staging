@@ -43,10 +43,10 @@ export const CustomerHeaderInfo = ({
 
   if (isMobile) {
     return (
-      <div className="flex flex-col gap-1 mb-4">
-        <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-          {customerName}
-          <Badge className={`text-xs ${getStatusColor(status)}`}>{status}</Badge>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2 truncate">
+          <span className="truncate">{customerName}</span>
+          <Badge className={`text-xs whitespace-nowrap ${getStatusColor(status)}`}>{status}</Badge>
         </h1>
         {company && (
           <p className="text-sm text-gray-600 truncate">{company}</p>
@@ -56,12 +56,12 @@ export const CustomerHeaderInfo = ({
   }
 
   return (
-    <div className="flex flex-col">
-      <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-        {customerName}
-        <Badge className={`text-xs ${getStatusColor(status)}`}>{status}</Badge>
+    <div className="flex flex-col min-w-0">
+      <h1 className="text-3xl font-bold text-gray-900 flex flex-wrap items-center gap-3 w-full">
+        <span className="break-words" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{customerName}</span>
+        <Badge className={`text-xs whitespace-nowrap shrink-0 ${getStatusColor(status)}`}>{status}</Badge>
       </h1>
-      {company && <p className="text-lg text-gray-600">{company}</p>}
+      {company && <p className="text-lg text-gray-600 truncate mt-1">{company}</p>}
     </div>
   );
 };

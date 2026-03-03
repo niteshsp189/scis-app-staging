@@ -41,26 +41,8 @@ const CustomerDetails = () => {
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "overview";
 
-  // tabs that belong to the second row on mobile
-  const mobileInnerTabs = [
-    "calls",
-    "dependencies",
-    "credentials",
-    "notes",
-    "appointments",
-  ];
-
   const [activeTab, setActiveTab] = useState<string>(initialTab);
-  const [mobileActiveTab, setMobileActiveTab] = useState<string>("more");
 
-  // if initial tab corresponds to an inner mobile tab, activate it specially
-  useEffect(() => {
-    if (isMobile && mobileInnerTabs.includes(initialTab)) {
-      setMobileActiveTab(initialTab);
-      // outer tab should default to overview rather than blank
-      setActiveTab(initialTab === "history" ? "history" : "overview");
-    }
-  }, [isMobile, initialTab]);
   const [notesCount, setNotesCount] = useState<number>(0);
   const [appointmentsCount, setAppointmentsCount] = useState<number>(0);
 
@@ -101,20 +83,9 @@ const CustomerDetails = () => {
   const handleTabChange = useCallback(
     (tabName: string) => {
       if (!tabName) return;
-
-      if (
-        isMobile &&
-        mobileInnerTabs.includes(tabName) &&
-        tabName !== "history"
-      ) {
-        // switch inner mobile panel, leave outer tab unchanged
-        setMobileActiveTab(tabName);
-      } else {
-        // outer tab selection
-        setActiveTab(tabName);
-      }
+      setActiveTab(tabName);
     },
-    [isMobile],
+    [],
   );
 
   // Listen for tab change events
@@ -381,85 +352,79 @@ const CustomerDetails = () => {
 
             {isMobile && (
               <div className="mt-4 mb-4">
-                <Tabs
-                  value={mobileActiveTab}
-                  onValueChange={setMobileActiveTab}
-                  className="w-full"
-                >
-                  <TabsList className="grid w-full grid-cols-5 h-auto gap-1 p-1">
-                    <TabsTrigger value="calls" className="text-xs py-2.5 px-1.5">
-                      Calls
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="dependencies"
-                      className="text-xs py-2.5 px-1.5"
-                    >
-                      Deps
-                    </TabsTrigger>
-                    <TabsTrigger value="credentials" className="text-xs py-2.5 px-1.5">
-                      Creds
-                    </TabsTrigger>
-                    <TabsTrigger value="notes" className="text-xs py-2.5 px-1.5">
-                      Notes
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="appointments"
-                      className="text-xs py-2.5 px-1.5"
-                    >
-                      Meet
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="calls" className="mt-4">
-                    <CustomerCallsTab
-                      customerId={customer.id}
-                      customerName={customer.name}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="dependencies" className="mt-4">
-                    <CustomerFamilyTab
-                      customerData={customer}
-                      onUpdateFamilyMembers={handleUpdateFamilyMembers}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="credentials" className="mt-4">
-                    <CustomerCredentialsTab customerData={customer} />
-                  </TabsContent>
-
-                  <TabsContent value="notes" className="mt-4">
-                    <CustomerNotesTab
-                      customerData={customer}
-                      onUpdateNotes={handleUpdateNotes}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="appointments" className="mt-4">
-                    <CustomerAppointmentsTab
-                      customerId={customer.id}
-                      customerName={`${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.name || 'Customer'}
-                      onCountChange={setAppointmentsCount}
-                    />
-                  </TabsContent>
-
-                </Tabs>
+                <TabsList className="grid w-full grid-cols-5 h-auto gap-1 p-1">
+                  <TabsTrigger value="calls" className="text-xs py-2.5 px-1.5">
+                    Calls
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="dependencies"
+                    className="text-xs py-2.5 px-1.5"
+                  >
+                    Deps
+                  </TabsTrigger>
+                  <TabsTrigger value="credentials" className="text-xs py-2.5 px-1.5">
+                    Creds
+                  </TabsTrigger>
+                  <TabsTrigger value="notes" className="text-xs py-2.5 px-1.5">
+                    Notes
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="appointments"
+                    className="text-xs py-2.5 px-1.5"
+                  >
+                    Meet
+                  </TabsTrigger>
+                </TabsList>
               </div>
             )}
 
-            {isMobile && (
-              <TabsContent value="documents" className="mt-4">
-                <CustomerDocumentsTab customerId={customer.id} />
-              </TabsContent>
-            )}
-            {isMobile && (
-              <TabsContent value="history" className="mt-4">
-                <CustomerHistoryTab
-                  customerId={customer.id}
-                  customerName={`${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.name || 'Customer'}
-                />
-              </TabsContent>
-            )}
+            <TabsContent value="calls" className={`${isMobile ? "mt-4" : "mt-6"}`}>
+              <CustomerCallsTab
+                customerId={customer.id}
+                customerName={customer.name}
+              />
+            </TabsContent>
+
+            <TabsContent value="dependencies" className={`${isMobile ? "mt-4" : "mt-6"}`}>
+              <CustomerFamilyTab
+                customerData={customer}
+                onUpdateFamilyMembers={handleUpdateFamilyMembers}
+              />
+            </TabsContent>
+
+            <TabsContent value="credentials" className={`${isMobile ? "mt-4" : "mt-6"}`}>
+              <CustomerCredentialsTab customerData={customer} />
+            </TabsContent>
+
+            <TabsContent value="notes" className={`${isMobile ? "mt-4" : "mt-6"}`}>
+              <CustomerNotesTab
+                customerData={customer}
+                onUpdateNotes={handleUpdateNotes}
+              />
+            </TabsContent>
+
+            <TabsContent value="appointments" className={`${isMobile ? "mt-4" : "mt-6"}`}>
+              <CustomerAppointmentsTab
+                customerId={customer.id}
+                customerName={
+                  customer.first_name || customer.last_name
+                    ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim()
+                    : customer.name || 'Customer'
+                }
+                onCountChange={setAppointmentsCount}
+              />
+            </TabsContent>
+
+            <TabsContent value="documents" className={`${isMobile ? "mt-4" : "mt-6"}`}>
+              <CustomerDocumentsTab customerId={customer.id} />
+            </TabsContent>
+
+            <TabsContent value="history" className={`${isMobile ? "mt-4" : "mt-6"}`}>
+              <CustomerHistoryTab
+                customerId={customer.id}
+                customerName={`${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.name || 'Customer'}
+              />
+            </TabsContent>
 
             <TabsContent
               value="overview"
@@ -467,15 +432,6 @@ const CustomerDetails = () => {
             >
               <CustomerOverviewTab customer={customer} isAdmin={isAdmin} />
             </TabsContent>
-
-            {!isMobile && (
-              <TabsContent value="calls" className="mt-6">
-                <CustomerCallsTab
-                  customerId={customer.id}
-                  customerName={customer.name}
-                />
-              </TabsContent>
-            )}
 
             {customer?.status !== "Prospect" && (
               <TabsContent
@@ -489,48 +445,7 @@ const CustomerDetails = () => {
               </TabsContent>
             )}
 
-            {!isMobile && (
-              <>
-                <TabsContent value="dependencies" className="mt-6">
-                  <CustomerFamilyTab
-                    customerData={customer}
-                    onUpdateFamilyMembers={handleUpdateFamilyMembers}
-                  />
-                </TabsContent>
-
-                <TabsContent value="credentials" className="mt-6">
-                  <CustomerCredentialsTab customerData={customer} />
-                </TabsContent>
-
-                <TabsContent value="documents" className="mt-6">
-                  <CustomerDocumentsTab customerId={customer.id} />
-                </TabsContent>
-
-                <TabsContent value="notes" className="mt-6">
-                  <CustomerNotesTab
-                    customerData={customer}
-                    onUpdateNotes={handleUpdateNotes}
-                  />
-                </TabsContent>
-
-                <TabsContent value="appointments" className="mt-6">
-                  <CustomerAppointmentsTab
-                    customerId={customer.id}
-                    customerName={
-                      customer.first_name + " " + customer.last_name
-                    }
-                    onCountChange={setAppointmentsCount}
-                  />
-                </TabsContent>
-
-                <TabsContent value="history" className="mt-6">
-                  <CustomerHistoryTab
-                    customerId={customer.id}
-                    customerName={`${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.name || 'Customer'}
-                  />
-                </TabsContent>
-              </>
-            )}
+            {/* Remaining empty space removed cleanly */}
           </Tabs>
         </div>
 

@@ -156,7 +156,7 @@ export const CustomerHeaderActions = ({
   }
 
   return (
-    <div className="flex flex-wrap gap-4 lg:ml-auto">
+    <div className="flex flex-wrap gap-3 lg:gap-4 lg:justify-end">
       {onConvertProspect && canConvert && (
         <Button
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"

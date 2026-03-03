@@ -31,7 +31,9 @@ export const MobileCustomerHeader = ({ customerData, onEditCustomer, onConvertPr
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-lg font-bold text-gray-900 flex-1">{customerData.name}</h1>
+        <div className="flex-1 min-w-0">
+          <CustomerHeaderInfo customerData={customerData} isMobile={true} />
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="p-2">
@@ -53,8 +55,6 @@ export const MobileCustomerHeader = ({ customerData, onEditCustomer, onConvertPr
         </DropdownMenu>
       </div>
 
-      <CustomerHeaderInfo customerData={customerData} isMobile={true} />
-      
       <CustomerHeaderActions customerData={customerData} isMobile={true} onEditCustomer={onEditCustomer} onConvertProspect={onConvertProspect} />
     </div>
   );
