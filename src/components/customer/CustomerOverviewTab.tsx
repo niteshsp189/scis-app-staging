@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePermissions } from "@/contexts/PermissionContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,7 +33,7 @@ import {
   CustomerActivity,
 } from "@/services/customerActivitiesService";
 import { api } from "@/lib/axios";
-import { useDataMasking, MaskedDisplay } from "@/utils/dataMasking";
+import { useDataMasking, MaskedDisplay, maskPhone } from "@/utils/dataMasking";
 import { RelationshipForm } from "./RelationshipForm";
 import {
   customerRelationshipService,
@@ -220,13 +221,17 @@ export const CustomerOverviewTab = ({
   const navigate = useNavigate();
   const dispatchTabChange = useEventDispatcher("changeTab");
   const {
-    getMaskedSSN,
-    getMaskedPhone,
-    getMaskedEmail,
-    getMaskedAddress,
+    // mask helpers removed; use utility functions instead
     canViewContact,
     canViewAddress,
   } = useDataMasking();
+  const isMobile = useIsMobile();
+
+  // helper for full name
+  const fullName =
+    customer.firstName && customer.lastName
+      ? `${customer.firstName} ${customer.middleName ? customer.middleName + " " : ""}${customer.lastName}`
+      : customer.name;
 
   // Use permission context for sensitive data
   const { hasPermission } = usePermissions();
@@ -622,6 +627,114 @@ export const CustomerOverviewTab = ({
 
   return (
     <div className="space-y-6">
+      {isMobile && (
+        <div className="space-y-3">
+          {/* Full name */}
+          <div className="p-3 bg-muted rounded-lg">
+            <div className="flex items-center gap-2 mb-1">
+              <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <span className="text-xs text-muted-foreground font-medium">
+                Full Name
+              </span>
+            </div>
+            <span className="text-sm font-semibold text-foreground">
+              {fullName}
+            </span>
+          </div>
+
+          {/* Phone numbers row */}
+          <div className="grid grid-cols-2 gap-3">
+            {customer.cellPhone && (
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground font-medium">
+                    Cell Phone
+                  </span>
+                </div>
+                <span className="text-sm font-semibold text-foreground">
+                  {maskPhone(customer.cellPhone)}
+                </span>
+              </div>
+            )}
+            {customer.homePhone && (
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground font-medium">
+                    Home Phone
+                  </span>
+                </div>
+                <span className="text-sm font-semibold text-foreground">
+                  {maskPhone(customer.homePhone)}
+                </span>
+              </div>
+            )}
+            {customer.workPhone && (
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground font-medium">
+                    Work Phone
+                  </span>
+                </div>
+                <span className="text-sm font-semibold text-foreground">
+                  {maskPhone(customer.workPhone)}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Address */}
+          <div className="p-3 bg-muted rounded-lg">
+            <div className="flex items-center gap-2 mb-1">
+              <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <span className="text-xs text-muted-foreground font-medium">
+                Address
+              </span>
+            </div>
+            <span className="text-sm font-semibold text-foreground">
+              {formatAddress(
+                customer.address,
+                customer.apartment,
+                customer.apartmentType,
+                customer.city,
+                customer.state,
+                customer.zipCode,
+                customer.country,
+              )}
+            </span>
+          </div>
+
+          {/* Referral */}
+          <div className="p-3 bg-muted rounded-lg">
+            <div className="flex items-center gap-2 mb-1">
+              <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <span className="text-xs text-muted-foreground font-medium">
+                Referral Source
+              </span>
+            </div>
+            <span className="text-sm font-semibold text-foreground">
+              {customer.referral || "Not specified"}
+            </span>
+          </div>
+
+          {/* DOB */}
+          {customer.dateOfBirth && (
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <span className="text-xs text-muted-foreground font-medium">
+                  Date of Birth
+                </span>
+              </div>
+              <span className="text-sm font-semibold text-[#58c4f2]">
+                {formatDisplayDate(customer.dateOfBirth)}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
       {/* Personal Information, Contact Information, and Physical Details - Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column: Personal Information and Physical Details */}
@@ -634,19 +747,21 @@ export const CustomerOverviewTab = ({
             </h4>
             <div className="grid grid-cols-2 gap-3">
               {/* Full Name */}
-              <div className="p-3 bg-muted rounded-lg col-span-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground font-medium">
-                    Full Name
+              {!isMobile && (
+                <div className="p-3 bg-muted rounded-lg col-span-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Full Name
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">
+                    {customer.firstName && customer.lastName
+                      ? `${customer.firstName} ${customer.middleName ? customer.middleName + " " : ""}${customer.lastName}`
+                      : customer.name}
                   </span>
                 </div>
-                <span className="text-sm font-semibold text-foreground">
-                  {customer.firstName && customer.lastName
-                    ? `${customer.firstName} ${customer.middleName ? customer.middleName + " " : ""}${customer.lastName}`
-                    : customer.name}
-                </span>
-              </div>
+              )}
 
               {/* Gender */}
               {customer.gender && (
@@ -664,7 +779,7 @@ export const CustomerOverviewTab = ({
               )}
 
               {/* Date of Birth */}
-              {customer.dateOfBirth && (
+              {!isMobile && customer.dateOfBirth && (
                 <div className="p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -672,7 +787,7 @@ export const CustomerOverviewTab = ({
                       Date of Birth
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-foreground">
+                  <span className="text-sm font-semibold text-[#58c4f2]">
                     {formatDisplayDate(customer.dateOfBirth)}
                   </span>
                 </div>
@@ -803,7 +918,7 @@ export const CustomerOverviewTab = ({
               </div>
 
               {/* Cell Phone */}
-              {customer.cellPhone && (
+              {!isMobile && customer.cellPhone && (
                 <div className="p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -821,7 +936,7 @@ export const CustomerOverviewTab = ({
               )}
 
               {/* Home Phone */}
-              {customer.homePhone && (
+              {!isMobile && customer.homePhone && (
                 <div className="p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -839,7 +954,7 @@ export const CustomerOverviewTab = ({
               )}
 
               {/* Work Phone */}
-              {customer.workPhone && (
+              {!isMobile && customer.workPhone && (
                 <div className="p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -884,42 +999,46 @@ export const CustomerOverviewTab = ({
             </h4>
             <div className="grid grid-cols-2 gap-3">
               {/* Physical Address */}
-              <div className="p-3 bg-muted rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground font-medium">
-                    Physical Address
-                  </span>
+              {!isMobile && (
+                <div className="p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Physical Address
+                    </span>
+                  </div>
+                  <MaskedDisplay
+                    value={formatAddress(
+                      customer.address,
+                      customer.apartment,
+                      customer.apartmentType,
+                      customer.city,
+                      customer.state,
+                      customer.zipCode,
+                      customer.country,
+                    )}
+                    type="address"
+                    className="text-sm text-foreground font-medium"
+                    fallback="No address provided"
+                    visible={canViewSensitive}
+                  />
                 </div>
-                <MaskedDisplay
-                  value={formatAddress(
-                    customer.address,
-                    customer.apartment,
-                    customer.apartmentType,
-                    customer.city,
-                    customer.state,
-                    customer.zipCode,
-                    customer.country,
-                  )}
-                  type="address"
-                  className="text-sm text-foreground font-medium"
-                  fallback="No address provided"
-                  visible={canViewSensitive}
-                />
-              </div>
+              )}
 
               {/* Referral Source */}
-              <div className="p-3 bg-muted rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground font-medium">
-                    Referral Source
+              {!isMobile && (
+                <div className="p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Referral Source
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium text-foreground">
+                    {customer.referral || "Not specified"}
                   </span>
                 </div>
-                <span className="text-sm font-medium text-foreground">
-                  {customer.referral || "Not specified"}
-                </span>
-              </div>
+              )}
 
               {/* Mailing Address (if different) */}
               {customer.differentMailingAddress && (

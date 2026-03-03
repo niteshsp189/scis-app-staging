@@ -43,36 +43,25 @@ export const CustomerHeaderInfo = ({
 
   if (isMobile) {
     return (
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-          {initials}
-        </div>
-        <div className="flex-1 min-w-0">
+      <div className="flex flex-col gap-1 mb-4">
+        <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+          {customerName}
+          <Badge className={`text-xs ${getStatusColor(status)}`}>{status}</Badge>
+        </h1>
+        {company && (
           <p className="text-sm text-gray-600 truncate">{company}</p>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge className={`text-xs ${getStatusColor(status)}`}>
-              {status}
-            </Badge>
-          </div>
-        </div>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-4">
-      <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-xl font-semibold">
-        {initials}
-      </div>
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">{customerName}</h1>
-        <p className="text-lg text-gray-600">{company}</p>
-        <div className="flex items-center gap-2 mt-2">
-          <Badge className={`text-xs ${getStatusColor(status)}`}>
-            {status}
-          </Badge>
-        </div>
-      </div>
+    <div className="flex flex-col">
+      <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+        {customerName}
+        <Badge className={`text-xs ${getStatusColor(status)}`}>{status}</Badge>
+      </h1>
+      {company && <p className="text-lg text-gray-600">{company}</p>}
     </div>
   );
 };

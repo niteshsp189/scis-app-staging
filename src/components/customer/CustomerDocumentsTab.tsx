@@ -257,7 +257,7 @@ export const CustomerDocumentsTab = ({
     <div className="space-y-4">
       {/* Header with Upload Button */}
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Documents</h3>
+        <h3 className="text-lg font-semibold">Attachments</h3>
         <Dialog
           open={showUploadDialog}
           onOpenChange={(open) => {
@@ -274,12 +274,12 @@ export const CustomerDocumentsTab = ({
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2">
               <Upload className="h-4 w-4" />
-              Upload Document
+              Upload Attachment
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Upload Document</DialogTitle>
+              <DialogTitle>Upload Attachment</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -351,7 +351,7 @@ export const CustomerDocumentsTab = ({
                 disabled={uploading || !uploadFile || !uploadName.trim()}
                 className="w-full"
               >
-                {uploading ? "Uploading..." : "Upload Document"}
+                {uploading ? "Uploading..." : "Upload Attachment"}
               </Button>
             </div>
           </DialogContent>

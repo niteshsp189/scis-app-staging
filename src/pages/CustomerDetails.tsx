@@ -40,8 +40,27 @@ const CustomerDetails = () => {
   const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "overview";
+
+  // tabs that belong to the second row on mobile
+  const mobileInnerTabs = [
+    "calls",
+    "dependencies",
+    "credentials",
+    "notes",
+    "appointments",
+  ];
+
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [mobileActiveTab, setMobileActiveTab] = useState<string>("more");
+
+  // if initial tab corresponds to an inner mobile tab, activate it specially
+  useEffect(() => {
+    if (isMobile && mobileInnerTabs.includes(initialTab)) {
+      setMobileActiveTab(initialTab);
+      // outer tab should default to overview rather than blank
+      setActiveTab(initialTab === "history" ? "history" : "overview");
+    }
+  }, [isMobile, initialTab]);
   const [notesCount, setNotesCount] = useState<number>(0);
   const [appointmentsCount, setAppointmentsCount] = useState<number>(0);
 
@@ -81,20 +100,18 @@ const CustomerDetails = () => {
   // Handler for tab change events
   const handleTabChange = useCallback(
     (tabName: string) => {
-      if (tabName) {
-        setActiveTab(tabName);
+      if (!tabName) return;
 
-        // For mobile view, also need to handle the second tab panel
-        if (
-          isMobile &&
-          (tabName === "dependencies" ||
-            tabName === "notes" ||
-            tabName === "appointments" ||
-            tabName === "calls" ||
-            tabName === "history")
-        ) {
-          setMobileActiveTab(tabName);
-        }
+      if (
+        isMobile &&
+        mobileInnerTabs.includes(tabName) &&
+        tabName !== "history"
+      ) {
+        // switch inner mobile panel, leave outer tab unchanged
+        setMobileActiveTab(tabName);
+      } else {
+        // outer tab selection
+        setActiveTab(tabName);
       }
     },
     [isMobile],
@@ -299,7 +316,8 @@ const CustomerDetails = () => {
           onConvertProspect={customer?.status === "Prospect" ? () => setIsConvertDialogOpen(true) : undefined}
         />
 
-        <CustomerQuickStats customerData={customer} />
+        {/* hide summary stats on mobile per requirements */}
+        {!isMobile && <CustomerQuickStats customerData={customer} />}
 
         {/* Detailed Information */}
         <div
@@ -311,42 +329,47 @@ const CustomerDetails = () => {
             className="w-full"
           >
             <TabsList
-              className={`grid w-full ${isMobile ? "grid-cols-3 h-auto gap-1 p-1" : "grid-cols-9"}`}
+              className={`grid w-full ${isMobile ? "grid-cols-4 h-auto gap-1 p-1" : "grid-cols-9"}`}
             >
               <TabsTrigger
                 value="overview"
                 className={isMobile ? "text-xs py-2.5 px-2" : ""}
               >
-                {isMobile ? "Info" : "Info"}
-              </TabsTrigger>
-              {!isMobile && (
-                <TabsTrigger value="calls">Calls</TabsTrigger>
-              )}
-              {customer?.status !== "Prospect" && (
-                <TabsTrigger
-                  value="policies"
-                  className={isMobile ? "text-xs py-2.5 px-2" : ""}
-                >
-                  {isMobile ? "Policies" : "Policies"}
-                </TabsTrigger>
-              )}
-              {!isMobile && (
-                <TabsTrigger value="dependencies">Dependencies</TabsTrigger>
-              )}
-              <TabsTrigger
-                value="credentials"
-                className={isMobile ? "text-xs py-2.5 px-2" : ""}
-              >
-                {isMobile ? "Creds" : "Credentials"}
+                Info
               </TabsTrigger>
               <TabsTrigger
                 value="documents"
                 className={isMobile ? "text-xs py-2.5 px-2" : ""}
               >
-                {isMobile ? "Docs" : "Documents"}
+                Attachment
               </TabsTrigger>
+              {customer?.status !== "Prospect" && (
+                <TabsTrigger
+                  value="policies"
+                  className={isMobile ? "text-xs py-2.5 px-2" : ""}
+                >
+                  Policies
+                </TabsTrigger>
+              )}
+              {isMobile && (
+                <TabsTrigger
+                  value="history"
+                  className="text-xs py-2.5 px-2"
+                >
+                  History
+                </TabsTrigger>
+              )}
               {!isMobile && (
                 <>
+                  <TabsTrigger value="calls">Calls</TabsTrigger>
+                  <TabsTrigger value="dependencies">Dependencies</TabsTrigger>
+                  <TabsTrigger
+                    value="credentials"
+                    className=""
+                  >
+                    Credentials
+                  </TabsTrigger>
+                  <TabsTrigger value="documents">Attachments</TabsTrigger>
                   <TabsTrigger value="notes">
                     Notes ({notesCount})
                   </TabsTrigger>
@@ -363,7 +386,7 @@ const CustomerDetails = () => {
                   onValueChange={setMobileActiveTab}
                   className="w-full"
                 >
-                  <TabsList className="grid w-full grid-cols-6 h-auto gap-1 p-1">
+                  <TabsList className="grid w-full grid-cols-5 h-auto gap-1 p-1">
                     <TabsTrigger value="calls" className="text-xs py-2.5 px-1.5">
                       Calls
                     </TabsTrigger>
@@ -384,12 +407,6 @@ const CustomerDetails = () => {
                       className="text-xs py-2.5 px-1.5"
                     >
                       Meet
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="history"
-                      className="text-xs py-2.5 px-1.5"
-                    >
-                      History
                     </TabsTrigger>
                   </TabsList>
 
@@ -426,12 +443,6 @@ const CustomerDetails = () => {
                     />
                   </TabsContent>
 
-                  <TabsContent value="history" className="mt-4">
-                    <CustomerHistoryTab
-                      customerId={customer.id}
-                      customerName={`${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.name || 'Customer'}
-                    />
-                  </TabsContent>
                 </Tabs>
               </div>
             )}
@@ -439,6 +450,14 @@ const CustomerDetails = () => {
             {isMobile && (
               <TabsContent value="documents" className="mt-4">
                 <CustomerDocumentsTab customerId={customer.id} />
+              </TabsContent>
+            )}
+            {isMobile && (
+              <TabsContent value="history" className="mt-4">
+                <CustomerHistoryTab
+                  customerId={customer.id}
+                  customerName={`${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.name || 'Customer'}
+                />
               </TabsContent>
             )}
 

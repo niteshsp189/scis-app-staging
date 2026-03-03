@@ -133,31 +133,7 @@ export const CustomerHeaderActions = ({
           />
         </div>
 
-        <div className="mt-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full text-xs"
-            onClick={handleShare}
-          >
-            <Share2 className="h-3 w-3 mr-1" />
-            Copy Share Link
-          </Button>
-        </div>
-
-        {canDelete && (
-          <div className="mt-3">
-            <Button
-              variant="destructive"
-              size="sm"
-              className="w-full text-xs"
-              onClick={() => setShowEnhancedDeleteDialog(true)}
-            >
-              <Trash2 className="h-3 w-3 mr-1" />
-              {isProspect ? "Delete Prospect" : "Delete Customer"}
-            </Button>
-          </div>
-        )}
+        {/* share link and delete actions intentionally hidden on mobile per requirements */}
 
         <div className="mt-3">
           <PrintButton
