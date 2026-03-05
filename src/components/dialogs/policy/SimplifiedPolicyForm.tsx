@@ -714,8 +714,7 @@ export const SimplifiedPolicyForm = ({
     try {
       const response = await policyCreationService.getUsers();
       const usersArray = Array.isArray(response) ? response : [];
-      // Filter active users only
-      setUsers(usersArray.filter((user: User) => user.is_active));
+      setUsers(usersArray);
     } catch (error) {
       console.error("Failed to load users:", error);
       toast({

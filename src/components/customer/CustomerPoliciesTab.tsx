@@ -248,7 +248,7 @@ export const CustomerPoliciesTab = ({
 
   // Helper to get agent names
   const getAgentByType = (policy: Policy, type: string): string => {
-    const agent = policy.agents?.find(a => a.agent_type === type && a.is_active);
+    const agent = policy.agents?.find(a => a.agent_type === type);
     if (agent?.agent) {
       return agent.agent.name || `${agent.agent.first_name || ''} ${agent.agent.last_name || ''}`.trim() || '—';
     }

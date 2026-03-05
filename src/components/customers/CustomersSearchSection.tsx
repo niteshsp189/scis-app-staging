@@ -70,8 +70,7 @@ export function CustomersSearchSection({
                   <SelectContent>
                     <SelectItem value="all">All Policy Status</SelectItem>
                     <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Renewal Due">Renewal Due</SelectItem>
-                    <SelectItem value="Expired">Expired</SelectItem>
+                    <SelectItem value="Cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -184,8 +183,7 @@ export function CustomersSearchSection({
               <SelectContent>
                 <SelectItem value="all">All Policy Status</SelectItem>
                 <SelectItem value="Active">Active</SelectItem>
-                <SelectItem value="Renewal Due">Renewal Due</SelectItem>
-                <SelectItem value="Expired">Expired</SelectItem>
+                <SelectItem value="Cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select> 
           </div>

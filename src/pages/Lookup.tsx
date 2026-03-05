@@ -2040,8 +2040,9 @@ const Lookup = () => {
 
                   let totalItems: number;
                   if (activeResultTab === "all") {
-                    // "All" tab: client-side pagination over loaded results
-                    totalItems = results.filter(r => r.type !== "prospect").length;
+                    // "All" tab: use DB total counts so the number matches the header
+                    const dbTotal = Object.entries(totalCounts).reduce((sum, [key, val]) => key !== 'prospect' ? sum + val : sum, 0);
+                    totalItems = dbTotal || results.filter(r => r.type !== "prospect").length;
                   } else {
                     // Specific type tabs: use DB total count for server-side pagination
                     const mappedType = typeMap[activeResultTab] || activeResultTab;

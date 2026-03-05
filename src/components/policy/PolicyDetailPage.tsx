@@ -258,10 +258,10 @@ export const PolicyDetailPage: React.FC<PolicyDetailPageProps> = ({
             </CardHeader>
             <CardContent>
               {(() => {
-                const activeAgents = (policy.agents || []).filter(a => a.is_active);
-                return activeAgents.length > 0 ? (
+                const agents = (policy.agents || []);
+                return agents.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {activeAgents.map((agent, index) => (
+                    {agents.map((agent, index) => (
                       <div key={index} className="border rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                           <Badge
