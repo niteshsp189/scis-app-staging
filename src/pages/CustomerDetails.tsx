@@ -43,6 +43,14 @@ const CustomerDetails = () => {
 
   const [activeTab, setActiveTab] = useState<string>(initialTab);
 
+  // Sync activeTab when URL search params change (e.g. navigating between customers)
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
   const [notesCount, setNotesCount] = useState<number>(0);
   const [appointmentsCount, setAppointmentsCount] = useState<number>(0);
 

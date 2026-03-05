@@ -10,6 +10,8 @@ import { dependentService } from "@/services/dependentService";
 import { PolicyService } from "@/services/policyService";
 import { ConfirmationDialog } from "@/components/dialogs/ConfirmationDialog";
 import { getCustomerViewUrl } from "@/utils/customerRoutes";
+import { SelectCustomerForDependentDialog, CustomerOption } from "@/components/dialogs/SelectCustomerForDependentDialog";
+import { LinkExistingCustomerAsDependentDialog } from "./LinkExistingCustomerAsDependentDialog";
 
 interface CustomerFamilyTabProps {
   customerData: CustomerData;
@@ -27,6 +29,9 @@ export const CustomerFamilyTab = ({
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<number | null>(null);
+  const [isSelectCustomerOpen, setIsSelectCustomerOpen] = useState(false);
+  const [isLinkExistingOpen, setIsLinkExistingOpen] = useState(false);
+  const [selectedExistingCustomer, setSelectedExistingCustomer] = useState<any>(null);
 
   const fetchFamilyMembersAndPolicies = async () => {
     try {
@@ -243,8 +248,25 @@ export const CustomerFamilyTab = ({
   };
 
   const handleEditMember = (member: FamilyMember) => {
-    setEditingMember(member);
-    setIsAddMemberOpen(true);
+    if (member.relatedCustomerId) {
+      // Linked dependent: open simplified edit dialog
+      setSelectedExistingCustomer({
+        id: member.relatedCustomerId,
+        name: `${member.firstName} ${member.lastName}`.trim(),
+        firstName: member.firstName,
+        lastName: member.lastName,
+        email: member.email,
+        phone: member.phone,
+        status: member.relatedCustomerStatus || member.status || 'Client',
+        legacyClientId: member.relatedCustomerLegacyId,
+      });
+      setEditingMember(member);
+      setIsLinkExistingOpen(true);
+    } else {
+      // Non-linked dependent: open full edit form
+      setEditingMember(member);
+      setIsAddMemberOpen(true);
+    }
   };
 
   const handleDeleteMember = async (memberId: number) => {
@@ -282,6 +304,147 @@ export const CustomerFamilyTab = ({
     }
   };
 
+  const handleCustomerSelectedAsDependent = async (customer: CustomerOption) => {
+    // Open simplified link dialog for existing customer
+    setSelectedExistingCustomer({
+      id: customer.id,
+      name: customer.name,
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+      email: customer.email,
+      phone: customer.phone,
+    });
+    setIsLinkExistingOpen(true);
+  };
+
+  const handleLinkExistingSubmit = async (data: {
+    relatedCustomerId: number;
+    relationship: string;
+    notes: string;
+    selectedPolicyIds: number[];
+  }) => {
+    try {
+      // Create dependent linking to existing customer
+      const newMember = await dependentService.createDependent({
+        customerId: customerData.id,
+        relatedCustomerId: data.relatedCustomerId,
+        relationship: data.relationship,
+        notes: data.notes,
+      } as any);
+
+      // Associate selected policies to newly created dependent
+      for (const policyId of data.selectedPolicyIds) {
+        try {
+          await PolicyService.associatePolicyWithDependent(policyId, newMember.id, {
+            isPrimaryBeneficiary: false,
+            notes: 'Associated via dependent management',
+          });
+        } catch (error) {
+          console.error(`Failed to associate policy ${policyId} to new dependent:`, error);
+        }
+      }
+
+      // Refresh the dependents and their policies
+      await fetchFamilyMembersAndPolicies();
+
+      toast({
+        title: "Success",
+        description: "Existing customer linked as dependent successfully.",
+      });
+
+      setIsLinkExistingOpen(false);
+      setSelectedExistingCustomer(null);
+    } catch (error: any) {
+      console.error('Error linking existing customer as dependent:', error);
+      if (error.response?.status === 422 && error.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        const firstErrorField = Object.keys(errors)[0];
+        const firstErrorMessage = Array.isArray(errors[firstErrorField])
+          ? errors[firstErrorField][0]
+          : errors[firstErrorField];
+        toast({
+          title: "Validation Error",
+          description: firstErrorMessage,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to link customer as dependent.",
+          variant: "destructive",
+        });
+      }
+      throw error; // Re-throw so the dialog knows submission failed
+    }
+  };
+
+  const handleEditLinkedSubmit = async (data: {
+    relatedCustomerId: number;
+    relationship: string;
+    notes: string;
+    selectedPolicyIds: number[];
+  }) => {
+    if (!editingMember) return;
+
+    try {
+      // Update the dependent's relationship and notes
+      await dependentService.updateDependent(editingMember.id, {
+        relationship: data.relationship,
+        notes: data.notes,
+      });
+
+      // Update policy associations
+      const currentPolicies = memberPolicies[editingMember.id] || [];
+      const currentlyAssignedIds = currentPolicies.map((p: any) => p.id);
+
+      const toAssign = data.selectedPolicyIds.filter((id) => !currentlyAssignedIds.includes(id));
+      const toUnassign = currentlyAssignedIds.filter((id) => !data.selectedPolicyIds.includes(id));
+
+      for (const policyId of toAssign) {
+        try {
+          await PolicyService.associatePolicyWithDependent(policyId, editingMember.id, {
+            isPrimaryBeneficiary: false,
+            notes: 'Associated via dependent management',
+          });
+        } catch (error) {
+          console.error(`Failed to associate policy ${policyId}:`, error);
+        }
+      }
+
+      for (const policyId of toUnassign) {
+        try {
+          await PolicyService.disassociatePolicyFromDependent(policyId, editingMember.id);
+        } catch (error) {
+          console.error(`Failed to disassociate policy ${policyId}:`, error);
+        }
+      }
+
+      await fetchFamilyMembersAndPolicies();
+
+      toast({
+        title: "Success",
+        description: "Dependent updated successfully.",
+      });
+
+      setIsLinkExistingOpen(false);
+      setSelectedExistingCustomer(null);
+      setEditingMember(null);
+    } catch (error: any) {
+      console.error('Error updating linked dependent:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update dependent.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const handleAddNewDependent = () => {
+    setEditingMember(null);
+    setIsAddMemberOpen(true);
+  };
+
   const resetForm = () => {
     setEditingMember(null);
   };
@@ -295,13 +458,43 @@ export const CustomerFamilyTab = ({
           size="sm"
           onClick={() => {
             setEditingMember(null);
-            setIsAddMemberOpen(true);
+            setIsSelectCustomerOpen(true);
           }}
         >
           <Users className="h-4 w-4 mr-1" />
           Add Dependent
         </Button>
       </div>
+
+      <SelectCustomerForDependentDialog
+        open={isSelectCustomerOpen}
+        onOpenChange={setIsSelectCustomerOpen}
+        onCustomerSelected={handleCustomerSelectedAsDependent}
+        onAddNewDependent={handleAddNewDependent}
+        excludeCustomerId={customerData.id}
+      />
+
+      <LinkExistingCustomerAsDependentDialog
+        isOpen={isLinkExistingOpen}
+        onOpenChange={(open) => {
+          setIsLinkExistingOpen(open);
+          if (!open) {
+            setSelectedExistingCustomer(null);
+            setEditingMember(null);
+          }
+        }}
+        selectedCustomer={selectedExistingCustomer}
+        customerId={customerData.id}
+        onSubmit={editingMember?.relatedCustomerId ? handleEditLinkedSubmit : handleLinkExistingSubmit}
+        onBack={editingMember ? undefined : () => {
+          setIsLinkExistingOpen(false);
+          setSelectedExistingCustomer(null);
+          setIsSelectCustomerOpen(true);
+        }}
+        editingDependentId={editingMember?.relatedCustomerId ? editingMember.id : null}
+        initialRelationship={editingMember?.relationship}
+        initialNotes={editingMember?.notes}
+      />
 
       <FamilyMemberForm
         isOpen={isAddMemberOpen}
@@ -334,8 +527,12 @@ export const CustomerFamilyTab = ({
                         <button
                           className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
                           onClick={() => {
-                            const url = getCustomerViewUrl(member.relatedCustomerId!, member.relatedCustomerStatus || member.status || 'Client');
-                            navigate(url);
+                            const url = getCustomerViewUrl(
+                              member.relatedCustomerId!,
+                              member.relatedCustomerStatus || member.status || 'Client',
+                              member.relatedCustomerLegacyId
+                            );
+                            navigate(`${url}?tab=overview`);
                           }}
                           title={`View ${member.firstName} ${member.lastName}`}
                         >

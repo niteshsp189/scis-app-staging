@@ -121,6 +121,7 @@ const transformDependentRequest = (
 ): Partial<DependentApiRequest> => {
   return {
     customer_id: dependent.customerId,
+    related_customer_id: dependent.relatedCustomerId,
     first_name: dependent.firstName,
     middle_name: dependent.middleName,
     last_name: dependent.lastName,
