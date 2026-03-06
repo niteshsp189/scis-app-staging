@@ -848,15 +848,20 @@ export const PolicyDetailView: React.FC<PolicyDetailViewProps> = ({
                           // Update the policy in the query cache
                           queryClient.setQueryData(
                             ["policy", currentPolicy.id],
-                            updatedPolicy,
+                            { data: updatedPolicy },
                           );
 
                           // Refetch the policy data to ensure we have the latest information
                           await refetchPolicy();
 
+                          // Invalidate related queries so parent lists (customer policies, all policies) refresh
+                          queryClient.invalidateQueries({ queryKey: ["customer-policies"] });
+                          queryClient.invalidateQueries({ queryKey: ["policies"] });
+
                           // Update parent component with the latest data
-                          if (onPolicyUpdate && policyData?.data) {
-                            onPolicyUpdate(policyData.data);
+                          const freshPolicy = policyData?.data || updatedPolicy;
+                          if (onPolicyUpdate) {
+                            onPolicyUpdate(freshPolicy);
                           }
 
                           toast({

@@ -113,6 +113,13 @@ export const EditPolicyDialog = ({
 
   useEffect(() => {
     if (open && policy) {
+      // Clear any leftover localStorage form cache from create-mode
+      // so it never bleeds into the edit form
+      try {
+        localStorage.removeItem("simplifiedPolicyFormData");
+      } catch (e) {
+        // ignore
+      }
       loadPlanType();
     }
   }, [open, policy, loadPlanType]);

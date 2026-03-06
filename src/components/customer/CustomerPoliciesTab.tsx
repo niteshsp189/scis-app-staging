@@ -416,13 +416,13 @@ export const CustomerPoliciesTab = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Policies</p>
-                <p className="text-2xl font-bold text-blue-600">
+                <div className="text-2xl font-bold text-blue-600">
                   {isLoading ? (
                     <Skeleton className="h-8 w-8" />
                   ) : (
                     policies.length
                   )}
-                </p>
+                </div>
               </div>
               <FileText className="h-8 w-8 text-blue-600" />
             </div>
@@ -434,7 +434,7 @@ export const CustomerPoliciesTab = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Premium</p>
-                <p className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-green-600">
                   {isLoading ? (
                     <Skeleton className="h-8 w-16" />
                   ) : (
@@ -456,7 +456,7 @@ export const CustomerPoliciesTab = ({
                       placeholder="0"
                     />
                   )}
-                </p>
+                </div>
               </div>
               <DollarSign className="h-8 w-8 text-green-600" />
             </div>
@@ -621,6 +621,15 @@ export const CustomerPoliciesTab = ({
             policy={selectedPolicy}
             isOpen={isDetailsDialogOpen}
             onClose={() => setIsDetailsDialogOpen(false)}
+            onPolicyUpdate={(updatedPolicy) => {
+              // Update the selected policy state so the detail view shows fresh data
+              setSelectedPolicy(updatedPolicy);
+              // Invalidate the customer-policies query so the list refreshes
+              queryClient.invalidateQueries({
+                queryKey: ["customer-policies", customerData.id],
+              });
+              queryClient.invalidateQueries({ queryKey: ["policies"] });
+            }}
           />
 
           <PolicyReinstatementDialog

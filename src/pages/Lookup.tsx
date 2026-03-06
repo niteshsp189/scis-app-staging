@@ -31,6 +31,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import SearchInputWithSuggestions from "@/components/ui/SearchInputWithSuggestions";
+import RelevanceScoreChart from "@/components/ui/RelevanceScoreChart";
 import ReminderDetailModal from "@/components/modals/ReminderDetailModal";
 import ProspectDetailModal from "@/components/modals/ProspectDetailModal";
 import globalSearchService, {
@@ -1808,25 +1809,73 @@ const Lookup = () => {
                   </div>
 
                   <TabsContent value="all" className="space-y-3 mt-4">
-                    {results
-                      .filter((result) => result.type !== "prospect")
-                      .slice((currentPage - 1) * pageSize, currentPage * pageSize)
-                      .map((result, index) => {
+                    {(() => {
+                      // Group results by type in priority order: Customers → Policies → Appointments → Reminders → Users
+                      const typePriority: Record<string, number> = {
+                        customer: 1,
+                        policy: 2,
+                        appointment: 3,
+                        reminder: 4,
+                        user: 5,
+                      };
+                      const typeLabels: Record<string, string> = {
+                        customer: 'Customers',
+                        policy: 'Policies',
+                        appointment: 'Appointments',
+                        reminder: 'Reminders',
+                        user: 'Users',
+                      };
+                      const typeIcons: Record<string, any> = {
+                        customer: User,
+                        policy: FileText,
+                        appointment: Calendar,
+                        reminder: Bell,
+                        user: Users,
+                      };
+
+                      const sortedResults = [...results]
+                        .filter((result) => result.type !== "prospect")
+                        .sort((a, b) => (typePriority[a.type] || 99) - (typePriority[b.type] || 99));
+
+                      const pagedResults = sortedResults.slice(
+                        (currentPage - 1) * pageSize,
+                        currentPage * pageSize
+                      );
+
+                      let lastType = '';
+                      const elements: React.ReactNode[] = [];
+
+                      pagedResults.forEach((result, index) => {
+                        // Render group header when type changes
+                        if (result.type !== lastType) {
+                          const GroupIcon = typeIcons[result.type] || Search;
+                          const groupCount = sortedResults.filter(r => r.type === result.type).length;
+                          elements.push(
+                            <div
+                              key={`header-${result.type}`}
+                              className="flex items-center gap-2 pt-3 pb-1 border-b border-gray-200 mb-1"
+                            >
+                              <GroupIcon className={`h-4 w-4 ${globalSearchService.getTypeColor(result.type as SearchResult["type"])}`} />
+                              <h3 className="text-sm font-semibold text-gray-700">
+                                {typeLabels[result.type] || result.type} ({groupCount})
+                              </h3>
+                            </div>
+                          );
+                          lastType = result.type;
+                        }
+
                         const href = getResultHref(result);
-                        // Use div for card to avoid nested anchors (invalid HTML)
-                        // But keep main interactive behaviors
                         const handleClick = (e: React.MouseEvent) => {
                           handleResultClick(result, e);
                         };
-
                         const handleMouseDown = (e: React.MouseEvent) => {
-                          if (e.button === 1) { // Middle click
+                          if (e.button === 1) {
                             e.preventDefault();
                             handleClick(e);
                           }
                         };
 
-                        return (
+                        elements.push(
                           <div
                             key={`${result.type}-${result.id}-${index}`}
                             className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors text-inherit"
@@ -1902,12 +1951,24 @@ const Lookup = () => {
                                 </div>
                               </div>
                             </div>
-                            <div className="text-sm text-gray-400 self-start sm:self-center shrink-0">
-                              Score: {result.relevance_score}/100
+                            <div className="self-start sm:self-center">
+                              {result.type === 'customer' ? (
+                                <RelevanceScoreChart
+                                  score={result.relevance_score}
+                                  breakdown={result.score_breakdown}
+                                />
+                              ) : (
+                                <span className="text-sm text-gray-400 shrink-0">
+                                  Score: {result.relevance_score}/100
+                                </span>
+                              )}
                             </div>
                           </div>
                         );
-                      })}
+                      });
+
+                      return elements;
+                    })()}
                   </TabsContent>
 
                   {[
@@ -2024,8 +2085,17 @@ const Lookup = () => {
                                   </div>
                                 </div>
                               </div>
-                              <div className="text-sm text-gray-400 self-start sm:self-center shrink-0">
-                                Score: {result.relevance_score}/100
+                              <div className="self-start sm:self-center">
+                                {result.type === 'customer' ? (
+                                  <RelevanceScoreChart
+                                    score={result.relevance_score}
+                                    breakdown={result.score_breakdown}
+                                  />
+                                ) : (
+                                  <span className="text-sm text-gray-400 shrink-0">
+                                    Score: {result.relevance_score}/100
+                                  </span>
+                                )}
                               </div>
                             </div>
                           );

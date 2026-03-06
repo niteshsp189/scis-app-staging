@@ -400,25 +400,49 @@ export const SimplifiedPolicyForm = ({
   initialData,
   isEditMode = false,
 }: PolicyFormProps) => {
+  // In edit mode, clear any leftover localStorage cache immediately so it
+  // cannot interfere with the edit form's initial state or any effects.
+  if (isEditMode) {
+    try {
+      localStorage.removeItem("simplifiedPolicyFormData");
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  // Build clean initial state — in edit mode always from initialData,
+  // never from localStorage.
+  const buildInitialFormData = (): FormData => {
+    if (isEditMode && initialData) {
+      return {
+        customer_id: initialData.customer_id || (customer?.id ? customer.id.toString() : ""),
+        customer_name: initialData.customer_name || customer?.name || "",
+        company_id: initialData.company_id || "",
+        plan_id: initialData.plan_id || "",
+        policy_number: initialData.policy_number || "",
+        agent_of_record: initialData.agent_of_record || "",
+        writing_agent: initialData.writing_agent || "",
+        effective_date: "",
+        extra_fields: initialData.extra_fields || {},
+        status: "Active",
+      };
+    }
+    return {
+      customer_id: initialData?.customer_id || (customer?.id ? customer.id.toString() : ""),
+      customer_name: initialData?.customer_name || customer?.name || "",
+      company_id: initialData?.company_id || "",
+      plan_id: initialData?.plan_id || "",
+      policy_number: initialData?.policy_number || "",
+      agent_of_record: initialData?.agent_of_record || "",
+      writing_agent: initialData?.writing_agent || "",
+      effective_date: "",
+      extra_fields: initialData?.extra_fields || {},
+      status: initialData?.status || "Active",
+    };
+  };
+
   // Form data state - only the 6 core fields + extra fields
-  const [formData, setFormData] = useState<FormData>({
-    customer_id:
-      initialData?.customer_id || (customer?.id ? customer.id.toString() : ""),
-    customer_name: initialData?.customer_name || customer?.name || "",
-    company_id: initialData?.company_id || "",
-    plan_id: initialData?.plan_id || "",
-    policy_number: initialData?.policy_number || (isEditMode ? "" : ""),
-    agent_of_record: initialData?.agent_of_record || "",
-    writing_agent: initialData?.writing_agent || "",
-    effective_date: "", // Hidden field - not used for policy creation
-    extra_fields: initialData?.extra_fields || {},
-    status: initialData?.status || "Active",
-  });
-  
-  // Form data state tracking
-  useEffect(() => {
-    // Monitor form data changes for debugging
-  }, [formData]);
+  const [formData, setFormData] = useState<FormData>(buildInitialFormData);
 
   // API data states
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -510,9 +534,9 @@ export const SimplifiedPolicyForm = ({
 
   // Initialize form data when initialData changes (for edit mode) or on mount (for create mode)
   useEffect(() => {
-    // Initialize form data from initialData prop (for edit mode) or localStorage (for create mode)
     if (isEditMode && initialData) {
-      const newFormData = {
+      // Edit mode: always reset form to the policy's actual data
+      setFormData({
         customer_id:
           initialData.customer_id ||
           (customer?.id ? customer.id.toString() : ""),
@@ -522,14 +546,12 @@ export const SimplifiedPolicyForm = ({
         policy_number: initialData.policy_number || "",
         agent_of_record: initialData.agent_of_record || "",
         writing_agent: initialData.writing_agent || "",
-        effective_date: "", // Hidden field - not used for policy creation
+        effective_date: "",
         extra_fields: initialData.extra_fields || {},
-        status: "Active", // Always set to Active in edit mode, regardless of original status
-      };
-      
-      setFormData(newFormData);
+        status: "Active",
+      });
     } else if (!isEditMode) {
-      // Initialize form data from localStorage on component mount (for create mode only)
+      // Create mode: restore draft from localStorage if available
       try {
         const savedData = localStorage.getItem("simplifiedPolicyFormData");
         if (savedData) {
@@ -1188,6 +1210,28 @@ export const SimplifiedPolicyForm = ({
     setValidationErrors(formErrors);
     return !hasValidationErrors(formErrors);
   };
+
+  // In edit mode, wait for reference data (companies, plans, users) to load
+  // before rendering the form. This prevents Radix UI Select's infinite ref
+  // update loop that occurs when a controlled value doesn't match any SelectItem.
+  const hasPaymentModeField = includedExtraFields.some(([key]) => key === 'payment_mode');
+  const isEditDataReady = !isEditMode || (
+    companies.length > 0 &&
+    users.length > 0 &&
+    (plans.length > 0 || !formData.company_id) &&
+    (!hasPaymentModeField || paymentModes.length > 0)
+  );
+
+  if (!isEditDataReady) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex flex-col items-center justify-center py-12 space-y-3">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="text-sm text-muted-foreground">Loading policy form data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">

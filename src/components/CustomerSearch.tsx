@@ -53,6 +53,7 @@ export const CustomerSearch = ({
         onSuggestionNavigate={handleSuggestionNavigate}
         placeholder="Search by name, phone, SSN, or zip code..."
         className="w-full"
+        showSearchButton
         suggestionsFilter="customer"
         suggestionsAccountStatus={accountStatus}
       />

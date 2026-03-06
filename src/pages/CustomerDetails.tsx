@@ -307,81 +307,46 @@ const CustomerDetails = () => {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList
-              className={`grid w-full ${isMobile ? "grid-cols-4 h-auto gap-1 p-1" : "grid-cols-9"}`}
-            >
-              <TabsTrigger
-                value="overview"
-                className={isMobile ? "text-xs py-2.5 px-2" : ""}
-              >
-                Info
-              </TabsTrigger>
-              <TabsTrigger
-                value="documents"
-                className={isMobile ? "text-xs py-2.5 px-2" : ""}
-              >
-                Attachment
-              </TabsTrigger>
-              {customer?.status !== "Prospect" && (
-                <TabsTrigger
-                  value="policies"
-                  className={isMobile ? "text-xs py-2.5 px-2" : ""}
-                >
-                  Policies
-                </TabsTrigger>
-              )}
-              {isMobile && (
-                <TabsTrigger
-                  value="history"
-                  className="text-xs py-2.5 px-2"
-                >
-                  History
-                </TabsTrigger>
-              )}
-              {!isMobile && (
-                <>
-                  <TabsTrigger value="calls">Calls</TabsTrigger>
-                  <TabsTrigger value="dependencies">Dependencies</TabsTrigger>
-                  <TabsTrigger
-                    value="credentials"
-                    className=""
-                  >
-                    Credentials
-                  </TabsTrigger>
-                  <TabsTrigger value="documents">Attachments</TabsTrigger>
-                  <TabsTrigger value="notes">
-                    Notes ({notesCount})
-                  </TabsTrigger>
-                  <TabsTrigger value="appointments">Appointments ({appointmentsCount})</TabsTrigger>
-                  <TabsTrigger value="history">History</TabsTrigger>
-                </>
-              )}
-            </TabsList>
+            {/* Desktop: single row — Info | Attachment | Policies | History | Calls | Appointments | Notes | Dependencies | Credentials */}
+            {!isMobile && (
+              <TabsList className="flex w-full items-center gap-x-3 gap-y-[5px] flex-wrap lg:flex-nowrap lg:overflow-x-auto p-1">
+                <TabsTrigger value="overview" className="flex-1 text-center">Info</TabsTrigger>
+                <TabsTrigger value="documents" className="flex-1 text-center">Attachments</TabsTrigger>
+                {customer?.status !== "Prospect" && (
+                  <TabsTrigger value="policies" className="flex-1 text-center">Policies</TabsTrigger>
+                )}
+                <TabsTrigger value="history" className="flex-1 text-center">History</TabsTrigger>
+                <TabsTrigger value="calls" className="flex-1 text-center">Calls</TabsTrigger>
+                <TabsTrigger value="appointments" className="flex-1 text-center">Appointments ({appointmentsCount})</TabsTrigger>
+                <TabsTrigger value="notes" className="flex-1 text-center">Notes ({notesCount})</TabsTrigger>
+                <TabsTrigger value="dependencies" className="flex-1 text-center">Dependencies</TabsTrigger>
+                <TabsTrigger value="credentials" className="flex-1 text-center">Credentials</TabsTrigger>
+              </TabsList>
+            )}
 
+            {/* Mobile row 1: Info | Attachment | Policies | History */}
+            {isMobile && (
+              <TabsList className="grid w-full grid-cols-4 h-auto gap-1 p-1">
+                <TabsTrigger value="overview" className="text-xs py-2.5 px-2">Info</TabsTrigger>
+                <TabsTrigger value="documents" className="text-xs py-2.5 px-2">Attachment</TabsTrigger>
+                {customer?.status !== "Prospect" ? (
+                  <TabsTrigger value="policies" className="text-xs py-2.5 px-2">Policies</TabsTrigger>
+                ) : (
+                  <div />
+                )}
+                <TabsTrigger value="history" className="text-xs py-2.5 px-2">History</TabsTrigger>
+              </TabsList>
+            )}
+
+            {/* Mobile row 2: Calls | Appointments | Notes | Dependencies | Credentials */}
             {isMobile && (
               <div className="mt-4 mb-4">
                 <TabsList className="grid w-full grid-cols-5 h-auto gap-1 p-1">
-                  <TabsTrigger value="calls" className="text-xs py-2.5 px-1.5">
-                    Calls
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="dependencies"
-                    className="text-xs py-2.5 px-1.5"
-                  >
-                    Deps
-                  </TabsTrigger>
-                  <TabsTrigger value="credentials" className="text-xs py-2.5 px-1.5">
-                    Creds
-                  </TabsTrigger>
-                  <TabsTrigger value="notes" className="text-xs py-2.5 px-1.5">
-                    Notes
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="appointments"
-                    className="text-xs py-2.5 px-1.5"
-                  >
-                    Meet
-                  </TabsTrigger>
+                  <TabsTrigger value="calls" className="text-xs py-2.5 px-1.5">Calls</TabsTrigger>
+                  <TabsTrigger value="appointments" className="text-xs py-2.5 px-1.5">Appointment</TabsTrigger>
+                  <TabsTrigger value="notes" className="text-xs py-2.5 px-1.5">Notes</TabsTrigger>
+                  <TabsTrigger value="dependencies" className="text-xs py-2.5 px-1.5">Deps</TabsTrigger>
+                  <TabsTrigger value="credentials" className="text-xs py-2.5 px-1.5">Creds</TabsTrigger>
                 </TabsList>
               </div>
             )}

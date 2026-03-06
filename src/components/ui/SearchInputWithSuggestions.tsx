@@ -266,13 +266,19 @@ const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProps> = ({
         </div>
         {showSearchButton && (
           <button
-            type="button"
-            onClick={() => onSearch()}
-            disabled={disabled || !value.trim()}
-            className="inline-flex items-center justify-center px-3 h-10 bg-transparent hover:bg-slate-100 text-slate-500 hover:text-slate-700 rounded-r-lg border border-l-0 border-slate-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-          >
-            <Search className="h-4 w-4" />
-          </button>
+              type="button"
+              onClick={() => {
+                // Trigger parent search, then hide suggestions and blur input
+                onSearch();
+                setShowSuggestions(false);
+                setActiveSuggestionIndex(-1);
+                inputRef.current?.blur();
+              }}
+              disabled={disabled || !value.trim()}
+              className="inline-flex items-center justify-center px-3 h-10 bg-transparent hover:bg-slate-100 text-slate-500 hover:text-slate-700 rounded-r-lg border border-l-0 border-slate-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            >
+              <Search className="h-4 w-4" />
+            </button>
         )}
       </div>
 

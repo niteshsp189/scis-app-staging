@@ -7,6 +7,7 @@ export interface SearchResult {
   description: string;
   status: string;
   relevance_score: number;
+  score_breakdown?: Record<string, number>; // field → score (0-100), sorted desc
   url: string;
   details: any;
   // Customer-specific identifiers (for disambiguation when names are duplicated)
