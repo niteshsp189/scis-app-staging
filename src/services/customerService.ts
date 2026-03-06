@@ -104,6 +104,37 @@ export interface FamilyMemberResponse {
   last_name: string;
   relationship: string;
   date_of_birth: string;
+  gender?: string;
+  ssn?: string;
+  marital_status?: string;
+  height?: string;
+  weight?: string;
+  smoker?: string;
+  email?: string;
+  home_phone?: string;
+  cell_phone?: string;
+  work_phone?: string;
+  fax?: string;
+  address?: string;
+  apartment?: string;
+  apartment_type?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  country?: string;
+  mailing_address?: string;
+  mailing_apartment?: string;
+  mailing_apartment_type?: string;
+  mailing_city?: string;
+  mailing_state?: string;
+  mailing_zip_code?: string;
+  mailing_country?: string;
+  different_mailing_address?: boolean;
+  company?: string;
+  referral?: string;
+  notes?: string;
+  policies?: any[];
+  related_customer?: any;
 }
 
 export interface NoteResponse {
@@ -179,6 +210,7 @@ export interface CustomerResponse {
   updater?: { id: string; name: string };
   policies?: { policy_number: string }[];
   family_members?: FamilyMemberResponse[];
+  dependents?: FamilyMemberResponse[];  // API returns 'dependents' key
   notes?: NoteResponse[];
   documents?: DocumentResponse[];
 }
@@ -269,7 +301,7 @@ const transformCustomerResponse = (
     relationship: "", // Not applicable for main customer
     familyId: apiCustomer.family_id || "",
     dependents:
-      apiCustomer.family_members?.map((fm) => ({
+      (apiCustomer.dependents || apiCustomer.family_members)?.map((fm: any) => ({
         name:
           fm.first_name && fm.last_name
             ? `${fm.first_name} ${fm.last_name}`.trim()
@@ -280,7 +312,7 @@ const transformCustomerResponse = (
     groupPolicy: null, // Would need to be determined from policies
     customerType: apiCustomer.customer_type || "Individual",
     familyMembers:
-      apiCustomer.family_members?.map((fm) => ({
+      (apiCustomer.dependents || apiCustomer.family_members)?.map((fm: any) => ({
         id: fm.id,
         firstName: fm.first_name || "",
         middleName: fm.middle_name || "",

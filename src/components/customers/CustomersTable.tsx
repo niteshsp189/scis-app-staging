@@ -13,113 +13,14 @@ import { Eye, Mail, Phone } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { getCustomerViewUrl } from "@/utils/customerRoutes";
 import { usePhoneSelection } from "@/hooks/usePhoneSelection";
-import { useEffect, useState } from "react";
-import { PolicyService } from "@/services/policyService";
-import { dependentService } from "@/services/dependentService";
-import { Policy } from "@/types/policy";
 
 interface CustomersTableProps {
   customers: CustomerData[];
 }
 
-// Helper function to get premium value from policy (same as CustomerPoliciesTab)
-const getPremiumValue = (policy: Policy): number => {
-  // Check if the policy has a plan with plan type that includes premium in extra fields
-  const planType = policy.plan?.planType || policy.plan?.plan_type;
-
-  // Parse field_values if it's a string
-  let fieldValues = policy.field_values;
-  if (typeof fieldValues === "string") {
-    try {
-      fieldValues = JSON.parse(fieldValues);
-    } catch (e) {
-      console.error("Failed to parse field_values:", e);
-      return 0;
-    }
-  }
-
-  // If plan type has premium in extra fields and policy has field_values
-  if (
-    planType?.extra_fields?.premium &&
-    fieldValues &&
-    typeof fieldValues === "object"
-  ) {
-    const premiumValue = fieldValues.premium;
-
-    if (
-      premiumValue !== undefined &&
-      premiumValue !== null &&
-      premiumValue !== ""
-    ) {
-      const numericValue = parseFloat(premiumValue.toString());
-      if (!isNaN(numericValue)) {
-        return numericValue;
-      }
-    }
-  }
-
-  // For all other cases (no premium in extra fields, no field_values, or empty premium), return 0
-  return 0;
-};
-
 export function CustomersTable({ customers }: CustomersTableProps) {
   const navigate = useNavigate();
   const { handleCall, PhoneSelectionDialog, hasPhoneNumbers } = usePhoneSelection();
-  
-  // State for calculated values per customer
-  const [calculatedValues, setCalculatedValues] = useState<Record<number, { premium: number | null; dependents: number | null }>>({});
-
-  // Fetch policies and dependents for all customers
-  useEffect(() => {
-    const fetchAllData = async () => {
-      const newCalculatedValues: Record<number, { premium: number | null; dependents: number | null }> = {};
-
-      await Promise.all(
-        customers.map(async (customer) => {
-          // Fetch policies and calculate premium
-          try {
-            const policiesResponse = await PolicyService.getPolicies(1, 100, {
-              customer_id: customer.id,
-            });
-            const policies = policiesResponse.data || [];
-            
-            const totalPremium = policies.reduce((sum, policy) => {
-              const premiumValue = getPremiumValue(policy);
-              const planType = policy.plan?.planType || policy.plan?.plan_type;
-              if (planType?.extra_fields?.premium && premiumValue > 0) {
-                return sum + premiumValue;
-              }
-              return sum;
-            }, 0);
-            
-            newCalculatedValues[customer.id] = { premium: totalPremium, dependents: null };
-          } catch (error) {
-            console.error(`Failed to fetch policies for customer ${customer.id}:`, error);
-            newCalculatedValues[customer.id] = { premium: customer.totalPremium, dependents: null };
-          }
-
-          // Fetch dependents count if needed
-          if ((customer.dependents?.length || 0) === 0) {
-            try {
-              const dependents = await dependentService.getDependents(customer.id);
-              newCalculatedValues[customer.id].dependents = dependents.length;
-            } catch (error) {
-              console.error(`Failed to fetch dependents for customer ${customer.id}:`, error);
-              newCalculatedValues[customer.id].dependents = 0;
-            }
-          } else {
-            newCalculatedValues[customer.id].dependents = customer.dependents?.length || 0;
-          }
-        })
-      );
-
-      setCalculatedValues(newCalculatedValues);
-    };
-
-    if (customers.length > 0) {
-      fetchAllData();
-    }
-  }, [customers]);
   
   const getStatusVariant = (status: string) => {
     switch (status.toLowerCase()) {
@@ -172,16 +73,12 @@ export function CustomersTable({ customers }: CustomersTableProps) {
                     {customer.status}
                   </Badge>
                 </TableCell>
-                 <TableCell className="w-[10%] min-w-[80px]">{customer.policies ? customer.policies.length : 0}</TableCell>
+                 <TableCell className="w-[10%] min-w-[80px]">{customer.totalPolicies || 0}</TableCell>
                  <TableCell className="w-[12%] min-w-[100px] whitespace-nowrap">
-                   ${calculatedValues[customer.id]?.premium !== undefined 
-                     ? calculatedValues[customer.id].premium?.toLocaleString() || '0'
-                     : customer.totalPremium?.toLocaleString() || '0'}
+                   ${customer.totalPremium?.toLocaleString() || '0'}
                  </TableCell>
                  <TableCell className="w-[12%] min-w-[100px]">
-                   {calculatedValues[customer.id]?.dependents !== undefined 
-                     ? calculatedValues[customer.id].dependents 
-                     : (customer.dependents?.length || 0)}
+                   {customer.dependents?.length || 0}
                  </TableCell>
                 <TableCell className="text-right sticky right-0 bg-white shadow-[-2px_0_4px_rgba(0,0,0,0.05)] z-10 w-[15%] min-w-[120px] md:min-w-[140px]">
                   <div className="flex items-center justify-end gap-1 md:gap-2">

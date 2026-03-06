@@ -27,7 +27,6 @@ import { usePermissions } from "@/contexts/PermissionContext";
 import { usePhoneSelection } from "@/hooks/usePhoneSelection";
 import { useMapSelection } from "@/hooks/useMapSelection";
 import { useState } from "react";
-import { Policy } from "@/types/policy";
 import { EditCustomerDialog } from "@/components/dialogs/EditCustomerDialog";
 import { formatDisplayDate } from "@/utils/dateFormatters";
 
@@ -35,46 +34,6 @@ interface CustomerCardProps {
   customer: CustomerData;
   isAdmin: boolean;
 }
-
-// Helper function to get premium value from policy (same as CustomerPoliciesTab)
-const getPremiumValue = (policy: Policy): number => {
-  // Check if the policy has a plan with plan type that includes premium in extra fields
-  const planType = policy.plan?.planType || policy.plan?.plan_type;
-
-  // Parse field_values if it's a string
-  let fieldValues = policy.field_values;
-  if (typeof fieldValues === "string") {
-    try {
-      fieldValues = JSON.parse(fieldValues);
-    } catch (e) {
-      console.error("Failed to parse field_values:", e);
-      return 0;
-    }
-  }
-
-  // If plan type has premium in extra fields and policy has field_values
-  if (
-    planType?.extra_fields?.premium &&
-    fieldValues &&
-    typeof fieldValues === "object"
-  ) {
-    const premiumValue = fieldValues.premium;
-
-    if (
-      premiumValue !== undefined &&
-      premiumValue !== null &&
-      premiumValue !== ""
-    ) {
-      const numericValue = parseFloat(premiumValue.toString());
-      if (!isNaN(numericValue)) {
-        return numericValue;
-      }
-    }
-  }
-
-  // For all other cases (no premium in extra fields, no field_values, or empty premium), return 0
-  return 0;
-};
 
 export const CustomerCard = ({ customer, isAdmin }: CustomerCardProps) => {
   const navigate = useNavigate();
@@ -88,18 +47,10 @@ export const CustomerCard = ({ customer, isAdmin }: CustomerCardProps) => {
 
   // Use data from API response instead of making separate API calls (N+1 problem fix)
   // The policies and dependents are already loaded with the customer list from the API
-  const policies = customer.policies || [];
   const dependentsCount = customer.dependents?.length || 0;
   
-  // Calculate total premium from already-loaded policies data
-  const calculatedPremium = policies.reduce((sum: number, policy: any) => {
-    const premiumValue = getPremiumValue(policy);
-    const planType = policy.plan?.planType || policy.plan?.plan_type;
-    if (planType?.extra_fields?.premium && premiumValue > 0) {
-      return sum + premiumValue;
-    }
-    return sum;
-  }, 0);
+  // Use totalPremium from the API (already computed server-side)
+  const displayPremium = customer.totalPremium || 0;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -256,7 +207,7 @@ export const CustomerCard = ({ customer, isAdmin }: CustomerCardProps) => {
           </div>
           <div className="text-center">
             <div className="text-lg font-semibold text-emerald-600">
-              ${calculatedPremium !== null ? calculatedPremium.toLocaleString() : customer.totalPremium.toLocaleString()}
+              ${displayPremium.toLocaleString()}
             </div>
             <div className="text-xs text-gray-500">Premium</div>
           </div>
